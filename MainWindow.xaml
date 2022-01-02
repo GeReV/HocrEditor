@@ -1,0 +1,61 @@
+﻿<Window x:Class="HocrEditor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HocrEditor"
+        xmlns:controls="clr-namespace:HocrEditor.Controls"
+        xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
+        mc:Ignorable="d"
+        Title="hOCR Editor"
+        Height="1080"
+        Width="1920"
+        d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Open..." />
+                <MenuItem Header="_Save..." />
+                <Separator />
+                <MenuItem Header="E_xit" />
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <!-- <MenuItem Name="DeleteMenu" Header="_Delete" Command="{Binding DeleteCommand}" /> -->
+                <!-- <MenuItem Name="MergeMenu" Header="_Merge" Command="{Binding MergeCommand}" /> -->
+            </MenuItem>
+        </Menu>
+        <StackPanel Orientation="Horizontal"
+                    DockPanel.Dock="Top">
+            <Button Content="OCR"
+                    Click="Button_OnClick" />
+        </StackPanel>
+
+        <Grid DockPanel.Dock="Top">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="300" />
+            </Grid.ColumnDefinitions>
+            <TreeView Grid.Column="1"
+                      ItemsSource="{Binding Document.NodeTree[0].Children}" SelectedItemChanged="TreeView_OnSelectedItemChanged">
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="TreeViewItem"
+                           d:DataContext="{d:DesignInstance viewModels:HocrNodeViewModel}">
+                        <Setter Property="IsExpanded"
+                                Value="{Binding IsExpanded, Mode=TwoWay}" />
+                        <Setter Property="IsSelected"
+                                Value="{Binding IsSelected, Mode=TwoWay}" />
+                    </Style>
+                </TreeView.ItemContainerStyle>
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate DataType="viewModels:HocrNodeViewModel"
+                                              ItemsSource="{Binding Children}">
+                        <TextBlock Text="{Binding InnerText}" />
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+            <controls:DocumentCanvas Grid.Column="0"
+                                     x:Name="Canvas"
+                                     DataContext="{Binding Document}" />
+        </Grid>
+    </DockPanel>
+</Window>
