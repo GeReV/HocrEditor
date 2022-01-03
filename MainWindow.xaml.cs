@@ -106,8 +106,7 @@ namespace HocrEditor
                 return;
             }
 
-            selectedNodes?.Clear();
-            selectedNodes?.Add(node);
+            // selectedNodes?.ReplaceRange(new []{ node });
         }
     }
 }

@@ -20,8 +20,8 @@
                 <MenuItem Header="E_xit" />
             </MenuItem>
             <MenuItem Header="_Edit">
-                <!-- <MenuItem Name="DeleteMenu" Header="_Delete" Command="{Binding DeleteCommand}" /> -->
-                <!-- <MenuItem Name="MergeMenu" Header="_Merge" Command="{Binding MergeCommand}" /> -->
+                <MenuItem Name="DeleteMenu" Header="_Delete" Command="{Binding DeleteCommand}" />
+                <MenuItem Name="MergeMenu" Header="_Merge" Command="{Binding MergeCommand}" />
             </MenuItem>
         </Menu>
         <StackPanel Orientation="Horizontal"
@@ -36,7 +36,7 @@
                 <ColumnDefinition Width="300" />
             </Grid.ColumnDefinitions>
             <TreeView Grid.Column="1"
-                      ItemsSource="{Binding Document.NodeTree[0].Children}" SelectedItemChanged="TreeView_OnSelectedItemChanged">
+                      ItemsSource="{Binding Document.Nodes[0].Children}" SelectedItemChanged="TreeView_OnSelectedItemChanged">
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="TreeViewItem"
                            d:DataContext="{d:DesignInstance viewModels:HocrNodeViewModel}">

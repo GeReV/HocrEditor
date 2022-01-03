@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using HocrEditor.Models;
+using HocrEditor.Services;
 using HocrEditor.ViewModels;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
@@ -24,51 +25,6 @@ internal enum MouseState
     Resizing,
 }
 
-[Flags]
-internal enum CardinalDirections
-{
-    North = 1 << 1,
-    East = 1 << 2,
-    South = 1 << 3,
-    West = 1 << 4,
-    NorthWest = North | West,
-    NorthEast = North | East,
-    SouthEast = South | East,
-    SouthWest = South | West,
-}
-
-internal class ResizeHandle
-{
-    private const int HANDLE_PADDING = 3;
-
-    public ResizeHandle(SKPoint position, CardinalDirections direction)
-    {
-        Rect = SKRect.Create(HANDLE_PADDING * 2 + 1, HANDLE_PADDING * 2 + 1);
-        Position = position;
-        Direction = direction;
-    }
-
-    public SKRect Rect { get; set; }
-
-    public SKPoint Position
-    {
-        get => new(Rect.MidX, Rect.MidY);
-        set
-        {
-            var rect = Rect with
-            {
-                Location = value,
-            };
-
-            rect.Offset(-HANDLE_PADDING - 1, -HANDLE_PADDING - 1);
-
-            Rect = rect;
-        }
-    }
-
-    public CardinalDirections Direction { get; set; }
-}
-
 public class Element
 {
     public SKBitmap? Background { get; set; }
@@ -79,12 +35,12 @@ public class Element
     public float BorderWidth { get; set; }
 
     public SKColor FillColor = SKColor.Empty;
-
-    public List<Element> Children { get; } = new();
 }
 
 public partial class DocumentCanvas : UserControl
 {
+    private static readonly SKSize CenterPadding = new(-10.0f, -10.0f);
+
     private static readonly SKPaint HandleFillPaint = new()
     {
         IsStroke = false,
@@ -124,14 +80,10 @@ public partial class DocumentCanvas : UserControl
 
     private SKRect dragLimit = SKRect.Empty;
 
-    private SKRect selectionRect = SKRect.Empty;
-    private ResizeHandle? selectedResizeHandle = null;
+    private readonly CanvasSelection selectionRect = new();
+    private ResizeHandle? selectedResizeHandle;
 
-    public HocrDocumentViewModel? ViewModel
-    {
-        get => (HocrDocumentViewModel?)DataContext;
-        set => DataContext = value;
-    }
+    private HocrDocumentViewModel? ViewModel => (HocrDocumentViewModel?)DataContext;
 
     public DocumentCanvas()
     {
@@ -146,11 +98,12 @@ public partial class DocumentCanvas : UserControl
     {
         Dispatcher.InvokeAsync(Update, DispatcherPriority.Send);
 
-
         if (ViewModel == null)
         {
             return;
         }
+
+        CenterTransformation();
 
         ViewModel.Nodes.SubscribeItemPropertyChanged(
             (_, _) => Refresh()
@@ -228,7 +181,9 @@ public partial class DocumentCanvas : UserControl
                 throw new ArgumentOutOfRangeException();
         }
 
-        selectionRect = CalculateUnionRect(selectedElements, elements);
+        selectionRect.Rect = CalculateUnionRect(selectedElements, elements);
+
+        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
     }
 
     private void NodesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -264,8 +219,8 @@ public partial class DocumentCanvas : UserControl
 
                 if (!selectionRect.IsEmpty)
                 {
-                    var selectedHandle = CalculateRectResizeHandles(selectionRect)
-                        .FirstOrDefault(handle => handle.Rect.Contains(normalizedPosition));
+                    var selectedHandle = selectionRect.ResizeHandles
+                        .FirstOrDefault(handle => handle.GetRect(transformation).Contains(normalizedPosition));
 
                     if (selectedHandle != null)
                     {
@@ -273,7 +228,7 @@ public partial class DocumentCanvas : UserControl
 
                         selectedResizeHandle = selectedHandle;
 
-                        offsetStart = selectedHandle.Position;
+                        offsetStart = selectedHandle.Center;
 
                         break;
                     }
@@ -281,7 +236,7 @@ public partial class DocumentCanvas : UserControl
 
                 var key = GetElementIndexAtPoint(normalizedPosition);
 
-                if (key != null)
+                if (key != null && key != rootId)
                 {
                     mouseMoveState = MouseState.Dragging;
 
@@ -301,54 +256,57 @@ public partial class DocumentCanvas : UserControl
                         }
                     }
 
-                    if ((Keyboard.Modifiers & ModifierKeys.Control) == 0)
+                    // Page is unselectable.
+                    if (node.HocrNode.NodeType != HocrNodeType.Page)
                     {
-                        foreach (var selectedNode in ViewModel.SelectedNodes)
+                        if ((Keyboard.Modifiers & ModifierKeys.Control) == 0)
                         {
-                            selectedNode.IsSelected = false;
+                            ViewModel.ClearSelection();
                         }
 
-                        ViewModel.SelectedNodes.Clear();
+                        ViewModel.SelectedNodes.Add(node);
+
+                        node.IsSelected = true;
+
+                        if (node.ParentId != null)
+                        {
+                            var parentNode = elements[node.ParentId].Item1;
+
+                            var parentBounds = parentNode.BBox.ToSKRect();
+                            var nodeBounds = node.BBox.ToSKRect();
+
+                            // In some cases, the child node isn't contained within its parent. In that case, don't limit dragging for it (set limit to empty).
+                            if (parentBounds.Contains(nodeBounds))
+                            {
+                                dragLimit = new SKRect(
+                                    parentBounds.Left - nodeBounds.Left,
+                                    parentBounds.Top - nodeBounds.Top,
+                                    parentBounds.Right - nodeBounds.Right,
+                                    parentBounds.Bottom - nodeBounds.Bottom
+                                );
+                            }
+                            else
+                            {
+                                dragLimit = SKRect.Empty;
+                            }
+
+                            while (parentNode is { ParentId: { } })
+                            {
+                                parentNode.IsExpanded = true;
+                                parentNode = elements[parentNode.ParentId].Item1;
+                            }
+                        }
+
+                        offsetStart = transformation.MapPoint(element.Bounds.Location);
                     }
-
-                    ViewModel.SelectedNodes.Add(node);
-
-                    node.IsSelected = true;
-
-                    if (node.ParentId != null)
+                    else
                     {
-                        var parentNode = elements[node.ParentId].Item1;
-
-                        var parentBounds = parentNode.BBox.ToSKRect();
-                        var nodeBounds = node.BBox.ToSKRect();
-
-                        // In some cases, the child node isn't contained within its parent. In that case, don't limit dragging for it (set limit to empty).
-                        if (parentBounds.Contains(nodeBounds))
-                        {
-                            dragLimit = new SKRect(
-                                parentBounds.Left - nodeBounds.Left,
-                                parentBounds.Top - nodeBounds.Top,
-                                parentBounds.Right - nodeBounds.Right,
-                                parentBounds.Bottom - nodeBounds.Bottom
-                            );
-                        }
-                        else
-                        {
-                            dragLimit = SKRect.Empty;
-                        }
-
-                        while (parentNode is { ParentId: { } })
-                        {
-                            parentNode.IsExpanded = true;
-                            parentNode = elements[parentNode.ParentId].Item1;
-                        }
+                        ViewModel.ClearSelection();
                     }
-
-                    offsetStart = transformation.MapPoint(element.Bounds.Location);
                 }
                 else
                 {
-                    ViewModel.SelectedNodes.Clear();
+                    ViewModel.ClearSelection();
                 }
 
                 Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
@@ -450,13 +408,13 @@ public partial class DocumentCanvas : UserControl
                 {
                     var pt = inverseTransformation.MapPoint(position);
 
-                    var resizeHandles = CalculateRectResizeHandles(selectionRect);
+                    var resizeHandles = selectionRect.ResizeHandles;
 
                     Cursor = null;
 
                     foreach (var handle in resizeHandles)
                     {
-                        if (!handle.Rect.Contains(pt))
+                        if (!handle.GetRect().Contains(pt))
                         {
                             continue;
                         }
@@ -526,7 +484,10 @@ public partial class DocumentCanvas : UserControl
                     };
 
                     // Apply to selection rect.
-                    selectionRect.Location = newLocation;
+                    selectionRect.Rect = selectionRect.Rect with
+                    {
+                        Location = newLocation
+                    };
                 }
 
                 Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
@@ -597,14 +558,45 @@ public partial class DocumentCanvas : UserControl
         inverseScaleTransformation.ScaleY = inverseTransformation.ScaleY;
     }
 
-    private static void DrawScalingHandle(SKCanvas canvas, ResizeHandle handle)
+    private void CenterTransformation()
     {
+        Debug.Assert(ViewModel != null, $"{nameof(ViewModel)} != null");
+
+        var documentBounds = ViewModel.Nodes.First(n => n.IsRoot).BBox.ToSKRect();
+
+        var controlSize = SKRect.Create(RenderSize.ToSKSize());
+
+        controlSize.Inflate(CenterPadding);
+
+        var fitBounds = controlSize.AspectFit(documentBounds.Size);
+
+        var resizeFactor = Math.Min(
+            fitBounds.Width / documentBounds.Width,
+            fitBounds.Height / documentBounds.Height
+        );
+
+        transformation = SKMatrix.Identity;
+
+        UpdateTransformation(
+            SKMatrix.CreateScaleTranslation(
+                resizeFactor,
+                resizeFactor,
+                fitBounds.Left,
+                fitBounds.Top
+            )
+        );
+    }
+
+    private void DrawScalingHandle(SKCanvas canvas, ResizeHandle handle)
+    {
+        var rect = handle.GetRect(transformation);
+
         canvas.DrawRect(
-            handle.Rect,
+            rect,
             HandleFillPaint
         );
         canvas.DrawRect(
-            handle.Rect,
+            rect,
             HandleStrokePaint
         );
     }
@@ -617,7 +609,8 @@ public partial class DocumentCanvas : UserControl
         }
 
         elements.Clear();
-        DrawDocumentNodes(ViewModel.NodeTree, null);
+
+        DrawDocumentNodes(ViewModel.Nodes[0]);
 
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
     }
@@ -627,13 +620,15 @@ public partial class DocumentCanvas : UserControl
         Canvas.InvalidateVisual();
     }
 
-    private void DrawDocumentNodes(IEnumerable<HocrNodeViewModel> nodes, Element? parent)
+    private void DrawDocumentNodes(HocrNodeViewModel rootNode)
     {
-        foreach (var node in nodes)
+        var traverser = new HierarchyTraverser<HocrNodeViewModel>(node => node.Children);
+
+        foreach (var node in traverser.ToEnumerable(rootNode))
         {
             var el = new Element
             {
-                Bounds = node.HocrNode.BBox.ToSKRect()
+                Bounds = node.BBox.ToSKRect()
             };
 
             elements.Add(node.HocrNode.Id, (node, el));
@@ -652,13 +647,6 @@ public partial class DocumentCanvas : UserControl
                 el.BorderWidth = 1;
                 el.FillColor = color.WithAlpha(16);
             }
-
-            if (node.Children.Any())
-            {
-                DrawDocumentNodes(node.Children, el);
-            }
-
-            parent?.Children.Add(el);
         }
     }
 
@@ -723,7 +711,7 @@ public partial class DocumentCanvas : UserControl
             return;
         }
 
-        var bbox = transformation.MapRect(selectionRect);
+        var bbox = transformation.MapRect(selectionRect.Rect);
 
         canvas.DrawRect(
             bbox,
@@ -735,7 +723,7 @@ public partial class DocumentCanvas : UserControl
             }
         );
 
-        foreach (var handle in CalculateRectResizeHandles(bbox))
+        foreach (var handle in selectionRect.ResizeHandles)
         {
             DrawScalingHandle(canvas, handle);
         }
@@ -753,26 +741,11 @@ public partial class DocumentCanvas : UserControl
     private static IEnumerable<string> GetHierarchy(
         string rootNodeId,
         IReadOnlyDictionary<string, (HocrNodeViewModel, Element)> elementMap
-    )
-    {
-        void Recurse(string nodeId, IReadOnlyDictionary<string, (HocrNodeViewModel, Element)> map, List<string> list)
-        {
-            list.Add(nodeId);
-
-            var children = map[nodeId].Item1.Children;
-
-            foreach (var child in children)
-            {
-                Recurse(child.HocrNode.Id, map, list);
-            }
-        }
-
-        var list = new List<string>();
-
-        Recurse(rootNodeId, elementMap, list);
-
-        return list;
-    }
+    ) =>
+        new HierarchyTraverser<HocrNodeViewModel>(node => node.Children)
+            .ToEnumerable(elementMap[rootNodeId].Item1)
+            .Select(node => node.HocrNode.Id)
+            .ToList();
 
     private static SKRect CalculateUnionRect(
         ICollection<string> selection,
@@ -794,18 +767,4 @@ public partial class DocumentCanvas : UserControl
                 }
             );
     }
-
-    private static ResizeHandle[] CalculateRectResizeHandles(SKRect rect) =>
-        new[]
-        {
-            // Clockwise from top-left.
-            new ResizeHandle(rect.Location, CardinalDirections.NorthWest),
-            new ResizeHandle(new SKPoint(rect.MidX, rect.Top), CardinalDirections.North),
-            new ResizeHandle(new SKPoint(rect.Right, rect.Top), CardinalDirections.NorthEast),
-            new ResizeHandle(new SKPoint(rect.Right, rect.MidY), CardinalDirections.East),
-            new ResizeHandle(new SKPoint(rect.Right, rect.Bottom), CardinalDirections.SouthEast),
-            new ResizeHandle(new SKPoint(rect.MidX, rect.Bottom), CardinalDirections.South),
-            new ResizeHandle(new SKPoint(rect.Left, rect.Bottom), CardinalDirections.SouthWest),
-            new ResizeHandle(new SKPoint(rect.Left, rect.MidY), CardinalDirections.West),
-        };
 }
