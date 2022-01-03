@@ -264,10 +264,20 @@ public partial class DocumentCanvas : UserControl
                             ViewModel.ClearSelection();
                         }
 
-                        ViewModel.SelectedNodes.Add(node);
+                        if (ViewModel.SelectedNodes.Contains(node))
+                        {
+                            ViewModel.SelectedNodes.Remove(node);
 
-                        node.IsSelected = true;
+                            node.IsSelected = false;
+                        }
+                        else
+                        {
+                            ViewModel.SelectedNodes.Add(node);
 
+                            node.IsSelected = true;
+                        }
+
+                        // TODO: Recalculate drag limit based on all selected nodes to accommodate deselection.
                         if (node.ParentId != null)
                         {
                             var parentNode = elements[node.ParentId].Item1;
