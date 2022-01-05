@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:HocrEditor"
         xmlns:controls="clr-namespace:HocrEditor.Controls"
         xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
+        xmlns:mstv="clr-namespace:System.Windows.Controls;assembly=MultiSelectTreeView"
         mc:Ignorable="d"
         Title="hOCR Editor"
         Height="1080"
@@ -20,8 +21,12 @@
                 <MenuItem Header="E_xit" />
             </MenuItem>
             <MenuItem Header="_Edit">
-                <MenuItem Name="DeleteMenu" Header="_Delete" Command="{Binding DeleteCommand}" />
-                <MenuItem Name="MergeMenu" Header="_Merge" Command="{Binding MergeCommand}" />
+                <MenuItem Name="DeleteMenu"
+                          Header="_Delete"
+                          Command="{Binding DeleteCommand}" />
+                <MenuItem Name="MergeMenu"
+                          Header="_Merge"
+                          Command="{Binding MergeCommand}" />
             </MenuItem>
         </Menu>
         <StackPanel Orientation="Horizontal"
@@ -35,24 +40,44 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="300" />
             </Grid.ColumnDefinitions>
-            <TreeView Grid.Column="1"
-                      ItemsSource="{Binding Document.Nodes[0].Children}" SelectedItemChanged="TreeView_OnSelectedItemChanged">
-                <TreeView.ItemContainerStyle>
-                    <Style TargetType="TreeViewItem"
+            <mstv:MultiSelectTreeView Grid.Column="1"
+                                      ItemsSource="{Binding Document.Nodes[0].Children}"
+                                      SelectedItems="{Binding SelectedNodes}">
+                <mstv:MultiSelectTreeView.ItemContainerStyle>
+                    <Style TargetType="{x:Type mstv:MultiSelectTreeViewItem}"
                            d:DataContext="{d:DesignInstance viewModels:HocrNodeViewModel}">
+                        <!--
+						Here the TreeViewItem's properties are connected with the ViewModel class.
+						Basically you would make all MultiSelectTreeViewItem properties accessible
+						in the view model class that you possibly want to get or set in order to
+						determine or manipulate the view from the view model class.
+						-->
+                        <!-- <Setter Property="DisplayName" -->
+                        <!--         Value="{Binding DisplayName, Mode=TwoWay}" /> -->
                         <Setter Property="IsExpanded"
                                 Value="{Binding IsExpanded, Mode=TwoWay}" />
                         <Setter Property="IsSelected"
-                                Value="{Binding IsSelected, Mode=OneWay}" />
+                                Value="{Binding IsSelected, Mode=TwoWay}" />
+                        <!-- <Setter Property="IsEnabled" -->
+                        <!--         Value="{Binding IsEnabled, Mode=TwoWay}" /> -->
+                        <!-- <Setter Property="IsVisible" -->
+                        <!--         Value="{Binding IsVisible, Mode=TwoWay}" /> -->
+                        <!-- <Setter Property="IsEditable" -->
+                        <!--         Value="{Binding IsEditable, Mode=TwoWay}" /> -->
+                        <!-- <Setter Property="IsEditing" -->
+                        <!--         Value="{Binding IsEditing, Mode=TwoWay}" /> -->
+                        <!-- <Setter Property="Remarks" -->
+                        <!--         Value="{Binding Remarks, Mode=TwoWay}" /> -->
                     </Style>
-                </TreeView.ItemContainerStyle>
-                <TreeView.ItemTemplate>
-                    <HierarchicalDataTemplate DataType="viewModels:HocrNodeViewModel"
+                </mstv:MultiSelectTreeView.ItemContainerStyle>
+
+                <mstv:MultiSelectTreeView.Resources>
+                    <HierarchicalDataTemplate DataType="{x:Type viewModels:HocrNodeViewModel}"
                                               ItemsSource="{Binding Children}">
                         <TextBlock Text="{Binding InnerText}" />
                     </HierarchicalDataTemplate>
-                </TreeView.ItemTemplate>
-            </TreeView>
+                </mstv:MultiSelectTreeView.Resources>
+            </mstv:MultiSelectTreeView>
             <controls:DocumentCanvas Grid.Column="0"
                                      x:Name="Canvas"
                                      DataContext="{Binding Document}" />

@@ -37,7 +37,7 @@ namespace HocrEditor.ViewModels
 
         public void ClearSelection()
         {
-            foreach (var selectedNode in SelectedNodes)
+            foreach (var selectedNode in SelectedNodes.ToList())
             {
                 selectedNode.IsSelected = false;
             }
