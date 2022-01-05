@@ -46,28 +46,16 @@
                 <mstv:MultiSelectTreeView.ItemContainerStyle>
                     <Style TargetType="{x:Type mstv:MultiSelectTreeViewItem}"
                            d:DataContext="{d:DesignInstance viewModels:HocrNodeViewModel}">
-                        <!--
-						Here the TreeViewItem's properties are connected with the ViewModel class.
-						Basically you would make all MultiSelectTreeViewItem properties accessible
-						in the view model class that you possibly want to get or set in order to
-						determine or manipulate the view from the view model class.
-						-->
-                        <!-- <Setter Property="DisplayName" -->
-                        <!--         Value="{Binding DisplayName, Mode=TwoWay}" /> -->
                         <Setter Property="IsExpanded"
                                 Value="{Binding IsExpanded, Mode=TwoWay}" />
                         <Setter Property="IsSelected"
                                 Value="{Binding IsSelected, Mode=TwoWay}" />
                         <!-- <Setter Property="IsEnabled" -->
                         <!--         Value="{Binding IsEnabled, Mode=TwoWay}" /> -->
-                        <!-- <Setter Property="IsVisible" -->
-                        <!--         Value="{Binding IsVisible, Mode=TwoWay}" /> -->
                         <!-- <Setter Property="IsEditable" -->
                         <!--         Value="{Binding IsEditable, Mode=TwoWay}" /> -->
                         <!-- <Setter Property="IsEditing" -->
                         <!--         Value="{Binding IsEditing, Mode=TwoWay}" /> -->
-                        <!-- <Setter Property="Remarks" -->
-                        <!--         Value="{Binding Remarks, Mode=TwoWay}" /> -->
                     </Style>
                 </mstv:MultiSelectTreeView.ItemContainerStyle>
 
