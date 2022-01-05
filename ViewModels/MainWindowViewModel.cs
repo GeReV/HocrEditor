@@ -11,6 +11,19 @@ namespace HocrEditor.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
+        // Workaround for MultiSelectTreeView not working with Document.SelectedNodes directly.
+        public ObservableCollection<HocrNodeViewModel>? SelectedNodes
+        {
+            get => Document?.SelectedNodes;
+            set
+            {
+                if (Document != null && value != null)
+                {
+                    Document.SelectedNodes = new RangeObservableCollection<HocrNodeViewModel>(value);
+                }
+            }
+        }
+
         public MainWindowViewModel()
         {
             DeleteCommand = new RelayCommand(Delete, CanEdit);

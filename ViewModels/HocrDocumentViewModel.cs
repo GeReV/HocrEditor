@@ -12,7 +12,7 @@ namespace HocrEditor.ViewModels
 
         public RangeObservableCollection<HocrNodeViewModel> Nodes { get; }
 
-        public RangeObservableCollection<HocrNodeViewModel> SelectedNodes { get; }
+        public RangeObservableCollection<HocrNodeViewModel> SelectedNodes { get; set; }
 
         public HocrDocumentViewModel(HocrDocument hocrDocument)
         {
