@@ -416,15 +416,15 @@ public partial class DocumentCanvas : UserControl
             case MouseState.None:
                 if (!selectionRect.IsEmpty)
                 {
-                    var pt = inverseTransformation.MapPoint(position);
-
                     var resizeHandles = selectionRect.ResizeHandles;
 
                     Cursor = null;
 
                     foreach (var handle in resizeHandles)
                     {
-                        if (!handle.GetRect().Contains(pt))
+                        var handleRect = handle.GetRect(transformation);
+
+                        if (!handleRect.Contains(position))
                         {
                             continue;
                         }
@@ -506,7 +506,7 @@ public partial class DocumentCanvas : UserControl
             }
             case MouseState.Resizing:
             {
-                var newLocation = inverseTransformation.MapPoint(offsetStart) + delta;
+                var newLocation = offsetStart + delta;
 
 
                 Debug.Assert(selectedResizeHandle != null, $"{nameof(selectedResizeHandle)} != null");
