@@ -7,6 +7,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using PropertyChanged;
 
 namespace HocrEditor
 {
@@ -18,6 +19,7 @@ namespace HocrEditor
     /// implementing INotifyCollectionChanged to notify listeners
     /// when items get added, removed or the whole list is refreshed.
     /// </summary>
+    [DoNotNotify]
     public sealed class RangeObservableCollection<T> : ObservableCollection<T>
     {
         //------------------------------------------------------
