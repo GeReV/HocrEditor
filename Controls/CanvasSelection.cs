@@ -5,7 +5,7 @@ namespace HocrEditor.Controls;
 
 internal class CanvasSelection
 {
-    private SKRect rect;
+    private SKRect bounds;
     private readonly ResizeHandle[] resizeHandles;
 
     public CanvasSelection()
@@ -13,57 +13,57 @@ internal class CanvasSelection
         resizeHandles = new[]
         {
             // Clockwise from top-left.
-            new ResizeHandle(Rect.Location, CardinalDirections.NorthWest),
-            new ResizeHandle(new SKPoint(Rect.MidX, Rect.Top), CardinalDirections.North),
-            new ResizeHandle(new SKPoint(Rect.Right, Rect.Top), CardinalDirections.NorthEast),
-            new ResizeHandle(new SKPoint(Rect.Right, Rect.MidY), CardinalDirections.East),
-            new ResizeHandle(new SKPoint(Rect.Right, Rect.Bottom), CardinalDirections.SouthEast),
-            new ResizeHandle(new SKPoint(Rect.MidX, Rect.Bottom), CardinalDirections.South),
-            new ResizeHandle(new SKPoint(Rect.Left, Rect.Bottom), CardinalDirections.SouthWest),
-            new ResizeHandle(new SKPoint(Rect.Left, Rect.MidY), CardinalDirections.West),
+            new ResizeHandle(Bounds.Location, CardinalDirections.NorthWest),
+            new ResizeHandle(new SKPoint(Bounds.MidX, Bounds.Top), CardinalDirections.North),
+            new ResizeHandle(new SKPoint(Bounds.Right, Bounds.Top), CardinalDirections.NorthEast),
+            new ResizeHandle(new SKPoint(Bounds.Right, Bounds.MidY), CardinalDirections.East),
+            new ResizeHandle(new SKPoint(Bounds.Right, Bounds.Bottom), CardinalDirections.SouthEast),
+            new ResizeHandle(new SKPoint(Bounds.MidX, Bounds.Bottom), CardinalDirections.South),
+            new ResizeHandle(new SKPoint(Bounds.Left, Bounds.Bottom), CardinalDirections.SouthWest),
+            new ResizeHandle(new SKPoint(Bounds.Left, Bounds.MidY), CardinalDirections.West),
         };
     }
 
-    public SKRect Rect
+    public SKRect Bounds
     {
-        get => rect;
-        set => rect = value;
+        get => bounds;
+        set => bounds = value;
     }
 
     public IEnumerable<ResizeHandle> ResizeHandles
     {
         get
         {
-            CalculateRectResizeHandles(rect);
+            CalculateRectResizeHandles(bounds);
 
             return resizeHandles;
         }
     }
 
-    public bool IsEmpty => Rect.IsEmpty;
+    public bool IsEmpty => Bounds.IsEmpty;
 
     public float Left
     {
-        get => rect.Left;
-        set => rect.Left = value;
+        get => bounds.Left;
+        set => bounds.Left = value;
     }
 
     public float Top
     {
-        get => rect.Top;
-        set => rect.Top = value;
+        get => bounds.Top;
+        set => bounds.Top = value;
     }
 
     public float Right
     {
-        get => rect.Right;
-        set => rect.Right = value;
+        get => bounds.Right;
+        set => bounds.Right = value;
     }
 
     public float Bottom
     {
-        get => rect.Bottom;
-        set => rect.Bottom = value;
+        get => bounds.Bottom;
+        set => bounds.Bottom = value;
     }
 
     private void CalculateRectResizeHandles(SKRect r)

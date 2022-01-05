@@ -181,7 +181,7 @@ public partial class DocumentCanvas : UserControl
                 throw new ArgumentOutOfRangeException();
         }
 
-        selectionRect.Rect = CalculateUnionRect(selectedElements, elements);
+        selectionRect.Bounds = CalculateUnionRect(selectedElements, elements);
 
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
     }
@@ -468,18 +468,12 @@ public partial class DocumentCanvas : UserControl
 
                 if (ViewModel.SelectedNodes.Any())
                 {
-                    var node = ViewModel.SelectedNodes.First();
-
-                    var draggedElement = elements[node.HocrNode.Id].Item2;
-
-                    var draggedElementBounds = draggedElement.Bounds;
-
                     // Apply to all selected elements.
                     foreach (var id in selectedElements)
                     {
                         var (_, element) = elements[id];
 
-                        var deltaFromDraggedElement = element.Bounds.Location - draggedElementBounds.Location;
+                        var deltaFromDraggedElement = element.Bounds.Location - selectionRect.Bounds.Location;
 
                         element.Bounds = element.Bounds with
                         {
@@ -487,14 +481,8 @@ public partial class DocumentCanvas : UserControl
                         };
                     }
 
-                    // Apply to self.
-                    draggedElement.Bounds = draggedElementBounds with
-                    {
-                        Location = newLocation
-                    };
-
                     // Apply to selection rect.
-                    selectionRect.Rect = selectionRect.Rect with
+                    selectionRect.Bounds = selectionRect.Bounds with
                     {
                         Location = newLocation
                     };
@@ -721,7 +709,7 @@ public partial class DocumentCanvas : UserControl
             return;
         }
 
-        var bbox = transformation.MapRect(selectionRect.Rect);
+        var bbox = transformation.MapRect(selectionRect.Bounds);
 
         canvas.DrawRect(
             bbox,
