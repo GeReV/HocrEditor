@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Input;
 using HocrEditor.Models;
@@ -46,11 +47,24 @@ namespace HocrEditor.ViewModels
                 return;
             }
 
+            var selectedNodes = Document.SelectedNodes.OrderBy(node => Document.Nodes.IndexOf(node)).ToList();
+
             // All child nodes will be merged into the first one.
-            var first = Document.SelectedNodes.First();
-            var rest = Document.SelectedNodes.Skip(1).ToArray();
+            var first = selectedNodes.First();
+            var rest = selectedNodes.Skip(1).ToArray();
+
+            if (rest.Any(node => node.HocrNode.NodeType != first.HocrNode.NodeType))
+            {
+                // TODO: Show error.
+                return;
+            }
 
             var children = rest.SelectMany(node => node.Children).ToList();
+
+            foreach (var parent in rest)
+            {
+                parent.Children.Clear();
+            }
 
             foreach (var child in children)
             {
