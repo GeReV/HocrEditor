@@ -180,8 +180,6 @@ public partial class DocumentCanvas
                 throw new ArgumentOutOfRangeException();
         }
 
-        selectionRect.Bounds = CalculateUnionRect(selectedElements, elements);
-
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
     }
 
@@ -235,16 +233,23 @@ public partial class DocumentCanvas
 
                 var normalizedPosition = inverseTransformation.MapPoint(position);
 
-
                 var key = GetElementIndexAtPoint(normalizedPosition);
 
                 if (key == null)
                 {
-                    ViewModel.ClearSelection();
+                    ClearSelection();
                     break;
                 }
 
                 mouseMoveState = MouseState.Dragging;
+
+                if (selectionRect.Bounds.Contains(normalizedPosition))
+                {
+                    // Dragging the selection, no need to select anything else.
+                    offsetStart = transformation.MapPoint(selectionRect.Bounds.Location);
+
+                    break;
+                }
 
                 var node = elements[key].Item1;
 
@@ -264,25 +269,25 @@ public partial class DocumentCanvas
 
                 // TODO: Should probably choose node at mouseup, because user intention isn't clear at mouse down
                 //  i.e. about to drag selection or choose a different item
-                if ((node.HocrNode.NodeType == HocrNodeType.Page || ViewModel.SelectedNodes.Contains(node)) &&
-                    selectionRect.Bounds.Contains(normalizedPosition))
+                if (selectionRect.Bounds.Contains(normalizedPosition) &&
+                    (node.HocrNode.NodeType == HocrNodeType.Page || ViewModel.SelectedNodes.Contains(node)))
                 {
                     // Dragging the selection, no need to select anything else.
+                    offsetStart = transformation.MapPoint(selectionRect.Bounds.Location);
+
                     break;
                 }
-
-                Debug.Assert(rootId != null, $"{nameof(rootId)} != null");
 
                 // Page is unselectable.
                 if (node.HocrNode.NodeType == HocrNodeType.Page)
                 {
-                    ViewModel.ClearSelection();
+                    ClearSelection();
                     break;
                 }
 
                 if ((Keyboard.Modifiers & ModifierKeys.Control) == 0)
                 {
-                    ViewModel.ClearSelection();
+                    ClearSelection();
                 }
 
                 if (ViewModel.SelectedNodes.Contains(node))
@@ -298,38 +303,11 @@ public partial class DocumentCanvas
                     node.IsSelected = true;
                 }
 
-                // TODO: Recalculate drag limit based on all selected nodes to accommodate deselection.
-                if (node.ParentId != null)
-                {
-                    var parentNode = elements[node.ParentId].Item1;
-
-                    var parentBounds = parentNode.BBox.ToSKRect();
-                    var nodeBounds = node.BBox.ToSKRect();
-
-                    // In some cases, the child node isn't contained within its parent. In that case, don't limit dragging for it (set limit to empty).
-                    if (parentBounds.Contains(nodeBounds))
-                    {
-                        dragLimit = new SKRect(
-                            parentBounds.Left - nodeBounds.Left,
-                            parentBounds.Top - nodeBounds.Top,
-                            parentBounds.Right - nodeBounds.Right,
-                            parentBounds.Bottom - nodeBounds.Bottom
-                        );
-                    }
-                    else
-                    {
-                        dragLimit = SKRect.Empty;
-                    }
-
-                    while (parentNode is { ParentId: { } })
-                    {
-                        parentNode.IsExpanded = true;
-                        parentNode = elements[parentNode.ParentId].Item1;
-                    }
-                }
+                selectionRect.Bounds = CalculateUnionRect(selectedElements, elements);
 
                 offsetStart = transformation.MapPoint(selectionRect.Bounds.Location);
 
+                dragLimit = CalculateDragLimitBounds(ViewModel.SelectedNodes, elements);
 
                 break;
             }
@@ -354,6 +332,14 @@ public partial class DocumentCanvas
         }
 
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
+    }
+
+    private void ClearSelection()
+    {
+        ViewModel?.ClearSelection();
+
+        dragLimit = SKRect.Empty;
+        selectionRect.Bounds = SKRect.Empty;
     }
 
     protected override void OnMouseUp(MouseButtonEventArgs e)
@@ -400,6 +386,8 @@ public partial class DocumentCanvas
                             (int)bounds.Bottom
                         );
                     }
+
+                    dragLimit = CalculateDragLimitBounds(ViewModel.SelectedNodes, elements);
                 }
 
                 break;
@@ -551,7 +539,8 @@ public partial class DocumentCanvas
                 var matrix = SKMatrix.CreateScale(ratio.X, ratio.Y, resizePivot.X, resizePivot.Y);
 
                 // If more than one element selected, or exactly one element selected _and_ Ctrl is pressed, resize together with children.
-                var includeChildren = ViewModel.SelectedNodes.Count > 1 || (Keyboard.Modifiers & ModifierKeys.Control) != 0;
+                var includeChildren = ViewModel.SelectedNodes.Count > 1 ||
+                                      (Keyboard.Modifiers & ModifierKeys.Control) != 0;
 
                 foreach (var id in selectedElements)
                 {
@@ -588,6 +577,11 @@ public partial class DocumentCanvas
         var newScale = (float)Math.Pow(2, delta * 0.05);
 
         UpdateTransformation(SKMatrix.CreateScale(newScale, newScale, p.X, p.Y));
+
+        dragLimit = CalculateDragLimitBounds(
+            ViewModel?.SelectedNodes ?? Enumerable.Empty<HocrNodeViewModel>(),
+            elements
+        );
 
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
     }
@@ -759,6 +753,7 @@ public partial class DocumentCanvas
 
         var bbox = transformation.MapRect(selectionRect.Bounds);
 
+
         canvas.DrawRect(
             bbox,
             new SKPaint
@@ -805,12 +800,61 @@ public partial class DocumentCanvas
 
         return selection.Skip(1)
             .Aggregate(
-                elements[selection.First()].Item2.Bounds,
+                elements[selection.First()].Item1.BBox.ToSKRect(),
                 (rect, id) =>
                 {
-                    rect.Union(elements[id].Item2.Bounds);
+                    rect.Union(elements[id].Item1.BBox.ToSKRect());
                     return rect;
                 }
             );
+    }
+
+    private static SKRect CalculateDragLimitBounds(
+        IEnumerable<HocrNodeViewModel> selectedNodes,
+        IReadOnlyDictionary<string, (HocrNodeViewModel, Element)> elements
+    )
+    {
+        var dragLimit = SKRect.Empty;
+
+        foreach (var node in selectedNodes)
+        {
+            if (node.ParentId == null)
+            {
+                continue;
+            }
+
+            var parentNode = elements[node.ParentId].Item1;
+
+            var parentBounds = parentNode.BBox.ToSKRect();
+            var nodeBounds = node.BBox.ToSKRect();
+
+            // In some cases, the child node isn't contained within its parent. In that case, don't limit dragging for it (leave limit empty).
+            if (parentBounds.Contains(nodeBounds))
+            {
+                var limitRect = new SKRect(
+                    parentBounds.Left - nodeBounds.Left,
+                    parentBounds.Top - nodeBounds.Top,
+                    parentBounds.Right - nodeBounds.Right,
+                    parentBounds.Bottom - nodeBounds.Bottom
+                );
+
+                if (dragLimit.IsEmpty)
+                {
+                    dragLimit = limitRect;
+                }
+                else
+                {
+                    dragLimit.Intersect(limitRect);
+                }
+            }
+
+            while (parentNode is { ParentId: { } })
+            {
+                parentNode.IsExpanded = true;
+                parentNode = elements[parentNode.ParentId].Item1;
+            }
+        }
+
+        return dragLimit;
     }
 }
