@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using SkiaSharp;
 
 namespace HocrEditor.Controls;
 
 internal class CanvasSelection
 {
+    private SKRect initialBounds = SKRect.Empty;
     private SKRect bounds;
     private readonly ResizeHandle[] resizeHandles;
 
@@ -64,6 +66,43 @@ internal class CanvasSelection
     {
         get => bounds.Bottom;
         set => bounds.Bottom = value;
+    }
+
+    public SKPoint Center => new(bounds.MidX, bounds.MidY);
+
+    public SKPoint ResizeRatio {
+        get
+        {
+            if (initialBounds.IsEmpty)
+            {
+                throw new InvalidOperationException("BeginResize has not been called.");
+            }
+
+            var w = bounds.Width / initialBounds.Width;
+            var h = bounds.Height / initialBounds.Height;
+
+            if (Math.Abs(initialBounds.Width) < float.Epsilon)
+            {
+                w = 0;
+            }
+
+            if (Math.Abs(initialBounds.Height) < float.Epsilon)
+            {
+                h = 0;
+            }
+
+            return new SKPoint(w, h);
+        }
+    }
+
+    public void BeginResize()
+    {
+        initialBounds = bounds;
+    }
+
+    public void EndResize()
+    {
+        initialBounds = SKRect.Empty;
     }
 
     private void CalculateRectResizeHandles(SKRect r)
