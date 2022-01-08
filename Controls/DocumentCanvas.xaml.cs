@@ -223,6 +223,8 @@ public partial class DocumentCanvas
                     {
                         mouseMoveState = MouseState.Resizing;
 
+                        selectionRect.BeginResize();
+
                         selectedResizeHandle = selectedHandle;
 
                         offsetStart = selectedHandle.Center;
@@ -376,6 +378,11 @@ public partial class DocumentCanvas
             {
                 e.Handled = true;
 
+                if (mouseMoveState == MouseState.Resizing)
+                {
+                    selectionRect.EndResize();
+                }
+
                 mouseMoveState = MouseState.None;
 
                 if (selectedElements.Any())
@@ -507,27 +514,57 @@ public partial class DocumentCanvas
             {
                 var newLocation = offsetStart + delta;
 
-
                 Debug.Assert(selectedResizeHandle != null, $"{nameof(selectedResizeHandle)} != null");
+
+                var resizePivot = selectionRect.Center;
 
                 if ((selectedResizeHandle.Direction & CardinalDirections.West) != 0)
                 {
                     selectionRect.Left = newLocation.X;
+
+                    resizePivot.X = selectionRect.Right;
                 }
 
                 if ((selectedResizeHandle.Direction & CardinalDirections.North) != 0)
                 {
                     selectionRect.Top = newLocation.Y;
+
+                    resizePivot.Y = selectionRect.Bottom;
                 }
 
                 if ((selectedResizeHandle.Direction & CardinalDirections.East) != 0)
                 {
                     selectionRect.Right = newLocation.X;
+
+                    resizePivot.X = selectionRect.Left;
                 }
 
                 if ((selectedResizeHandle.Direction & CardinalDirections.South) != 0)
                 {
                     selectionRect.Bottom = newLocation.Y;
+
+                    resizePivot.Y = selectionRect.Top;
+                }
+
+                var ratio = selectionRect.ResizeRatio;
+
+                var matrix = SKMatrix.CreateScale(ratio.X, ratio.Y, resizePivot.X, resizePivot.Y);
+
+                // If more than one element selected, or exactly one element selected _and_ Ctrl is pressed, resize together with children.
+                var includeChildren = ViewModel.SelectedNodes.Count > 1 || (Keyboard.Modifiers & ModifierKeys.Control) != 0;
+
+                foreach (var id in selectedElements)
+                {
+                    // Start with the initial value, so pressing and releasing Ctrl reverts to original size.
+                    var bounds = elements[id].Item1.BBox.ToSKRect();
+
+                    if (includeChildren || ViewModel.SelectedNodes.Any(node => node.Id == id))
+                    {
+                        bounds = matrix.MapRect(bounds);
+                        bounds.Clamp(selectionRect.Bounds);
+                    }
+
+                    elements[id].Item2.Bounds = bounds;
                 }
 
                 Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
