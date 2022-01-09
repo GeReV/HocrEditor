@@ -12,6 +12,13 @@
         Height="1080"
         Width="1920"
         d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}">
+    <Window.InputBindings>
+        <KeyBinding Key="Delete"
+                    Command="{Binding DeleteCommand}" />
+        <KeyBinding Modifiers="Control"
+                    Key="M"
+                    Command="{Binding MergeCommand}" />
+    </Window.InputBindings>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
@@ -29,13 +36,24 @@
                           Command="{Binding MergeCommand}" />
             </MenuItem>
         </Menu>
-        <StackPanel Orientation="Horizontal"
-                    DockPanel.Dock="Top">
-            <Button Content="OCR"
-                    Click="Button_OnClick" />
-        </StackPanel>
-
-        <Grid DockPanel.Dock="Top">
+        <ToolBarTray DockPanel.Dock="Top">
+            <ToolBar>
+                <Button Content="Import"
+                        Click="Button_OnClick" />
+                <Button Content="Open" />
+            </ToolBar>
+            <ToolBar>
+                <Button Content="Delete"
+                        Command="{Binding DeleteCommand}" />
+                <Button Content="Merge"
+                        Command="{Binding MergeCommand}" />
+                <Button Content="Crop"
+                        Command="{Binding CropCommand}" />
+                <ToggleButton Content="Auto Crop"
+                              IsChecked="{Binding AutoCrop}" />
+            </ToolBar>
+        </ToolBarTray>
+        <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="300" />

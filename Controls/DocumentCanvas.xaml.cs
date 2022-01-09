@@ -12,6 +12,7 @@ using HocrEditor.ViewModels;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
 using SkiaSharp.Views.WPF;
+using Rect = HocrEditor.Models.Rect;
 using Size = System.Windows.Size;
 
 namespace HocrEditor.Controls;
@@ -79,7 +80,7 @@ public partial class DocumentCanvas
 
     private SKRect dragLimit = SKRect.Empty;
 
-    private readonly CanvasSelection selectionRect = new();
+    private readonly CanvasSelection canvasSelection = new();
     private ResizeHandle? selectedResizeHandle;
 
     private HocrDocumentViewModel? ViewModel => (HocrDocumentViewModel?)DataContext;
@@ -105,7 +106,21 @@ public partial class DocumentCanvas
         CenterTransformation();
 
         ViewModel.Nodes.SubscribeItemPropertyChanged(
-            (_, _) => Refresh()
+            (nodeSender, nodePropertyChangedArgs) =>
+            {
+                Debug.Assert(nodeSender != null, $"{nameof(nodeSender)} != null");
+
+                switch (nodePropertyChangedArgs.PropertyName)
+                {
+                    case nameof(HocrNodeViewModel.BBox):
+                        var node = (HocrNodeViewModel)nodeSender;
+
+                        elements[node.Id].Item2.Bounds = node.BBox.ToSKRect();
+                        break;
+                }
+
+                Refresh();
+            }
         );
 
         ViewModel.Nodes.CollectionChanged += NodesOnCollectionChanged;
@@ -180,6 +195,8 @@ public partial class DocumentCanvas
                 throw new ArgumentOutOfRangeException();
         }
 
+        UpdateCanvasSelection();
+
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
     }
 
@@ -212,16 +229,16 @@ public partial class DocumentCanvas
             {
                 e.Handled = true;
 
-                if (!selectionRect.IsEmpty)
+                if (!canvasSelection.IsEmpty)
                 {
-                    var selectedHandle = selectionRect.ResizeHandles
+                    var selectedHandle = canvasSelection.ResizeHandles
                         .FirstOrDefault(handle => handle.GetRect(transformation).Contains(position));
 
                     if (selectedHandle != null)
                     {
                         mouseMoveState = MouseState.Resizing;
 
-                        selectionRect.BeginResize();
+                        canvasSelection.BeginResize();
 
                         selectedResizeHandle = selectedHandle;
 
@@ -243,10 +260,10 @@ public partial class DocumentCanvas
 
                 mouseMoveState = MouseState.Dragging;
 
-                if (selectionRect.Bounds.Contains(normalizedPosition))
+                if (canvasSelection.Bounds.Contains(normalizedPosition))
                 {
                     // Dragging the selection, no need to select anything else.
-                    offsetStart = transformation.MapPoint(selectionRect.Bounds.Location);
+                    offsetStart = transformation.MapPoint(canvasSelection.Bounds.Location);
 
                     break;
                 }
@@ -269,11 +286,11 @@ public partial class DocumentCanvas
 
                 // TODO: Should probably choose node at mouseup, because user intention isn't clear at mouse down
                 //  i.e. about to drag selection or choose a different item
-                if (selectionRect.Bounds.Contains(normalizedPosition) &&
+                if (canvasSelection.Bounds.Contains(normalizedPosition) &&
                     (node.HocrNode.NodeType == HocrNodeType.Page || ViewModel.SelectedNodes.Contains(node)))
                 {
                     // Dragging the selection, no need to select anything else.
-                    offsetStart = transformation.MapPoint(selectionRect.Bounds.Location);
+                    offsetStart = transformation.MapPoint(canvasSelection.Bounds.Location);
 
                     break;
                 }
@@ -303,9 +320,9 @@ public partial class DocumentCanvas
                     node.IsSelected = true;
                 }
 
-                selectionRect.Bounds = CalculateUnionRect(selectedElements, elements);
+                UpdateCanvasSelection();
 
-                offsetStart = transformation.MapPoint(selectionRect.Bounds.Location);
+                offsetStart = transformation.MapPoint(canvasSelection.Bounds.Location);
 
                 dragLimit = CalculateDragLimitBounds(ViewModel.SelectedNodes, elements);
 
@@ -334,12 +351,19 @@ public partial class DocumentCanvas
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
     }
 
+    private void UpdateCanvasSelection()
+    {
+        var nodes = selectedElements.Select(id => elements[id].Item1);
+
+        canvasSelection.Bounds = NodeHelpers.CalculateUnionRect(nodes).ToSKRect();
+    }
+
     private void ClearSelection()
     {
         ViewModel?.ClearSelection();
 
         dragLimit = SKRect.Empty;
-        selectionRect.Bounds = SKRect.Empty;
+        canvasSelection.Bounds = SKRect.Empty;
     }
 
     protected override void OnMouseUp(MouseButtonEventArgs e)
@@ -366,7 +390,7 @@ public partial class DocumentCanvas
 
                 if (mouseMoveState == MouseState.Resizing)
                 {
-                    selectionRect.EndResize();
+                    canvasSelection.EndResize();
                 }
 
                 mouseMoveState = MouseState.None;
@@ -379,7 +403,7 @@ public partial class DocumentCanvas
 
                         var bounds = element.Bounds;
 
-                        node.BBox = new BoundingBox(
+                        node.BBox = new Rect(
                             (int)bounds.Left,
                             (int)bounds.Top,
                             (int)bounds.Right,
@@ -420,9 +444,9 @@ public partial class DocumentCanvas
         switch (mouseMoveState)
         {
             case MouseState.None:
-                if (!selectionRect.IsEmpty)
+                if (!canvasSelection.IsEmpty)
                 {
-                    var resizeHandles = selectionRect.ResizeHandles;
+                    var resizeHandles = canvasSelection.ResizeHandles;
 
                     Cursor = null;
 
@@ -479,7 +503,7 @@ public partial class DocumentCanvas
                     {
                         var (_, element) = elements[id];
 
-                        var deltaFromDraggedElement = element.Bounds.Location - selectionRect.Bounds.Location;
+                        var deltaFromDraggedElement = element.Bounds.Location - canvasSelection.Bounds.Location;
 
                         element.Bounds = element.Bounds with
                         {
@@ -488,7 +512,7 @@ public partial class DocumentCanvas
                     }
 
                     // Apply to selection rect.
-                    selectionRect.Bounds = selectionRect.Bounds with
+                    canvasSelection.Bounds = canvasSelection.Bounds with
                     {
                         Location = newLocation
                     };
@@ -504,37 +528,37 @@ public partial class DocumentCanvas
 
                 Debug.Assert(selectedResizeHandle != null, $"{nameof(selectedResizeHandle)} != null");
 
-                var resizePivot = selectionRect.Center;
+                var resizePivot = canvasSelection.Center;
 
                 if ((selectedResizeHandle.Direction & CardinalDirections.West) != 0)
                 {
-                    selectionRect.Left = newLocation.X;
+                    canvasSelection.Left = newLocation.X;
 
-                    resizePivot.X = selectionRect.Right;
+                    resizePivot.X = canvasSelection.Right;
                 }
 
                 if ((selectedResizeHandle.Direction & CardinalDirections.North) != 0)
                 {
-                    selectionRect.Top = newLocation.Y;
+                    canvasSelection.Top = newLocation.Y;
 
-                    resizePivot.Y = selectionRect.Bottom;
+                    resizePivot.Y = canvasSelection.Bottom;
                 }
 
                 if ((selectedResizeHandle.Direction & CardinalDirections.East) != 0)
                 {
-                    selectionRect.Right = newLocation.X;
+                    canvasSelection.Right = newLocation.X;
 
-                    resizePivot.X = selectionRect.Left;
+                    resizePivot.X = canvasSelection.Left;
                 }
 
                 if ((selectedResizeHandle.Direction & CardinalDirections.South) != 0)
                 {
-                    selectionRect.Bottom = newLocation.Y;
+                    canvasSelection.Bottom = newLocation.Y;
 
-                    resizePivot.Y = selectionRect.Top;
+                    resizePivot.Y = canvasSelection.Top;
                 }
 
-                var ratio = selectionRect.ResizeRatio;
+                var ratio = canvasSelection.ResizeRatio;
 
                 var matrix = SKMatrix.CreateScale(ratio.X, ratio.Y, resizePivot.X, resizePivot.Y);
 
@@ -550,7 +574,7 @@ public partial class DocumentCanvas
                     if (includeChildren || ViewModel.SelectedNodes.Any(node => node.Id == id))
                     {
                         bounds = matrix.MapRect(bounds);
-                        bounds.Clamp(selectionRect.Bounds);
+                        bounds.Clamp(canvasSelection.Bounds);
                     }
 
                     elements[id].Item2.Bounds = bounds;
@@ -650,7 +674,7 @@ public partial class DocumentCanvas
 
         elements.Clear();
 
-        DrawDocumentNodes(ViewModel.Nodes[0]);
+        BuildDocumentElements(ViewModel.Nodes[0]);
 
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
     }
@@ -660,7 +684,7 @@ public partial class DocumentCanvas
         Canvas.InvalidateVisual();
     }
 
-    private void DrawDocumentNodes(HocrNodeViewModel rootNode)
+    private void BuildDocumentElements(HocrNodeViewModel rootNode)
     {
         var traverser = new HierarchyTraverser<HocrNodeViewModel>(node => node.Children);
 
@@ -746,12 +770,12 @@ public partial class DocumentCanvas
 
         Recurse(rootId);
 
-        if (selectionRect.IsEmpty)
+        if (canvasSelection.IsEmpty)
         {
             return;
         }
 
-        var bbox = transformation.MapRect(selectionRect.Bounds);
+        var bbox = transformation.MapRect(canvasSelection.Bounds);
 
 
         canvas.DrawRect(
@@ -764,7 +788,7 @@ public partial class DocumentCanvas
             }
         );
 
-        foreach (var handle in selectionRect.ResizeHandles)
+        foreach (var handle in canvasSelection.ResizeHandles)
         {
             DrawScalingHandle(canvas, handle);
         }
@@ -788,26 +812,7 @@ public partial class DocumentCanvas
             .Select(node => node.HocrNode.Id)
             .ToList();
 
-    private static SKRect CalculateUnionRect(
-        ICollection<string> selection,
-        IReadOnlyDictionary<string, (HocrNodeViewModel, Element)> elements
-    )
-    {
-        if (!selection.Any())
-        {
-            return SKRect.Empty;
-        }
 
-        return selection.Skip(1)
-            .Aggregate(
-                elements[selection.First()].Item1.BBox.ToSKRect(),
-                (rect, id) =>
-                {
-                    rect.Union(elements[id].Item1.BBox.ToSKRect());
-                    return rect;
-                }
-            );
-    }
 
     private static SKRect CalculateDragLimitBounds(
         IEnumerable<HocrNodeViewModel> selectedNodes,

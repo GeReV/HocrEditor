@@ -44,7 +44,7 @@ namespace HocrEditor.Models
             Id = id;
             ParentId = parentId;
             InnerText = string.Empty;
-            BBox = BoundingBox.FromBboxAttribute(GetAttributeFromTitle("bbox"));
+            BBox = Rect.FromBboxAttribute(GetAttributeFromTitle("bbox"));
             ChildNodes = children;
         }
 
@@ -54,7 +54,7 @@ namespace HocrEditor.Models
         public string Id { get; init; }
         public string ParentId { get; init; }
         public string InnerText { get; init; }
-        public BoundingBox BBox { get; init; }
+        public Rect BBox { get; init; }
         public IList<IHocrNode> ChildNodes { get; init; }
     }
 }

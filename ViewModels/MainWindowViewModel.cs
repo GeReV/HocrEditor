@@ -1,16 +1,29 @@
 ﻿using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Windows.Input;
 using HocrEditor.Models;
 using HocrEditor.Services;
 using Microsoft.Toolkit.Mvvm.Input;
-using Xamarin.Forms.Internals;
 
 namespace HocrEditor.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
+        private ObservableCollection<HocrNodeViewModel>? previousSelectedNodes;
+
+        public MainWindowViewModel()
+        {
+            DeleteCommand = new RelayCommand(DeleteSelectedNodes, CanEdit);
+            MergeCommand = new RelayCommand(MergeSelectedNodes, CanEdit);
+            CropCommand = new RelayCommand(CropSelectedNodes, CanEdit);
+
+            PropertyChanged += HandlePropertyChanged;
+        }
+
+        public bool AutoCrop { get; set; } = true;
+
         // Workaround for MultiSelectTreeView not working with Document.SelectedNodes directly.
         public ObservableCollection<HocrNodeViewModel>? SelectedNodes
         {
@@ -24,20 +37,44 @@ namespace HocrEditor.ViewModels
             }
         }
 
-        public MainWindowViewModel()
-        {
-            DeleteCommand = new RelayCommand(Delete, CanEdit);
-            MergeCommand = new RelayCommand(Merge, CanEdit);
-        }
-
         public HocrDocumentViewModel? Document { get; set; }
 
-        public ICommand DeleteCommand { get; init; }
-        public ICommand MergeCommand { get; init; }
+        public IRelayCommand DeleteCommand { get; init; }
+        public IRelayCommand MergeCommand { get; init; }
+
+        public IRelayCommand CropCommand { get; init; }
+
+        private void HandlePropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            switch (e.PropertyName)
+            {
+                case nameof(Document):
+                    if (previousSelectedNodes != null)
+                    {
+                        previousSelectedNodes.CollectionChanged -= HandleSelectedNodesChanged;
+                    }
+
+                    if (Document != null)
+                    {
+                        Document.SelectedNodes.CollectionChanged += HandleSelectedNodesChanged;
+
+                        previousSelectedNodes = Document.SelectedNodes;
+                    }
+
+                    break;
+            }
+        }
+
+        private void HandleSelectedNodesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            DeleteCommand.NotifyCanExecuteChanged();
+            MergeCommand.NotifyCanExecuteChanged();
+            CropCommand.NotifyCanExecuteChanged();
+        }
 
         private bool CanEdit() => Document?.SelectedNodes.Any() ?? false;
 
-        private void Delete()
+        private void DeleteSelectedNodes()
         {
             Debug.Assert(Document != null, $"{nameof(Document)} != null");
 
@@ -46,12 +83,17 @@ namespace HocrEditor.ViewModels
             foreach (var node in selectedNodes)
             {
                 Document.Remove(node);
+
+                if (AutoCrop)
+                {
+                    CropParents(node);
+                }
             }
 
             Document.ClearSelection();
         }
 
-        private void Merge()
+        private void MergeSelectedNodes()
         {
             Debug.Assert(Document != null, $"{nameof(Document)} != null");
 
@@ -86,16 +128,44 @@ namespace HocrEditor.ViewModels
                 first.Children.Add(child);
             }
 
-            var bounds = first.BBox.ToSKRect();
+            var nodes = new HierarchyTraverser<HocrNodeViewModel>(node => node.Children).ToEnumerable(first);
 
-            foreach (var child in new HierarchyTraverser<HocrNodeViewModel>(node => node.Children).ToEnumerable(first))
-            {
-                bounds.Union(child.BBox.ToSKRect());
-            }
-
-            first.BBox = new BoundingBox((int)bounds.Left, (int)bounds.Top, (int)bounds.Right, (int)bounds.Bottom);
+            first.BBox = NodeHelpers.CalculateUnionRect(nodes);
 
             Document.RemoveRange(rest);
+        }
+
+        private void CropSelectedNodes()
+        {
+            // Order nodes from the latest occurrence (deepest) to earliest, so if a chain of parent-children is selected,
+            // the deepest child is cropped, then its parent and so on, bottom-up.
+            var selectedNodes = Document?.SelectedNodes.OrderBy(node => -Document.Nodes.IndexOf(node)) ??
+                                Enumerable.Empty<HocrNodeViewModel>();
+
+            foreach (var node in selectedNodes)
+            {
+                CropNodeBounds(node);
+            }
+        }
+
+        private void CropParents(HocrNodeViewModel node)
+        {
+            Debug.Assert(Document != null, $"{nameof(Document)} != null");
+            Debug.Assert(node.ParentId != null, "node.ParentId != null");
+
+            var parent = Document.NodeCache[node.ParentId];
+
+            while (parent != null && parent.HocrNode.NodeType != HocrNodeType.Page)
+            {
+                CropNodeBounds(parent);
+
+                parent = parent.ParentId == null ? null : Document.NodeCache[parent.ParentId];
+            }
+        }
+
+        private static void CropNodeBounds(HocrNodeViewModel node)
+        {
+            node.BBox = NodeHelpers.CalculateUnionRect(node.Children);
         }
     }
 }

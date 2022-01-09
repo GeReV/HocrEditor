@@ -9,7 +9,7 @@ namespace HocrEditor.Models
         public string Title { get; init; }
         public string Id { get; init; }
         public string ParentId { get; init; }
-        public BoundingBox BBox { get; init; }
+        public Rect BBox { get; init; }
         public string InnerText { get; init; }
         public IList<IHocrNode> ChildNodes { get; init; }
     }

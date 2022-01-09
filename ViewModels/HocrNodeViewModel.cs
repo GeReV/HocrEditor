@@ -20,7 +20,7 @@ namespace HocrEditor.ViewModels
             _ => Enum.GetName(HocrNode.NodeType) ?? string.Empty
         };
 
-        public BoundingBox BBox { get; set; }
+        public Rect BBox { get; set; }
 
         public HocrNodeViewModel? Parent { get; set; }
 
