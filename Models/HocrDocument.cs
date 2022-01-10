@@ -12,6 +12,6 @@ namespace HocrEditor.Models
 
         public IHocrNode RootNode { get; }
 
-        public IEnumerable<IHocrNode> Items => new HierarchyTraverser<IHocrNode>(node => node.ChildNodes).ToEnumerable(RootNode);
+        public IEnumerable<IHocrNode> Items => RootNode.ChildNodes.RecursiveSelect(n => n.ChildNodes);
     }
 }

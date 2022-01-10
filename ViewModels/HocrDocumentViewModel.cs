@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using HocrEditor.Models;
 using HocrEditor.Services;
@@ -16,23 +15,38 @@ namespace HocrEditor.ViewModels
 
         public HocrDocumentViewModel(HocrDocument hocrDocument)
         {
-            NodeCache = hocrDocument.Items.Select(node => new HocrNodeViewModel(node)).ToDictionary(node => node.Id);
-
-            SelectedNodes = new RangeObservableCollection<HocrNodeViewModel>();
+            NodeCache = BuildNodeCache(hocrDocument.Items.Prepend(hocrDocument.RootNode));
 
             Nodes = new RangeObservableCollection<HocrNodeViewModel>(NodeCache.Values);
 
-            foreach (var (_, value) in NodeCache)
+            SelectedNodes = new RangeObservableCollection<HocrNodeViewModel>();
+        }
+
+        private static Dictionary<string, HocrNodeViewModel> BuildNodeCache(IEnumerable<IHocrNode> nodes)
+        {
+            var dictionary = new Dictionary<string, HocrNodeViewModel>();
+
+            foreach (var node in nodes)
             {
-                if (string.IsNullOrEmpty(value.ParentId))
+                var hocrNodeViewModel = new HocrNodeViewModel(node);
+
+                dictionary.Add(hocrNodeViewModel.Id, hocrNodeViewModel);
+
+                if (string.IsNullOrEmpty(hocrNodeViewModel.ParentId))
                 {
-                    value.IsRoot = true;
+                    hocrNodeViewModel.IsRoot = true;
                 }
                 else
                 {
-                    NodeCache[value.ParentId].Children.Add(value);
+                    var parent = dictionary[hocrNodeViewModel.ParentId];
+
+                    hocrNodeViewModel.Parent = parent;
+
+                    parent.Children.Add(hocrNodeViewModel);
                 }
             }
+
+            return dictionary;
         }
 
         public void ClearSelection()
@@ -47,7 +61,7 @@ namespace HocrEditor.ViewModels
 
         public void Remove(HocrNodeViewModel node)
         {
-            var children = new HierarchyTraverser<HocrNodeViewModel>(item => item.Children).ToEnumerable(node).ToList();
+            var children = node.Descendents.Prepend(node).ToList();
 
             Nodes.RemoveRange(children);
 
@@ -56,19 +70,14 @@ namespace HocrEditor.ViewModels
                 NodeCache.Remove(child.Id);
             }
 
-            if (node.ParentId != null)
-            {
-                NodeCache[node.ParentId].Children.Remove(node);
-            }
+            node.Parent?.Children.Remove(node);
         }
 
         public void RemoveRange(IEnumerable<HocrNodeViewModel> nodes)
         {
             var nodeList = nodes.ToList();
 
-            var traverser = new HierarchyTraverser<HocrNodeViewModel>(item => item.Children);
-
-            var children = nodeList.SelectMany(node => traverser.ToEnumerable(node)).ToList();
+            var children = nodeList.SelectMany(node => node.Descendents).ToList();
 
             Nodes.RemoveRange(children);
 
@@ -79,10 +88,7 @@ namespace HocrEditor.ViewModels
 
             foreach (var node in nodeList)
             {
-                if (node.ParentId != null)
-                {
-                    NodeCache[node.ParentId].Children.Remove(node);
-                }
+                node.Parent?.Children.Remove(node);
             }
         }
     }

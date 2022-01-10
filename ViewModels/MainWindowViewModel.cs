@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using HocrEditor.Models;
-using HocrEditor.Services;
 using Microsoft.Toolkit.Mvvm.Input;
 
 namespace HocrEditor.ViewModels
@@ -123,12 +122,13 @@ namespace HocrEditor.ViewModels
 
             foreach (var child in children)
             {
+                child.Parent = first;
                 child.ParentId = first.Id;
 
                 first.Children.Add(child);
             }
 
-            var nodes = new HierarchyTraverser<HocrNodeViewModel>(node => node.Children).ToEnumerable(first);
+            var nodes = first.Descendents.Prepend(first);
 
             first.BBox = NodeHelpers.CalculateUnionRect(nodes);
 
@@ -148,18 +148,18 @@ namespace HocrEditor.ViewModels
             }
         }
 
-        private void CropParents(HocrNodeViewModel node)
+        private static void CropParents(HocrNodeViewModel node)
         {
-            Debug.Assert(Document != null, $"{nameof(Document)} != null");
-            Debug.Assert(node.ParentId != null, "node.ParentId != null");
+            Debug.Assert(node.Parent != null, "node.Parent != null");
 
-            var parent = Document.NodeCache[node.ParentId];
-
-            while (parent != null && parent.HocrNode.NodeType != HocrNodeType.Page)
+            foreach (var parent in node.Ascendants)
             {
-                CropNodeBounds(parent);
+                if (parent.NodeType == HocrNodeType.Page)
+                {
+                    continue;
+                }
 
-                parent = parent.ParentId == null ? null : Document.NodeCache[parent.ParentId];
+                CropNodeBounds(parent);
             }
         }
 

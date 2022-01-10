@@ -7,7 +7,6 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using HocrEditor.Models;
-using HocrEditor.Services;
 using HocrEditor.ViewModels;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
@@ -110,12 +109,25 @@ public partial class DocumentCanvas
             {
                 Debug.Assert(nodeSender != null, $"{nameof(nodeSender)} != null");
 
+                var node = (HocrNodeViewModel)nodeSender;
+
                 switch (nodePropertyChangedArgs.PropertyName)
                 {
                     case nameof(HocrNodeViewModel.BBox):
-                        var node = (HocrNodeViewModel)nodeSender;
-
                         elements[node.Id].Item2.Bounds = node.BBox.ToSKRect();
+                        break;
+                    case nameof(HocrNodeViewModel.IsSelected):
+                        var enumerable = Enumerable.Repeat(node, 1);
+
+                        if (node.IsSelected)
+                        {
+                            AddSelectedElements(enumerable);
+                        }
+                        else
+                        {
+                            AddSelectedElements(enumerable);
+                        }
+
                         break;
                 }
 
@@ -124,84 +136,43 @@ public partial class DocumentCanvas
         );
 
         ViewModel.Nodes.CollectionChanged += NodesOnCollectionChanged;
-        ViewModel.SelectedNodes.CollectionChanged += SelectedNodesOnCollectionChanged;
     }
 
-    private void SelectedNodesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void AddSelectedElements(IEnumerable<HocrNodeViewModel> nodes)
     {
-        void AddSelectedElements(IEnumerable<HocrNodeViewModel> nodes)
+        foreach (var node in nodes)
         {
-            foreach (var node in nodes)
+            if (selectedElements.Contains(node.Id))
             {
-                if (selectedElements.Contains(node.HocrNode.Id))
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                foreach (var id in GetHierarchy(node.HocrNode.Id, elements))
-                {
-                    selectedElements.Add(id);
-                }
+            foreach (var id in GetHierarchy(node))
+            {
+                selectedElements.Add(id);
             }
         }
+    }
 
-        void RemoveSelectedElements(IEnumerable<HocrNodeViewModel> nodes)
+    private void RemoveSelectedElements(IEnumerable<HocrNodeViewModel> nodes)
+    {
+        foreach (var node in nodes)
         {
-            foreach (var node in nodes)
+            if (!selectedElements.Contains(node.Id))
             {
-                if (!selectedElements.Contains(node.HocrNode.Id))
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                foreach (var id in GetHierarchy(node.HocrNode.Id, elements))
-                {
-                    selectedElements.Remove(id);
-                }
+            foreach (var id in GetHierarchy(node))
+            {
+                selectedElements.Remove(id);
             }
         }
-
-        switch (e.Action)
-        {
-            case NotifyCollectionChangedAction.Add:
-                // Optimization: If element is included in set, then all its children also are. No need to add them again.
-                if (e.NewItems != null)
-                {
-                    AddSelectedElements(e.NewItems.Cast<HocrNodeViewModel>());
-                }
-
-                break;
-            case NotifyCollectionChangedAction.Remove:
-                if (e.OldItems != null)
-                {
-                    RemoveSelectedElements(e.OldItems.Cast<HocrNodeViewModel>());
-                }
-
-                break;
-            case NotifyCollectionChangedAction.Replace:
-                if (e.NewItems != null && e.OldItems != null)
-                {
-                    RemoveSelectedElements(e.OldItems.Cast<HocrNodeViewModel>());
-                    AddSelectedElements(e.NewItems.Cast<HocrNodeViewModel>());
-                }
-
-                break;
-            case NotifyCollectionChangedAction.Move:
-                break;
-            case NotifyCollectionChangedAction.Reset:
-                selectedElements.Clear();
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-
-        UpdateCanvasSelection();
-
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
     }
 
     private void NodesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        // TODO: Handle granular cases.
         Dispatcher.InvokeAsync(Update, DispatcherPriority.Send);
     }
 
@@ -270,9 +241,9 @@ public partial class DocumentCanvas
 
                 var node = elements[key].Item1;
 
-                while (node.ParentId != null)
+                foreach (var ascendant in node.Ascendants)
                 {
-                    var (parentNode, parentElement) = elements[node.ParentId];
+                    var (parentNode, parentElement) = elements[ascendant.Id];
 
                     if (node.BBox.Equals(parentNode.BBox))
                     {
@@ -309,22 +280,24 @@ public partial class DocumentCanvas
 
                 if (ViewModel.SelectedNodes.Contains(node))
                 {
-                    ViewModel.SelectedNodes.Remove(node);
-
-                    node.IsSelected = false;
+                    RemoveSelectedNode(node);
                 }
                 else
                 {
-                    ViewModel.SelectedNodes.Add(node);
+                    AddSelectedNode(node);
+                }
 
-                    node.IsSelected = true;
+                // Close on deselect?
+                foreach (var parent in node.Ascendants)
+                {
+                    parent.IsExpanded = true;
                 }
 
                 UpdateCanvasSelection();
 
                 offsetStart = transformation.MapPoint(canvasSelection.Bounds.Location);
 
-                dragLimit = CalculateDragLimitBounds(ViewModel.SelectedNodes, elements);
+                dragLimit = CalculateDragLimitBounds(ViewModel.SelectedNodes);
 
                 break;
             }
@@ -339,16 +312,32 @@ public partial class DocumentCanvas
                 break;
             }
             case MouseButton.Right:
-                break;
             case MouseButton.XButton1:
-                break;
             case MouseButton.XButton2:
-                break;
             default:
-                throw new ArgumentOutOfRangeException();
+                // Noop.
+                break;
         }
 
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
+    }
+
+    private void AddSelectedNode(HocrNodeViewModel node)
+    {
+        ViewModel?.SelectedNodes.Add(node);
+
+        node.IsSelected = true;
+
+        AddSelectedElements(Enumerable.Repeat(node, 1));
+    }
+
+    private void RemoveSelectedNode(HocrNodeViewModel node)
+    {
+        ViewModel?.SelectedNodes.Remove(node);
+
+        node.IsSelected = false;
+
+        RemoveSelectedElements(Enumerable.Repeat(node, 1));
     }
 
     private void UpdateCanvasSelection()
@@ -361,6 +350,8 @@ public partial class DocumentCanvas
     private void ClearSelection()
     {
         ViewModel?.ClearSelection();
+
+        selectedElements.Clear();
 
         dragLimit = SKRect.Empty;
         canvasSelection.Bounds = SKRect.Empty;
@@ -403,15 +394,10 @@ public partial class DocumentCanvas
 
                         var bounds = element.Bounds;
 
-                        node.BBox = new Rect(
-                            (int)bounds.Left,
-                            (int)bounds.Top,
-                            (int)bounds.Right,
-                            (int)bounds.Bottom
-                        );
+                        node.BBox = (Rect)bounds;
                     }
 
-                    dragLimit = CalculateDragLimitBounds(ViewModel.SelectedNodes, elements);
+                    dragLimit = CalculateDragLimitBounds(ViewModel.SelectedNodes);
                 }
 
                 break;
@@ -603,8 +589,7 @@ public partial class DocumentCanvas
         UpdateTransformation(SKMatrix.CreateScale(newScale, newScale, p.X, p.Y));
 
         dragLimit = CalculateDragLimitBounds(
-            ViewModel?.SelectedNodes ?? Enumerable.Empty<HocrNodeViewModel>(),
-            elements
+            ViewModel?.SelectedNodes ?? Enumerable.Empty<HocrNodeViewModel>()
         );
 
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
@@ -686,9 +671,9 @@ public partial class DocumentCanvas
 
     private void BuildDocumentElements(HocrNodeViewModel rootNode)
     {
-        var traverser = new HierarchyTraverser<HocrNodeViewModel>(node => node.Children);
+        var nodes = rootNode.Descendents.Prepend(rootNode);
 
-        foreach (var node in traverser.ToEnumerable(rootNode))
+        foreach (var node in nodes)
         {
             var el = new Element
             {
@@ -800,35 +785,31 @@ public partial class DocumentCanvas
 
         return key == null
             ? null
-            : GetHierarchy(key, elements).LastOrDefault(k => elements[k].Item2.Bounds.Contains(p));
+            : GetHierarchy(elements[key].Item1).LastOrDefault(k => elements[k].Item2.Bounds.Contains(p));
     }
 
     private static IEnumerable<string> GetHierarchy(
-        string rootNodeId,
-        IReadOnlyDictionary<string, (HocrNodeViewModel, Element)> elementMap
+        HocrNodeViewModel node
     ) =>
-        new HierarchyTraverser<HocrNodeViewModel>(node => node.Children)
-            .ToEnumerable(elementMap[rootNodeId].Item1)
-            .Select(node => node.HocrNode.Id)
-            .ToList();
-
+        node.Descendents
+            .Prepend(node)
+            .Select(n => n.Id);
 
 
     private static SKRect CalculateDragLimitBounds(
-        IEnumerable<HocrNodeViewModel> selectedNodes,
-        IReadOnlyDictionary<string, (HocrNodeViewModel, Element)> elements
+        IEnumerable<HocrNodeViewModel> selectedNodes
     )
     {
         var dragLimit = SKRect.Empty;
 
         foreach (var node in selectedNodes)
         {
-            if (node.ParentId == null)
+            if (node.Parent == null)
             {
                 continue;
             }
 
-            var parentNode = elements[node.ParentId].Item1;
+            var parentNode = node.Parent;
 
             var parentBounds = parentNode.BBox.ToSKRect();
             var nodeBounds = node.BBox.ToSKRect();
@@ -851,12 +832,6 @@ public partial class DocumentCanvas
                 {
                     dragLimit.Intersect(limitRect);
                 }
-            }
-
-            while (parentNode is { ParentId: { } })
-            {
-                parentNode.IsExpanded = true;
-                parentNode = elements[parentNode.ParentId].Item1;
             }
         }
 

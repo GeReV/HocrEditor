@@ -3,32 +3,48 @@ using System.Collections.Generic;
 
 namespace HocrEditor.Services
 {
-    public class HierarchyTraverser<T>
+    public static class RecursiveSelectHelper
     {
-        private readonly Func<T, IEnumerable<T>> getChildren;
-
-        public HierarchyTraverser(Func<T, IEnumerable<T>> getChildren)
+        // https://stackoverflow.com/a/30441479/242826
+        public static IEnumerable<TSource> RecursiveSelect<TSource>(
+            this IEnumerable<TSource> source, Func<TSource, IEnumerable<TSource>> childSelector)
         {
-            this.getChildren = getChildren;
-        }
+            var stack = new Stack<IEnumerator<TSource>>();
+            var enumerator = source.GetEnumerator();
 
-        private void RecurseAppend(ICollection<T> list, T node)
-        {
-            list.Add(node);
-
-            foreach (var childNode in getChildren(node))
+            try
             {
-                RecurseAppend(list, childNode);
+                while (true)
+                {
+                    if (enumerator.MoveNext())
+                    {
+                        var element = enumerator.Current;
+                        yield return element;
+
+                        stack.Push(enumerator);
+                        enumerator = childSelector(element).GetEnumerator();
+                    }
+                    else if (stack.Count > 0)
+                    {
+                        enumerator.Dispose();
+                        enumerator = stack.Pop();
+                    }
+                    else
+                    {
+                        yield break;
+                    }
+                }
             }
-        }
+            finally
+            {
+                enumerator.Dispose();
 
-        public IEnumerable<T> ToEnumerable(T node)
-        {
-            var list = new List<T>();
-
-            RecurseAppend(list, node);
-
-            return list;
+                while (stack.Count > 0) // Clean up in case of an exception.
+                {
+                    enumerator = stack.Pop();
+                    enumerator.Dispose();
+                }
+            }
         }
     }
 }

@@ -11,7 +11,8 @@ namespace HocrEditor.Models
     {
         protected static readonly string ParagraphSeparator = Environment.NewLine + Environment.NewLine;
 
-        protected static string JoinInnerText(string separator, IEnumerable<IHocrNode> nodes) => string.Join(separator, nodes.Select(n => n.InnerText));
+        protected static string JoinInnerText(string separator, IEnumerable<IHocrNode> nodes) =>
+            string.Join(separator, nodes.Select(n => n.InnerText));
 
         protected string GetAttributeFromTitle(string attribute)
         {
@@ -48,7 +49,10 @@ namespace HocrEditor.Models
             ChildNodes = children;
         }
 
+
         public HocrNodeType NodeType { get; init; }
+
+        public virtual HocrNodeType[] MatchingNodeTypes { get; } = Array.Empty<HocrNodeType>();
         public string HtmlNodeType { get; init; }
         public string Title { get; init; }
         public string Id { get; init; }

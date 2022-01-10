@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using HocrEditor.Models;
+using HocrEditor.Services;
 
 namespace HocrEditor.ViewModels
 {
@@ -14,7 +15,9 @@ namespace HocrEditor.ViewModels
 
         public bool IsRoot { get; set; }
 
-        public string InnerText => HocrNode.NodeType switch
+        public HocrNodeType NodeType => HocrNode.NodeType;
+
+        public string InnerText => NodeType switch
         {
             HocrNodeType.Word or HocrNodeType.Line => HocrNode.InnerText,
             _ => Enum.GetName(HocrNode.NodeType) ?? string.Empty
@@ -38,6 +41,23 @@ namespace HocrEditor.ViewModels
             ParentId = string.IsNullOrEmpty(node.ParentId) ? null : node.ParentId;
 
             BBox = node.BBox;
+        }
+
+        public IEnumerable<HocrNodeViewModel> Descendents => Children.RecursiveSelect(n => n.Children);
+
+        public IEnumerable<HocrNodeViewModel> Ascendants
+        {
+            get
+            {
+                var parent = Parent;
+
+                while (parent is { })
+                {
+                    yield return parent;
+
+                    parent = parent.Parent;
+                }
+            }
         }
     }
 }

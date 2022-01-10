@@ -67,6 +67,12 @@ namespace HocrEditor.Models
             Ascenders = float.Parse(GetAttributeFromTitle("x_ascenders"));
         }
 
+        public override HocrNodeType[] MatchingNodeTypes { get; } = {
+            HocrNodeType.Line,
+            HocrNodeType.Caption,
+            HocrNodeType.TextFloat,
+        };
+
         public (float, float) Baseline { get; }
         public float Size { get; }
         public float Descenders { get; }
