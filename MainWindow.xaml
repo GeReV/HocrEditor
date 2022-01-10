@@ -28,12 +28,12 @@
                 <MenuItem Header="E_xit" />
             </MenuItem>
             <MenuItem Header="_Edit">
-                <MenuItem Name="DeleteMenu"
-                          Header="_Delete"
+                <MenuItem Header="_Delete"
                           Command="{Binding DeleteCommand}" />
-                <MenuItem Name="MergeMenu"
-                          Header="_Merge"
+                <MenuItem Header="_Merge"
                           Command="{Binding MergeCommand}" />
+                <MenuItem Header="_Crop"
+                          Command="{Binding CropCommand}" />
             </MenuItem>
         </Menu>
         <ToolBarTray DockPanel.Dock="Top">
@@ -58,6 +58,9 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="300" />
             </Grid.ColumnDefinitions>
+            <controls:DocumentCanvas Grid.Column="0"
+                                     x:Name="Canvas"
+                                     DataContext="{Binding Document}" />
             <mstv:MultiSelectTreeView Grid.Column="1"
                                       ItemsSource="{Binding Document.Nodes[0].Children}"
                                       SelectedItems="{Binding SelectedNodes}">
@@ -84,9 +87,6 @@
                     </HierarchicalDataTemplate>
                 </mstv:MultiSelectTreeView.Resources>
             </mstv:MultiSelectTreeView>
-            <controls:DocumentCanvas Grid.Column="0"
-                                     x:Name="Canvas"
-                                     DataContext="{Binding Document}" />
         </Grid>
     </DockPanel>
 </Window>
