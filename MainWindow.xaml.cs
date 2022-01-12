@@ -1,6 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using HocrEditor.Controls;
+using HocrEditor.Helpers;
 using HocrEditor.Services;
 using HocrEditor.ViewModels;
 using HtmlAgilityPack;
@@ -107,6 +110,24 @@ namespace HocrEditor
             }
 
             // selectedNodes?.ReplaceRange(new []{ node });
+        }
+
+        private void Canvas_OnNodesChanged(object? sender, NodesChangedEventArgs e)
+        {
+            ViewModel.UpdateNodesCommand.Execute(e.Changes);
+        }
+
+        private void Canvas_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count > 0)
+            {
+                ViewModel.SelectNodesCommand.TryExecute(e.AddedItems.Cast<HocrNodeViewModel>().ToList());
+            }
+
+            if (e.RemovedItems.Count > 0)
+            {
+                ViewModel.DeselectNodesCommand.TryExecute(e.RemovedItems.Cast<HocrNodeViewModel>().ToList());
+            }
         }
     }
 }

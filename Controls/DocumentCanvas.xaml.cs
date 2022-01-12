@@ -4,8 +4,11 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Threading;
+using HocrEditor.Helpers;
 using HocrEditor.Models;
 using HocrEditor.ViewModels;
 using SkiaSharp;
@@ -84,6 +87,11 @@ public partial class DocumentCanvas
 
     private HocrDocumentViewModel? ViewModel => (HocrDocumentViewModel?)DataContext;
 
+
+    public event EventHandler<NodesChangedEventArgs>? NodesChanged;
+
+    public event SelectionChangedEventHandler? SelectionChanged;
+
     public DocumentCanvas()
     {
         InitializeComponent();
@@ -125,17 +133,20 @@ public partial class DocumentCanvas
                         }
                         else
                         {
-                            AddSelectedElements(enumerable);
+                            RemoveSelectedElements(enumerable);
                         }
 
                         break;
                 }
+
+                UpdateCanvasSelection();
 
                 Refresh();
             }
         );
 
         ViewModel.Nodes.CollectionChanged += NodesOnCollectionChanged;
+        ViewModel.SelectedNodes.CollectionChanged += SelectedNodesOnCollectionChanged;
     }
 
     private void AddSelectedElements(IEnumerable<HocrNodeViewModel> nodes)
@@ -173,11 +184,85 @@ public partial class DocumentCanvas
     private void NodesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         // TODO: Handle granular cases.
-        Dispatcher.InvokeAsync(Update, DispatcherPriority.Send);
+        Update();
+
+        switch (e.Action)
+        {
+            case NotifyCollectionChangedAction.Add:
+                UpdateCanvasSelection();
+                break;
+            case NotifyCollectionChangedAction.Remove:
+                if (e.OldItems != null)
+                {
+                    RemoveSelectedElements(e.OldItems.Cast<HocrNodeViewModel>());
+                }
+
+                UpdateCanvasSelection();
+                break;
+            case NotifyCollectionChangedAction.Replace:
+                if (e.OldItems != null)
+                {
+                    RemoveSelectedElements(e.OldItems.Cast<HocrNodeViewModel>());
+                }
+
+                UpdateCanvasSelection();
+                break;
+            case NotifyCollectionChangedAction.Move:
+                break;
+            case NotifyCollectionChangedAction.Reset:
+                ClearCanvasSelection();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    private void SelectedNodesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        switch (e.Action)
+        {
+            case NotifyCollectionChangedAction.Add:
+                if (e.NewItems != null)
+                {
+                    AddSelectedElements(e.NewItems.Cast<HocrNodeViewModel>());
+                }
+
+                UpdateCanvasSelection();
+                break;
+            case NotifyCollectionChangedAction.Remove:
+                if (e.OldItems != null)
+                {
+                    RemoveSelectedElements(e.OldItems.Cast<HocrNodeViewModel>());
+                }
+
+                UpdateCanvasSelection();
+                break;
+            case NotifyCollectionChangedAction.Replace:
+                if (e.NewItems != null)
+                {
+                    AddSelectedElements(e.NewItems.Cast<HocrNodeViewModel>());
+                }
+
+                if (e.OldItems != null)
+                {
+                    RemoveSelectedElements(e.OldItems.Cast<HocrNodeViewModel>());
+                }
+
+                UpdateCanvasSelection();
+                break;
+            case NotifyCollectionChangedAction.Move:
+                break;
+            case NotifyCollectionChangedAction.Reset:
+                ClearCanvasSelection();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
     }
 
     protected override Size MeasureOverride(Size availableSize) => availableSize;
-
 
     protected override void OnMouseDown(MouseButtonEventArgs e)
     {
@@ -324,20 +409,24 @@ public partial class DocumentCanvas
 
     private void AddSelectedNode(HocrNodeViewModel node)
     {
-        ViewModel?.SelectedNodes.Add(node);
-
-        node.IsSelected = true;
-
-        AddSelectedElements(Enumerable.Repeat(node, 1));
+        OnSelectionChanged(
+            new SelectionChangedEventArgs(
+                Selector.SelectionChangedEvent,
+                Array.Empty<HocrNodeViewModel>(),
+                new List<HocrNodeViewModel> { node }
+            )
+        );
     }
 
     private void RemoveSelectedNode(HocrNodeViewModel node)
     {
-        ViewModel?.SelectedNodes.Remove(node);
-
-        node.IsSelected = false;
-
-        RemoveSelectedElements(Enumerable.Repeat(node, 1));
+        OnSelectionChanged(
+            new SelectionChangedEventArgs(
+                Selector.SelectionChangedEvent,
+                new List<HocrNodeViewModel> { node },
+                Array.Empty<HocrNodeViewModel>()
+            )
+        );
     }
 
     private void UpdateCanvasSelection()
@@ -347,15 +436,30 @@ public partial class DocumentCanvas
         canvasSelection.Bounds = NodeHelpers.CalculateUnionRect(nodes).ToSKRect();
     }
 
-    private void ClearSelection()
+    private void ClearCanvasSelection()
     {
-        ViewModel?.ClearSelection();
-
-        selectedElements.Clear();
-
         dragLimit = SKRect.Empty;
         canvasSelection.Bounds = SKRect.Empty;
+
+        selectedElements.Clear();
     }
+
+    private void ClearSelection()
+    {
+        if (ViewModel != null)
+        {
+            OnSelectionChanged(
+                new SelectionChangedEventArgs(
+                    Selector.SelectionChangedEvent,
+                    ViewModel.SelectedNodes.ToList(),
+                    Array.Empty<HocrNodeViewModel>()
+                )
+            );
+        }
+
+        ClearCanvasSelection();
+    }
+
 
     protected override void OnMouseUp(MouseButtonEventArgs e)
     {
@@ -379,6 +483,8 @@ public partial class DocumentCanvas
             {
                 e.Handled = true;
 
+                var position = e.GetPosition(this).ToSKPoint();
+
                 if (mouseMoveState == MouseState.Resizing)
                 {
                     canvasSelection.EndResize();
@@ -386,16 +492,20 @@ public partial class DocumentCanvas
 
                 mouseMoveState = MouseState.None;
 
-                if (selectedElements.Any())
+                var mouseMoved = position != dragStart;
+
+                if (selectedElements.Any() && mouseMoved)
                 {
+                    var changes = new List<NodesChangedEventArgs.NodeChange>();
+
                     foreach (var id in selectedElements)
                     {
                         var (node, element) = elements[id];
 
-                        var bounds = element.Bounds;
-
-                        node.BBox = (Rect)bounds;
+                        changes.Add(new NodesChangedEventArgs.NodeChange(node, (Rect)element.Bounds, node.BBox));
                     }
+
+                    OnNodesChanged(new NodesChangedEventArgs(changes));
 
                     dragLimit = CalculateDragLimitBounds(ViewModel.SelectedNodes);
                 }
@@ -836,5 +946,15 @@ public partial class DocumentCanvas
         }
 
         return dragLimit;
+    }
+
+    protected virtual void OnNodesChanged(NodesChangedEventArgs e)
+    {
+        NodesChanged?.Invoke(this, e);
+    }
+
+    protected virtual void OnSelectionChanged(SelectionChangedEventArgs e)
+    {
+        SelectionChanged?.Invoke(this, e);
     }
 }

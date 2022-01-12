@@ -18,6 +18,12 @@
         <KeyBinding Modifiers="Control"
                     Key="M"
                     Command="{Binding MergeCommand}" />
+        <KeyBinding Modifiers="Control"
+                    Key="Z"
+                    Command="{Binding UndoCommand}" />
+        <KeyBinding Modifiers="Control"
+                    Key="Y"
+                    Command="{Binding RedoCommand}" />
     </Window.InputBindings>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
@@ -28,6 +34,11 @@
                 <MenuItem Header="E_xit" />
             </MenuItem>
             <MenuItem Header="_Edit">
+                <MenuItem Header="_Undo"
+                          Command="{Binding UndoCommand}" />
+                <MenuItem Header="_Redo"
+                          Command="{Binding RedoCommand}" />
+                <Separator />
                 <MenuItem Header="_Delete"
                           Command="{Binding DeleteCommand}" />
                 <MenuItem Header="_Merge"
@@ -43,6 +54,11 @@
                 <Button Content="Open" />
             </ToolBar>
             <ToolBar>
+                <Button Content="Undo"
+                        Command="{Binding UndoCommand}" />
+                <Button Content="Redo"
+                        Command="{Binding RedoCommand}" />
+                <Separator />
                 <Button Content="Delete"
                         Command="{Binding DeleteCommand}" />
                 <Button Content="Merge"
@@ -60,7 +76,9 @@
             </Grid.ColumnDefinitions>
             <controls:DocumentCanvas Grid.Column="0"
                                      x:Name="Canvas"
-                                     DataContext="{Binding Document}" />
+                                     DataContext="{Binding Document}"
+                                     NodesChanged="Canvas_OnNodesChanged"
+                                     SelectionChanged="Canvas_OnSelectionChanged" />
             <mstv:MultiSelectTreeView Grid.Column="1"
                                       ItemsSource="{Binding Document.Nodes[0].Children}"
                                       SelectedItems="{Binding SelectedNodes}">

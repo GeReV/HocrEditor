@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using HocrEditor.Models;
-using HocrEditor.Services;
 
 namespace HocrEditor.ViewModels
 {
@@ -47,49 +46,6 @@ namespace HocrEditor.ViewModels
             }
 
             return dictionary;
-        }
-
-        public void ClearSelection()
-        {
-            foreach (var selectedNode in SelectedNodes.ToList())
-            {
-                selectedNode.IsSelected = false;
-            }
-
-            SelectedNodes.Clear();
-        }
-
-        public void Remove(HocrNodeViewModel node)
-        {
-            var children = node.Descendents.Prepend(node).ToList();
-
-            Nodes.RemoveRange(children);
-
-            foreach (var child in children)
-            {
-                NodeCache.Remove(child.Id);
-            }
-
-            node.Parent?.Children.Remove(node);
-        }
-
-        public void RemoveRange(IEnumerable<HocrNodeViewModel> nodes)
-        {
-            var nodeList = nodes.ToList();
-
-            var children = nodeList.SelectMany(node => node.Descendents).ToList();
-
-            Nodes.RemoveRange(children);
-
-            foreach (var child in children)
-            {
-                NodeCache.Remove(child.Id);
-            }
-
-            foreach (var node in nodeList)
-            {
-                node.Parent?.Children.Remove(node);
-            }
         }
     }
 }

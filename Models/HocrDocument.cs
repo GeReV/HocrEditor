@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using HocrEditor.Helpers;
 using HocrEditor.Services;
 
 namespace HocrEditor.Models
