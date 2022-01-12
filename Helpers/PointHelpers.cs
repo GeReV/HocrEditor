@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace HocrEditor;
+namespace HocrEditor.Helpers;
 
 public static class PointHelpers
 {

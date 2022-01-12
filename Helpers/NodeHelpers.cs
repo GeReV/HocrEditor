@@ -3,7 +3,7 @@ using System.Linq;
 using HocrEditor.Models;
 using HocrEditor.ViewModels;
 
-namespace HocrEditor;
+namespace HocrEditor.Helpers;
 
 public static class NodeHelpers
 {

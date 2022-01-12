@@ -2,7 +2,7 @@
 using System.Collections.Specialized;
 using System.ComponentModel;
 
-namespace HocrEditor;
+namespace HocrEditor.Helpers;
 
 public static class BindingHelpers
 {

@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using SkiaSharp;
 
-namespace HocrEditor;
+namespace HocrEditor.Helpers;
 
 public static class VectorHelpers
 {

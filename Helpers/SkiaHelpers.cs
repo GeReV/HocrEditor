@@ -1,9 +1,9 @@
 ﻿using System;
 using SkiaSharp;
 
-namespace HocrEditor;
+namespace HocrEditor.Helpers;
 
-public static class SKHelpers
+public static class SkiaHelpers
 {
     public static void Clamp(this ref SKPoint p, SKRect bounds)
     {

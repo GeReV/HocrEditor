@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace HocrEditor.Services
+namespace HocrEditor.Helpers
 {
     public static class RecursiveSelectHelper
     {
