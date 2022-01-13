@@ -55,7 +55,7 @@ namespace HocrEditor
                             var doc = new HtmlDocument();
                             doc.LoadHtml(body);
 
-                            return HocrDocumentParser.Parse(doc);
+                            return new HocrDocumentParser().Parse(doc);
                         }
                     )
                     .ContinueWith(
@@ -63,10 +63,7 @@ namespace HocrEditor
                         {
                             var hocrDocument = await hocr;
 
-                            if (DataContext is MainWindowViewModel mainWindowViewModel && hocrDocument != null)
-                            {
-                                mainWindowViewModel.Document = new HocrDocumentViewModel(hocrDocument);
-                            }
+                            ViewModel.Document = new HocrDocumentViewModel(hocrDocument);
                         },
                         TaskScheduler.FromCurrentSynchronizationContext()
                     );

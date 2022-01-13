@@ -101,7 +101,7 @@
                 <mstv:MultiSelectTreeView.Resources>
                     <HierarchicalDataTemplate DataType="{x:Type viewModels:HocrNodeViewModel}"
                                               ItemsSource="{Binding Children}">
-                        <TextBlock Text="{Binding InnerText}" />
+                        <TextBlock Text="{Binding DisplayText}" />
                     </HierarchicalDataTemplate>
                 </mstv:MultiSelectTreeView.Resources>
             </mstv:MultiSelectTreeView>

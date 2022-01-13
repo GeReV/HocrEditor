@@ -3,7 +3,7 @@ using SkiaSharp;
 
 namespace HocrEditor.Helpers;
 
-public static class SkiaHelpers
+public static class SKHelpers
 {
     public static void Clamp(this ref SKPoint p, SKRect bounds)
     {

@@ -1,14 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
-using HocrEditor.Services;
 
 namespace HocrEditor.ViewModels
 {
     public class HocrNodeViewModel : ViewModelBase
     {
+        private const int MAX_INNER_TEXT_LENGTH = 15;
+        private const char ELLIPSIS = '…';
+
         public IHocrNode HocrNode { get; }
 
         public string Id { get; }
@@ -18,11 +19,14 @@ namespace HocrEditor.ViewModels
 
         public HocrNodeType NodeType => HocrNode.NodeType;
 
-        public string InnerText => NodeType switch
+        public string DisplayText => NodeType switch
         {
-            HocrNodeType.Word or HocrNodeType.Line => HocrNode.InnerText,
-            _ => Enum.GetName(HocrNode.NodeType) ?? string.Empty
+            HocrNodeType.Word or HocrNodeType.Line or HocrNodeType.Graphic => HocrNode.InnerText,
+            _ => Children[0].DisplayText.Length > MAX_INNER_TEXT_LENGTH ?
+                Children[0].DisplayText.Remove(MAX_INNER_TEXT_LENGTH) + ELLIPSIS :
+                Children[0].DisplayText,
         };
+
 
         public Rect BBox { get; set; }
 

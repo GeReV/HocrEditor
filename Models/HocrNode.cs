@@ -29,15 +29,10 @@ namespace HocrEditor.Models
             return Title[(attributeValueIndex + attribute.Length + 1)..semicolonIndex];
         }
 
-        protected HocrNode(HocrNodeType nodeType, HtmlNode node, string parentId)
+        protected HocrNode(HocrNodeType nodeType, HtmlNode node, string? parentId, IEnumerable<IHocrNode> children)
         {
             var id = node.GetAttributeValue("id", string.Empty);
             var title = node.GetAttributeValue("title", string.Empty);
-
-            var children = node.ChildNodes
-                .Where(n => n.Name != "#text")
-                .Select(htmlNode => HocrDocumentParser.ParseNode(htmlNode, id))
-                .ToList();
 
             NodeType = nodeType;
             HtmlNodeType = node.Name;
@@ -46,9 +41,8 @@ namespace HocrEditor.Models
             ParentId = parentId;
             InnerText = string.Empty;
             BBox = Rect.FromBboxAttribute(GetAttributeFromTitle("bbox"));
-            ChildNodes = children;
+            ChildNodes = children.ToList();
         }
-
 
         public HocrNodeType NodeType { get; init; }
 
@@ -56,7 +50,7 @@ namespace HocrEditor.Models
         public string HtmlNodeType { get; init; }
         public string Title { get; init; }
         public string Id { get; init; }
-        public string ParentId { get; init; }
+        public string? ParentId { get; init; }
         public string InnerText { get; init; }
         public Rect BBox { get; init; }
         public IList<IHocrNode> ChildNodes { get; init; }

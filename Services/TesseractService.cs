@@ -25,7 +25,7 @@ namespace HocrEditor.Services
 
         public async Task<string> PerformOcr(string filename, string[] languages)
         {
-            return await ProcessRunner.Run(TesseractPath, $"{filename} stdout -l {string.Join('+', languages)} --psm 3 hocr");
+            return await ProcessRunner.Run(TesseractPath, $"{filename} stdout -l {string.Join('+', languages)} --psm 1 hocr");
         }
     }
 }
