@@ -172,18 +172,16 @@ namespace HocrEditor.ViewModels
                 }
             }
 
-            foreach (var selectedNode in selectedNodes)
-            {
-                // selectedNode.IsSelected = false;
-                commands.Add(
-                    new PropertyChangedCommand(
-                        selectedNode,
-                        nameof(selectedNode.IsSelected),
-                        selectedNode.IsSelected,
-                        false
+            commands.AddRange(
+                selectedNodes.Select(
+                        selectedNode => new PropertyChangedCommand(
+                            selectedNode,
+                            nameof(selectedNode.IsSelected),
+                            selectedNode.IsSelected,
+                            false
+                        )
                     )
-                );
-            }
+            );
 
             // SelectedNodes.Clear();
             commands.Add(new CollectionClearCommand(Document.SelectedNodes));
