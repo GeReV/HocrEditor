@@ -15,9 +15,13 @@ namespace HocrEditor.Models
         protected string GetAttributeFromTitle(string attribute)
         {
             var attributeValueIndex = Title.IndexOf($"{attribute} ", StringComparison.Ordinal);
-            var semicolonIndex = Title.IndexOf(';', attributeValueIndex);
 
-            Debug.Assert(attributeValueIndex >= 0);
+            if (attributeValueIndex < 0)
+            {
+                return string.Empty;
+            }
+
+            var semicolonIndex = Title.IndexOf(';', attributeValueIndex);
 
             if (semicolonIndex == -1)
             {

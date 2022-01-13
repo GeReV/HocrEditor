@@ -74,15 +74,19 @@ namespace HocrEditor.Models
         {
             InnerText = JoinInnerText(" ", ChildNodes);
 
+            Size = float.Parse(GetAttributeFromTitle("x_size"));
+            Descenders = float.Parse(GetAttributeFromTitle("x_descenders"));
+            Ascenders = float.Parse(GetAttributeFromTitle("x_ascenders"));
+
             var baseline = GetAttributeFromTitle("baseline")
                 .Split(" ", StringSplitOptions.RemoveEmptyEntries)
                 .Select(float.Parse)
                 .ToArray();
-            Baseline = (baseline[0], baseline[1]);
 
-            Size = float.Parse(GetAttributeFromTitle("x_size"));
-            Descenders = float.Parse(GetAttributeFromTitle("x_descenders"));
-            Ascenders = float.Parse(GetAttributeFromTitle("x_ascenders"));
+            if (baseline.Length == 2)
+            {
+                Baseline = (baseline[0], baseline[1]);
+            }
         }
 
         public override HocrNodeType[] MatchingNodeTypes { get; } =
