@@ -10,7 +10,7 @@ namespace HocrEditor.ViewModels
         private const int MAX_INNER_TEXT_LENGTH = 15;
         private const char ELLIPSIS = '…';
 
-        public IHocrNode HocrNode { get; }
+        public IHocrNode HocrNode { get; set; }
 
         public string Id { get; }
         public string? ParentId { get; set; }
@@ -21,10 +21,10 @@ namespace HocrEditor.ViewModels
 
         public string DisplayText => NodeType switch
         {
-            HocrNodeType.Word or HocrNodeType.Line or HocrNodeType.Graphic => HocrNode.InnerText,
+            HocrNodeType.Word or HocrNodeType.Line or HocrNodeType.Image => HocrNode.InnerText,
             _ => Children[0].DisplayText.Length > MAX_INNER_TEXT_LENGTH ?
                 Children[0].DisplayText.Remove(MAX_INNER_TEXT_LENGTH) + ELLIPSIS :
-                Children[0].DisplayText,
+                Children[0].DisplayText
         };
 
 

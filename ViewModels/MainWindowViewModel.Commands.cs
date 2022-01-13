@@ -13,7 +13,7 @@ namespace HocrEditor.ViewModels
 {
     public partial class MainWindowViewModel
     {
-        private readonly UndoRedoManager undoRedoManager = new();
+        public readonly UndoRedoManager UndoRedoManager = new();
 
         public MainWindowViewModel()
         {
@@ -24,12 +24,16 @@ namespace HocrEditor.ViewModels
             SelectNodesCommand = new RelayCommand<IList<HocrNodeViewModel>>(SelectNodes, CanSelectNodes);
             DeselectNodesCommand = new RelayCommand<IList<HocrNodeViewModel>>(DeselectNodes, CanDeselectNodes);
 
+            ConvertToImageCommand = new ConvertToImageCommand(this);
+
             UndoCommand = new RelayCommand(Undo, CanUndo);
             RedoCommand = new RelayCommand(Redo, CanRedo);
             UpdateNodesCommand = new RelayCommand<List<NodesChangedEventArgs.NodeChange>>(UpdateNodes, CanUpdateNodes);
 
             PropertyChanged += HandlePropertyChanged;
         }
+
+        public ConvertToImageCommand ConvertToImageCommand { get; set; }
 
         public IRelayCommand DeleteCommand { get; init; }
         public IRelayCommand MergeCommand { get; init; }
@@ -68,11 +72,12 @@ namespace HocrEditor.ViewModels
             DeleteCommand.NotifyCanExecuteChanged();
             MergeCommand.NotifyCanExecuteChanged();
             CropCommand.NotifyCanExecuteChanged();
+            ConvertToImageCommand.NotifyCanExecuteChanged();
         }
 
         private void Redo()
         {
-            undoRedoManager.Redo();
+            UndoRedoManager.Redo();
 
             UndoCommand.NotifyCanExecuteChanged();
             RedoCommand.NotifyCanExecuteChanged();
@@ -80,15 +85,15 @@ namespace HocrEditor.ViewModels
 
         private void Undo()
         {
-            undoRedoManager.Undo();
+            UndoRedoManager.Undo();
 
             UndoCommand.NotifyCanExecuteChanged();
             RedoCommand.NotifyCanExecuteChanged();
         }
 
-        private bool CanRedo() => undoRedoManager.CanRedo;
+        private bool CanRedo() => UndoRedoManager.CanRedo;
 
-        private bool CanUndo() => undoRedoManager.CanUndo;
+        private bool CanUndo() => UndoRedoManager.CanUndo;
 
         private bool CanEdit() => Document?.SelectedNodes.Any() ?? false;
 
@@ -145,7 +150,7 @@ namespace HocrEditor.ViewModels
                 );
             }
 
-            undoRedoManager.ExecuteCommands(commands);
+            UndoRedoManager.ExecuteCommands(commands);
         }
 
         private void DeleteSelectedNodes()
@@ -299,7 +304,7 @@ namespace HocrEditor.ViewModels
 
         private void ExecuteUndoableCommand(IEnumerable<UndoRedoCommand> commands)
         {
-            undoRedoManager.ExecuteCommands(commands);
+            UndoRedoManager.ExecuteCommands(commands);
 
             UndoCommand.NotifyCanExecuteChanged();
             RedoCommand.NotifyCanExecuteChanged();

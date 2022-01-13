@@ -6,12 +6,11 @@ namespace HocrEditor.Models
     public interface IHocrNode
     {
         public HocrNodeType NodeType { get; init; }
-        public string HtmlNodeType { get; init; }
-        public string Title { get; init; }
-        public string Id { get; init; }
-        public string? ParentId { get; init; }
-        public Rect BBox { get; init; }
-        public string InnerText { get; init; }
+        public string Title { get; set; }
+        public string Id { get; set; }
+        public string? ParentId { get; set; }
+        public Rect BBox { get; set; }
+        public string InnerText { get; set; }
         public IList<IHocrNode> ChildNodes { get; init; }
     }
 }

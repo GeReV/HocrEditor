@@ -9,5 +9,5 @@ public enum HocrNodeType
     TextFloat,
     Caption,
     Word,
-    Graphic,
+    Image,
 }

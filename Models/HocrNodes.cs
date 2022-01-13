@@ -13,7 +13,13 @@ namespace HocrEditor.Models
 
     public record HocrPage : HocrNode
     {
-        public HocrPage(HtmlNode node, IEnumerable<IHocrNode> children) : base(HocrNodeType.Page, node, string.Empty, children)
+        public HocrPage(string id, string title, IEnumerable<IHocrNode> children) : base(
+            HocrNodeType.Page,
+            id,
+            string.Empty,
+            title,
+            children
+        )
         {
             InnerText = JoinInnerText(ParagraphSeparator, ChildNodes);
             Image = GetAttributeFromTitle("image").Trim('"');
@@ -24,7 +30,13 @@ namespace HocrEditor.Models
 
     public record HocrContentArea : HocrNode
     {
-        public HocrContentArea(HtmlNode node, string? parentId, IEnumerable<IHocrNode> children) : base(HocrNodeType.ContentArea, node, parentId, children)
+        public HocrContentArea(string id, string? parentId, string title, IEnumerable<IHocrNode> children) : base(
+            HocrNodeType.ContentArea,
+            id,
+            parentId,
+            title,
+            children
+        )
         {
             InnerText = JoinInnerText(ParagraphSeparator, ChildNodes);
         }
@@ -34,26 +46,31 @@ namespace HocrEditor.Models
     {
         private static readonly string LineSeparator = Environment.NewLine;
 
-        public HocrParagraph(HtmlNode node, string? parentId, IEnumerable<IHocrNode> children) : base(HocrNodeType.Paragraph, node, parentId, children)
+        public HocrParagraph(string id, string? parentId, string title, IEnumerable<IHocrNode> children) : base(
+            HocrNodeType.Paragraph,
+            id,
+            parentId,
+            title,
+            children
+        )
         {
             InnerText = JoinInnerText(LineSeparator, ChildNodes);
-            Language = node.GetAttributeValue("lang", string.Empty);
-            Direction = node.GetAttributeValue("dir", string.Empty) switch
-            {
-                "ltr" => Models.Direction.Ltr,
-                "rtl" => Models.Direction.Rtl,
-                _ => null,
-            };
         }
 
-        public string Language { get; }
+        public string? Language { get; init; }
 
-        public Direction? Direction { get; }
+        public Direction? Direction { get; init; }
     }
 
     public record HocrLine : HocrNode
     {
-        public HocrLine(HtmlNode node, string? parentId, IEnumerable<IHocrNode> children) : base(HocrNodeType.Line, node, parentId, children)
+        public HocrLine(string id, string? parentId, string title, IEnumerable<IHocrNode> children) : base(
+            HocrNodeType.Line,
+            id,
+            parentId,
+            title,
+            children
+        )
         {
             InnerText = JoinInnerText(" ", ChildNodes);
 
@@ -68,7 +85,8 @@ namespace HocrEditor.Models
             Ascenders = float.Parse(GetAttributeFromTitle("x_ascenders"));
         }
 
-        public override HocrNodeType[] MatchingNodeTypes { get; } = {
+        public override HocrNodeType[] MatchingNodeTypes { get; } =
+        {
             HocrNodeType.Line,
             HocrNodeType.Caption,
             HocrNodeType.TextFloat,
@@ -82,7 +100,12 @@ namespace HocrEditor.Models
 
     public record HocrTextFloat : HocrLine
     {
-        public HocrTextFloat(HtmlNode node, string? parentId, IEnumerable<IHocrNode> children) : base(node, parentId, children)
+        public HocrTextFloat(string id, string? parentId, string title, IEnumerable<IHocrNode> children) : base(
+            id,
+            parentId,
+            title,
+            children
+        )
         {
             NodeType = HocrNodeType.TextFloat;
         }
@@ -90,7 +113,12 @@ namespace HocrEditor.Models
 
     public record HocrCaption : HocrLine
     {
-        public HocrCaption(HtmlNode node, string? parentId, IEnumerable<IHocrNode> children) : base(node, parentId, children)
+        public HocrCaption(string id, string? parentId, string title, IEnumerable<IHocrNode> children) : base(
+            id,
+            parentId,
+            title,
+            children
+        )
         {
             NodeType = HocrNodeType.Caption;
         }
@@ -98,35 +126,36 @@ namespace HocrEditor.Models
 
     public record HocrWord : HocrNode
     {
-        public HocrWord(HtmlNode node, string? parentId) : base(HocrNodeType.Word, node, parentId, Enumerable.Empty<IHocrNode>())
+        public HocrWord(string id, string? parentId, string title, string innerText) : base(
+            HocrNodeType.Word,
+            id,
+            parentId,
+            title,
+            Enumerable.Empty<IHocrNode>()
+        )
         {
-            InnerText = HtmlEntity.DeEntitize(node.InnerText.Trim());
-            Language = node.GetAttributeValue("lang", string.Empty);
-            Direction = node.GetAttributeValue("dir", string.Empty) switch
-            {
-                "ltr" => Models.Direction.Ltr,
-                "rtl" => Models.Direction.Rtl,
-                _ => null,
-            };
+            InnerText = HtmlEntity.DeEntitize(innerText.Trim());
             Confidence = int.Parse(GetAttributeFromTitle("x_wconf"));
         }
 
-        public string Language { get; }
+        public string? Language { get; init; }
 
-        public Direction? Direction { get; }
+        public Direction? Direction { get; init; }
 
         public float Confidence { get; }
     }
 
-    public record HocrGraphic : HocrNode
+    public record HocrImage : HocrNode
     {
-        private readonly int imageId;
-
-        public HocrGraphic(HtmlNode node, string? parentId, int imageId) : base(HocrNodeType.Graphic, node, parentId, Enumerable.Empty<IHocrNode>())
+        public HocrImage(string id, string? parentId, string title) : base(
+            HocrNodeType.Image,
+            id,
+            parentId,
+            title,
+            Enumerable.Empty<IHocrNode>()
+        )
         {
-            this.imageId = imageId;
-
-            InnerText = $"Graphic {imageId}";
+            InnerText = "Image";
         }
     }
 }

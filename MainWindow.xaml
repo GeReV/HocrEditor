@@ -45,6 +45,9 @@
                           Command="{Binding MergeCommand}" />
                 <MenuItem Header="_Crop"
                           Command="{Binding CropCommand}" />
+                <Separator />
+                <MenuItem Header="Convert to _Images"
+                          Command="{Binding ConvertToImageCommand}" />
             </MenuItem>
         </Menu>
         <ToolBarTray DockPanel.Dock="Top">
@@ -67,6 +70,9 @@
                         Command="{Binding CropCommand}" />
                 <ToggleButton Content="Auto Crop"
                               IsChecked="{Binding AutoCrop}" />
+                <Separator />
+                <Button Content="Convert to Images"
+                        Command="{Binding ConvertToImageCommand}" />
             </ToolBar>
         </ToolBarTray>
         <Grid>
