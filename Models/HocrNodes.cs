@@ -23,7 +23,19 @@ namespace HocrEditor.Models
         {
             InnerText = JoinInnerText(ParagraphSeparator, ChildNodes);
             Image = GetAttributeFromTitle("image").Trim('"');
+
+            var dpi = GetAttributeFromTitle("scan_res")
+                .Split(" ", StringSplitOptions.RemoveEmptyEntries)
+                .Select(int.Parse)
+                .ToArray();
+
+            if (dpi.Length == 2)
+            {
+                Dpi = (dpi[0], dpi[1]);
+            }
         }
+
+        public (int, int) Dpi { get; }
 
         public string Image { get; }
     }
@@ -140,13 +152,22 @@ namespace HocrEditor.Models
         {
             InnerText = HtmlEntity.DeEntitize(innerText.Trim());
             Confidence = int.Parse(GetAttributeFromTitle("x_wconf"));
+
+            var fsize = GetAttributeFromTitle("x_fsize");
+            if (!string.IsNullOrEmpty(fsize))
+            {
+                FontSize = int.Parse(fsize);
+            }
         }
+
 
         public string? Language { get; init; }
 
         public Direction? Direction { get; init; }
 
         public float Confidence { get; }
+
+        public int FontSize { get; }
     }
 
     public record HocrImage : HocrNode

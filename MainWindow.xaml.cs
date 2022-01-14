@@ -2,8 +2,10 @@
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using HocrEditor.Commands;
 using HocrEditor.Controls;
 using HocrEditor.Helpers;
+using HocrEditor.Models;
 using HocrEditor.Services;
 using HocrEditor.ViewModels;
 using HtmlAgilityPack;
@@ -64,6 +66,38 @@ namespace HocrEditor
                             var hocrDocument = await hocr;
 
                             ViewModel.Document = new HocrDocumentViewModel(hocrDocument);
+
+                            var averageFontSize = hocrDocument.Items.Where(node => node.NodeType == HocrNodeType.Word)
+                                .Cast<HocrWord>()
+                                .Average(node => node.FontSize);
+
+                            var (dpix, dpiy) = hocrDocument.RootNode.Dpi;
+
+                            const float fontInchRatio = 1.0f / 72f;
+
+                            var noiseNodes = ViewModel.Document.Nodes.Where(
+                                node => node.NodeType == HocrNodeType.ContentArea &&
+                                        string.IsNullOrEmpty(node.InnerText) &&
+                                        (node.BBox.Width < averageFontSize * fontInchRatio * dpix  ||
+                                         node.BBox.Height < averageFontSize * fontInchRatio * dpiy)
+                            );
+
+                            ViewModel.Document.SelectedNodes.AddRange(noiseNodes);
+
+                            // TODO: Change command to accept selection as parameter.
+                            ViewModel.DeleteCommand.Execute(null);
+
+                            var graphics = ViewModel.Document.Nodes.Where(
+                                node => node.NodeType == HocrNodeType.ContentArea &&
+                                        string.IsNullOrEmpty(node.InnerText)
+                            );
+
+                            ViewModel.Document.SelectedNodes.AddRange(graphics);
+
+                            // TODO: Change command to accept selection as parameter.
+                            ViewModel.ConvertToImageCommand.Execute(null);
+
+                            ViewModel.Document.SelectedNodes.Clear();
                         },
                         TaskScheduler.FromCurrentSynchronizationContext()
                     );

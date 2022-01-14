@@ -19,13 +19,21 @@ namespace HocrEditor.ViewModels
 
         public HocrNodeType NodeType => HocrNode.NodeType;
 
+        public string InnerText
+        {
+            get => HocrNode.InnerText;
+            set => HocrNode.InnerText = value;
+        }
+
         public string DisplayText => NodeType switch
         {
-            HocrNodeType.Word or HocrNodeType.Line or HocrNodeType.Image => HocrNode.InnerText,
+            HocrNodeType.Word or HocrNodeType.Line or HocrNodeType.Image => InnerText,
             _ => Children[0].DisplayText.Length > MAX_INNER_TEXT_LENGTH ?
                 Children[0].DisplayText.Remove(MAX_INNER_TEXT_LENGTH) + ELLIPSIS :
                 Children[0].DisplayText
         };
+
+
 
 
         public Rect BBox { get; set; }

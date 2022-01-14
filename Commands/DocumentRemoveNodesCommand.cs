@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using HocrEditor.ViewModels;
 
@@ -38,9 +39,12 @@ public class DocumentRemoveNodesCommand : UndoRedoCommand
         var document = (HocrDocumentViewModel)Sender;
 
         document.SelectedNodes.RemoveRange(nodes);
+
+        Debug.WriteLine(string.Join(' ', nodes.Concat(children).Select(n => n.Id)));
+
         document.Nodes.RemoveRange(nodes.Concat(children));
 
-        foreach (var child in children)
+        foreach (var child in nodes.Concat(children))
         {
             document.NodeCache.Remove(child.Id);
         }

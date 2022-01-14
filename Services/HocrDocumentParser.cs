@@ -12,7 +12,7 @@ namespace HocrEditor.Services
 
             var page = Parse(pageNode, null);
 
-            return new HocrDocument(page);
+            return new HocrDocument((HocrPage)page);
         }
 
         private IHocrNode Parse(HtmlNode node, string? parentId)

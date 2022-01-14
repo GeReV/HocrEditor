@@ -220,14 +220,26 @@ namespace HocrEditor
             {
                 var index = IndexOf(item);
                 if (index < 0)
+                {
                     continue;
+                }
 
                 Items.RemoveAt(index);
 
+                // FIX: Unclustered range was missing an item.
+                if (clusters.ContainsKey(index))
+                {
+                    clusters[lastIndex = index] = lastCluster = clusters[index];
+                }
+
                 if (lastIndex == index && lastCluster != null)
+                {
                     lastCluster.Add(item);
+                }
                 else
+                {
                     clusters[lastIndex = index] = lastCluster = new List<T> { item };
+                }
             }
 
             OnEssentialPropertiesChanged();

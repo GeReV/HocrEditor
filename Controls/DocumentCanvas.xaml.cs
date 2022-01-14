@@ -103,14 +103,16 @@ public partial class DocumentCanvas
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-        Dispatcher.InvokeAsync(Update, DispatcherPriority.Send);
-
         if (ViewModel == null)
         {
             return;
         }
 
-        CenterTransformation();
+        elements.Clear();
+
+        var rootNode = ViewModel.Nodes[0];
+
+        BuildDocumentElements(rootNode.Descendents.Prepend(rootNode));
 
         ViewModel.Nodes.SubscribeItemPropertyChanged(
             (nodeSender, nodePropertyChangedArgs) =>
@@ -147,6 +149,10 @@ public partial class DocumentCanvas
 
         ViewModel.Nodes.CollectionChanged += NodesOnCollectionChanged;
         ViewModel.SelectedNodes.CollectionChanged += SelectedNodesOnCollectionChanged;
+
+        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
+
+        CenterTransformation();
     }
 
     private void AddSelectedElements(IEnumerable<HocrNodeViewModel> nodes)
@@ -183,18 +189,29 @@ public partial class DocumentCanvas
 
     private void NodesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        // TODO: Handle granular cases.
-        Update();
-
         switch (e.Action)
         {
             case NotifyCollectionChangedAction.Add:
+                if (e.NewItems != null)
+                {
+                    BuildDocumentElements(e.NewItems.Cast<HocrNodeViewModel>());
+                }
+
                 UpdateCanvasSelection();
                 break;
             case NotifyCollectionChangedAction.Remove:
                 if (e.OldItems != null)
                 {
-                    RemoveSelectedElements(e.OldItems.Cast<HocrNodeViewModel>());
+                    var list = e.OldItems.Cast<HocrNodeViewModel>().ToList();
+
+                    Debug.WriteLine(string.Join(' ', list.Select(n => n.Id)));
+
+                    RemoveSelectedElements(list);
+
+                    foreach (var node in list)
+                    {
+                        elements.Remove(node.Id);
+                    }
                 }
 
                 UpdateCanvasSelection();
@@ -202,7 +219,14 @@ public partial class DocumentCanvas
             case NotifyCollectionChangedAction.Replace:
                 if (e.OldItems != null)
                 {
-                    RemoveSelectedElements(e.OldItems.Cast<HocrNodeViewModel>());
+                    var list = e.OldItems.Cast<HocrNodeViewModel>().ToList();
+
+                    foreach (var node in list)
+                    {
+                        elements.Remove(node.Id);
+                    }
+
+                    BuildDocumentElements(list);
                 }
 
                 UpdateCanvasSelection();
@@ -210,6 +234,8 @@ public partial class DocumentCanvas
             case NotifyCollectionChangedAction.Move:
                 break;
             case NotifyCollectionChangedAction.Reset:
+                elements.Clear();
+
                 ClearCanvasSelection();
                 break;
             default:
@@ -768,29 +794,13 @@ public partial class DocumentCanvas
         );
     }
 
-    private void Update()
-    {
-        if (ViewModel?.Nodes == null)
-        {
-            return;
-        }
-
-        elements.Clear();
-
-        BuildDocumentElements(ViewModel.Nodes[0]);
-
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
-    }
-
     private void Refresh()
     {
         Canvas.InvalidateVisual();
     }
 
-    private void BuildDocumentElements(HocrNodeViewModel rootNode)
+    private void BuildDocumentElements(IEnumerable<HocrNodeViewModel> nodes)
     {
-        var nodes = rootNode.Descendents.Prepend(rootNode);
-
         foreach (var node in nodes)
         {
             var el = new Element
