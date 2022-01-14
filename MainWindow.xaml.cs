@@ -118,7 +118,14 @@ namespace HocrEditor
         {
             if (e.AddedItems.Count > 0)
             {
-                ViewModel.SelectNodesCommand.TryExecute(e.AddedItems.Cast<HocrNodeViewModel>().ToList());
+                var items = e.AddedItems.Cast<HocrNodeViewModel>().ToList();
+                ViewModel.SelectNodesCommand.TryExecute(items);
+
+                foreach (var parent in items.SelectMany(n => n.Ascendants))
+                {
+                    // Close on deselect?
+                    parent.IsExpanded = true;
+                }
             }
 
             if (e.RemovedItems.Count > 0)

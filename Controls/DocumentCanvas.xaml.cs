@@ -306,14 +306,6 @@ public partial class DocumentCanvas
 
                 var normalizedPosition = inverseTransformation.MapPoint(position);
 
-                var key = GetElementIndexAtPoint(normalizedPosition);
-
-                if (key == null)
-                {
-                    ClearSelection();
-                    break;
-                }
-
                 mouseMoveState = MouseState.Dragging;
 
                 if (canvasSelection.Bounds.Contains(normalizedPosition))
@@ -324,65 +316,7 @@ public partial class DocumentCanvas
                     break;
                 }
 
-                var node = elements[key].Item1;
-
-                foreach (var ascendant in node.Ascendants)
-                {
-                    var (parentNode, parentElement) = elements[ascendant.Id];
-
-                    if (node.BBox.Equals(parentNode.BBox))
-                    {
-                        (node, _) = (parentNode, parentElement);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                // TODO: Should probably choose node at mouseup, because user intention isn't clear at mouse down
-                //  i.e. about to drag selection or choose a different item
-                if (canvasSelection.Bounds.Contains(normalizedPosition) &&
-                    (node.HocrNode.NodeType == HocrNodeType.Page || ViewModel.SelectedNodes.Contains(node)))
-                {
-                    // Dragging the selection, no need to select anything else.
-                    offsetStart = transformation.MapPoint(canvasSelection.Bounds.Location);
-
-                    break;
-                }
-
-                // Page is unselectable.
-                if (node.HocrNode.NodeType == HocrNodeType.Page)
-                {
-                    ClearSelection();
-                    break;
-                }
-
-                if ((Keyboard.Modifiers & ModifierKeys.Control) == 0)
-                {
-                    ClearSelection();
-                }
-
-                if (ViewModel.SelectedNodes.Contains(node))
-                {
-                    RemoveSelectedNode(node);
-                }
-                else
-                {
-                    AddSelectedNode(node);
-                }
-
-                // Close on deselect?
-                foreach (var parent in node.Ascendants)
-                {
-                    parent.IsExpanded = true;
-                }
-
-                UpdateCanvasSelection();
-
-                offsetStart = transformation.MapPoint(canvasSelection.Bounds.Location);
-
-                dragLimit = CalculateDragLimitBounds(ViewModel.SelectedNodes);
+                SelectNode(normalizedPosition);
 
                 break;
             }
@@ -405,6 +339,75 @@ public partial class DocumentCanvas
         }
 
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
+    }
+
+    private void SelectNode(SKPoint normalizedPosition)
+    {
+        var key = GetElementKeyAtPoint(normalizedPosition);
+
+        if (key == null)
+        {
+            ClearSelection();
+
+            return;
+        }
+
+        var node = elements[key].Item1;
+
+        foreach (var ascendant in node.Ascendants)
+        {
+            var (parentNode, parentElement) = elements[ascendant.Id];
+
+            if (node.BBox.Equals(parentNode.BBox))
+            {
+                (node, _) = (parentNode, parentElement);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        // TODO: Should probably choose node at mouseup, because user intention isn't clear at mouse down
+        //  i.e. about to drag selection or choose a different item
+        var selectedNodes = ViewModel?.SelectedNodes ??
+                            throw new InvalidOperationException("Expected ViewModel to not be null");
+
+        if (canvasSelection.Bounds.Contains(normalizedPosition) &&
+            (node.HocrNode.NodeType == HocrNodeType.Page || selectedNodes.Contains(node)))
+        {
+            // Dragging the selection, no need to select anything else.
+            offsetStart = transformation.MapPoint(canvasSelection.Bounds.Location);
+
+            return;
+        }
+
+        // Page is unselectable.
+        if (node.HocrNode.NodeType == HocrNodeType.Page)
+        {
+            ClearSelection();
+            return;
+        }
+
+        if ((Keyboard.Modifiers & ModifierKeys.Control) == 0)
+        {
+            ClearSelection();
+        }
+
+        if (selectedNodes.Contains(node))
+        {
+            RemoveSelectedNode(node);
+        }
+        else
+        {
+            AddSelectedNode(node);
+        }
+
+        UpdateCanvasSelection();
+
+        offsetStart = transformation.MapPoint(canvasSelection.Bounds.Location);
+
+        dragLimit = CalculateDragLimitBounds(selectedNodes);
     }
 
     private void AddSelectedNode(HocrNodeViewModel node)
@@ -508,6 +511,11 @@ public partial class DocumentCanvas
                     OnNodesChanged(new NodesChangedEventArgs(changes));
 
                     dragLimit = CalculateDragLimitBounds(ViewModel.SelectedNodes);
+                }
+
+                if (!mouseMoved)
+                {
+                    SelectNode(inverseTransformation.MapPoint(position));
                 }
 
                 break;
@@ -889,9 +897,13 @@ public partial class DocumentCanvas
         }
     }
 
-    private string? GetElementIndexAtPoint(SKPoint p)
+    private string? GetElementKeyAtPoint(SKPoint p)
     {
-        var key = elements.Keys.FirstOrDefault(k => elements[k].Item2.Bounds.Contains(p));
+        var selectedKeys = ViewModel?.SelectedNodes.Select(n => n.Id).ToHashSet() ?? Enumerable.Empty<string>();
+
+        var key = elements.Keys
+            .Where(k => !selectedKeys.Contains(k))
+            .FirstOrDefault(k => elements[k].Item2.Bounds.Contains(p));
 
         return key == null
             ? null
