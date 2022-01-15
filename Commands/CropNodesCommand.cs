@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Helpers;
 using HocrEditor.ViewModels;
 
@@ -29,10 +28,8 @@ public class CropNodes : CommandBase<IList<HocrNodeViewModel>>
         var selectedNodes = nodes.OrderBy(node => -mainWindowViewModel.Document.Nodes.IndexOf(node));
 
         var commands = selectedNodes.Select(
-            node => new PropertyChangedCommand(
-                node,
-                nameof(HocrNodeViewModel.BBox),
-                node.BBox,
+            node => node.ToPropertyChangedCommand(
+                n => n.BBox,
                 NodeHelpers.CalculateUnionRect(node.Children)
             )
         );

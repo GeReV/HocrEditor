@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Helpers;
+using HocrEditor.Models;
 using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
@@ -50,26 +51,23 @@ public class MergeNodes : CommandBase<IList<HocrNodeViewModel>>
 
         foreach (var parent in rest)
         {
-            commands.Add(new CollectionClearCommand(parent.Children));
+            commands.Add(parent.Children.ToCollectionClearCommand());
         }
 
         foreach (var child in children)
         {
             // child.Parent = first;
-            commands.Add(new PropertyChangedCommand(child, nameof(child.Parent), child.Parent, first));
-
-            // child.ParentId = first.Id;
-            commands.Add(new PropertyChangedCommand(child, nameof(child.ParentId), child.ParentId, first.Id));
+            commands.Add(child.ToPropertyChangedCommand(c => c.Parent, first));
 
             // first.Children.Add(child);
-            commands.Add(new CollectionAddCommand(first.Children, child));
+            commands.Add(first.Children.ToCollectionAddCommand(child));
         }
 
         commands.Add(new DocumentRemoveNodesCommand(mainWindowViewModel.Document, rest));
 
         // first.BBox = NodeHelpers.CalculateUnionRect(nodes);
         commands.Add(
-            new PropertyChangedCommand(first, nameof(first.BBox), first.BBox, () =>
+            first.ToPropertyChangedCommand(f => f.BBox, () =>
                 {
                     var newNodes = first.Descendents.Prepend(first).ToList();
 

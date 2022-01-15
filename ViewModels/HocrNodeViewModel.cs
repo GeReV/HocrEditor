@@ -10,9 +10,13 @@ namespace HocrEditor.ViewModels
         private const int MAX_INNER_TEXT_LENGTH = 15;
         private const char ELLIPSIS = '…';
 
+        private HocrNodeViewModel? parent;
+
+        // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- Setter used by PropertyChangedCommand.
         public IHocrNode HocrNode { get; set; }
 
         public string Id { get; }
+
         public string? ParentId { get; set; }
 
         public bool IsRoot { get; set; }
@@ -38,7 +42,16 @@ namespace HocrEditor.ViewModels
 
         public Rect BBox { get; set; }
 
-        public HocrNodeViewModel? Parent { get; set; }
+        public HocrNodeViewModel? Parent
+        {
+            get => parent;
+            set
+            {
+                parent = value;
+
+                ParentId = parent?.Id;
+            }
+        }
 
         public ObservableCollection<HocrNodeViewModel> Children { get; set; } = new();
 

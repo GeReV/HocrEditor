@@ -6,6 +6,7 @@ using System.Linq;
 using HocrEditor.Commands;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Controls;
+using HocrEditor.Helpers;
 using Microsoft.Toolkit.Mvvm.Input;
 
 namespace HocrEditor.ViewModels
@@ -93,11 +94,11 @@ namespace HocrEditor.ViewModels
 
             if (addedItems.Any())
             {
-                commands.Add(new CollectionAddCommand(Document.SelectedNodes, addedItems));
+                commands.Add(Document.SelectedNodes.ToCollectionAddCommand(addedItems));
 
                 commands.AddRange(
                     addedItems.Select(
-                        node => new PropertyChangedCommand(node, nameof(node.IsSelected), node.IsSelected, true)
+                        node => node.ToPropertyChangedCommand(n => n.IsSelected, true)
                     )
                 );
             }
@@ -121,11 +122,11 @@ namespace HocrEditor.ViewModels
 
             if (removedItems.Any())
             {
-                commands.Add(new CollectionRemoveCommand(Document.SelectedNodes, removedItems));
+                commands.Add(Document.SelectedNodes.ToCollectionRemoveCommand(removedItems));
 
                 commands.AddRange(
                     removedItems.Select(
-                        node => new PropertyChangedCommand(node, nameof(node.IsSelected), node.IsSelected, false)
+                        node => node.ToPropertyChangedCommand(n => n.IsSelected, false)
                     )
                 );
             }
@@ -144,10 +145,8 @@ namespace HocrEditor.ViewModels
             }
 
             var commands = nodeChanges.Select(
-                change => new PropertyChangedCommand(
-                    change.Node,
-                    nameof(change.Node.BBox),
-                    change.OldBounds,
+                change => change.Node.ToPropertyChangedCommand(
+                    n => n.BBox,
                     change.NewBounds
                 )
             );

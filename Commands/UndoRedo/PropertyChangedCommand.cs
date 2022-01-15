@@ -2,17 +2,14 @@
 
 namespace HocrEditor.Commands.UndoRedo;
 
-public class PropertyChangedCommand : UndoRedoCommand
+public class PropertyChangedCommand<T> : UndoRedoCommand
 {
-    private readonly Func<object?> newValueFunc;
+    private readonly Func<T> newValueFunc;
     public string PropertyName { get; }
-    public object? OldValue { get; }
-    public object? NewValue
-    {
-        get => newValueFunc();
-    }
+    public T OldValue { get; }
+    public T NewValue => newValueFunc();
 
-    public PropertyChangedCommand(object sender, string propertyName, object? oldValue, object? newValue) : this(
+    public PropertyChangedCommand(object sender, string propertyName, T oldValue, T newValue) : this(
         sender,
         propertyName,
         oldValue,
@@ -21,7 +18,7 @@ public class PropertyChangedCommand : UndoRedoCommand
     {
     }
 
-    public PropertyChangedCommand(object sender, string propertyName, object? oldValue, Func<object?> newValueFunc) : base(sender)
+    public PropertyChangedCommand(object sender, string propertyName, T oldValue, Func<T> newValueFunc) : base(sender)
     {
         PropertyName = propertyName;
         OldValue = oldValue;

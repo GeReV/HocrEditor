@@ -6,6 +6,7 @@ public class CollectionClearCommand : UndoRedoCommand
 {
     private IList copy = new ArrayList();
 
+    // ReSharper disable once SuggestBaseTypeForParameterInConstructor
     public CollectionClearCommand(IList sender) : base(sender)
     {
     }

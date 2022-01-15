@@ -43,35 +43,26 @@ public class DeleteNodes : CommandBase<IList<HocrNodeViewModel>>
 
         commands.AddRange(
             nodes.Select(
-                selectedNode => new PropertyChangedCommand(
-                    selectedNode,
-                    nameof(selectedNode.IsSelected),
-                    selectedNode.IsSelected,
-                    false
-                )
+                selectedNode => selectedNode.ToPropertyChangedCommand(n => n.IsSelected, false)
             )
         );
 
         // SelectedNodes.Clear();
-        commands.Add(new CollectionClearCommand(mainWindowViewModel.Document.SelectedNodes));
+        commands.Add(mainWindowViewModel.Document.SelectedNodes.ToCollectionClearCommand());
 
         // ExecuteUndoableCommand(commands);
         mainWindowViewModel.UndoRedoManager.ExecuteCommands(commands);
     }
 
-    private static IEnumerable<PropertyChangedCommand> CropParents(HocrNodeViewModel node)
+    private static IEnumerable<PropertyChangedCommand<Rect>> CropParents(HocrNodeViewModel node)
     {
         Debug.Assert(node.Parent != null, "node.Parent != null");
 
         var ascendants = node.Ascendants.Where(n => n.NodeType != HocrNodeType.Page);
 
         return ascendants.Select(
-            parent => new PropertyChangedCommand(
-                parent,
-                nameof(parent.BBox),
-                parent.BBox,
-                NodeHelpers.CalculateUnionRect(parent.Children)
-            )
+            parent =>
+                parent.ToPropertyChangedCommand(p => p.BBox, NodeHelpers.CalculateUnionRect(parent.Children))
         );
     }
 }

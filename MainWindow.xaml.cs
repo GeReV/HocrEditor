@@ -1,7 +1,10 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Controls;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
