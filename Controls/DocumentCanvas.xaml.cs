@@ -883,6 +883,11 @@ public partial class DocumentCanvas
 
         Recurse(rootId);
 
+        RenderCanvasSelection(canvas);
+    }
+
+    private void RenderCanvasSelection(SKCanvas canvas)
+    {
         if (canvasSelection.IsEmpty)
         {
             return;
