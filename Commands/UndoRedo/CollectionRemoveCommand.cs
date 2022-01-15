@@ -1,18 +1,18 @@
 ﻿using System.Collections;
 
-namespace HocrEditor.Commands;
+namespace HocrEditor.Commands.UndoRedo;
 
-public class CollectionAddCommand : UndoRedoCommand
+public class CollectionRemoveCommand : UndoRedoCommand
 {
     private readonly IList children;
 
-    public CollectionAddCommand(IList sender, object child) : base(sender)
+    public CollectionRemoveCommand(IList sender, object child) : base(sender)
     {
         children = new ArrayList();
         children.Add(child);
     }
 
-    public CollectionAddCommand(IList sender, IList children) : base(sender)
+    public CollectionRemoveCommand(IList sender, IList children) : base(sender)
     {
         this.children = children;
     }
@@ -23,7 +23,7 @@ public class CollectionAddCommand : UndoRedoCommand
 
         foreach (var child in children)
         {
-            list.Remove(child);
+            list.Add(child);
         }
     }
 
@@ -33,7 +33,7 @@ public class CollectionAddCommand : UndoRedoCommand
 
         foreach (var child in children)
         {
-            list.Add(child);
+            list.Remove(child);
         }
     }
 }

@@ -14,10 +14,12 @@
         d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}">
     <Window.InputBindings>
         <KeyBinding Key="Delete"
-                    Command="{Binding DeleteCommand}" />
+                    Command="{Binding DeleteCommand}"
+                    CommandParameter="{Binding SelectedNodes}" />
         <KeyBinding Modifiers="Control"
                     Key="M"
-                    Command="{Binding MergeCommand}" />
+                    Command="{Binding MergeCommand}"
+                    CommandParameter="{Binding SelectedNodes}" />
         <KeyBinding Modifiers="Control"
                     Key="Z"
                     Command="{Binding UndoCommand}" />
@@ -40,14 +42,18 @@
                           Command="{Binding RedoCommand}" />
                 <Separator />
                 <MenuItem Header="_Delete"
-                          Command="{Binding DeleteCommand}" />
+                          Command="{Binding DeleteCommand}"
+                          CommandParameter="{Binding SelectedNodes}" />
                 <MenuItem Header="_Merge"
-                          Command="{Binding MergeCommand}" />
+                          Command="{Binding MergeCommand}"
+                          CommandParameter="{Binding SelectedNodes}" />
                 <MenuItem Header="_Crop"
-                          Command="{Binding CropCommand}" />
+                          Command="{Binding CropCommand}"
+                          CommandParameter="{Binding SelectedNodes}" />
                 <Separator />
                 <MenuItem Header="Convert to _Images"
-                          Command="{Binding ConvertToImageCommand}" />
+                          Command="{Binding ConvertToImageCommand}"
+                          CommandParameter="{Binding SelectedNodes}" />
             </MenuItem>
         </Menu>
         <ToolBarTray DockPanel.Dock="Top">
@@ -63,16 +69,20 @@
                         Command="{Binding RedoCommand}" />
                 <Separator />
                 <Button Content="Delete"
-                        Command="{Binding DeleteCommand}" />
+                        Command="{Binding DeleteCommand}"
+                        CommandParameter="{Binding SelectedNodes}" />
                 <Button Content="Merge"
-                        Command="{Binding MergeCommand}" />
+                        Command="{Binding MergeCommand}"
+                        CommandParameter="{Binding SelectedNodes}" />
                 <Button Content="Crop"
-                        Command="{Binding CropCommand}" />
+                        Command="{Binding CropCommand}"
+                        CommandParameter="{Binding SelectedNodes}" />
                 <ToggleButton Content="Auto Crop"
                               IsChecked="{Binding AutoCrop}" />
                 <Separator />
                 <Button Content="Convert to Images"
-                        Command="{Binding ConvertToImageCommand}" />
+                        Command="{Binding ConvertToImageCommand}"
+                        CommandParameter="{Binding SelectedNodes}" />
             </ToolBar>
         </ToolBarTray>
         <Grid>

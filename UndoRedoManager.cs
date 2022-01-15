@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using HocrEditor.Commands;
+using HocrEditor.Commands.UndoRedo;
 
 namespace HocrEditor;
 
@@ -13,6 +14,8 @@ public class UndoRedoManager
     public bool CanUndo => CurrentIndex >= 0;
 
     public bool CanRedo => commands.Count > 0 && CurrentIndex < commands.Count - 1;
+
+    public event EventHandler? UndoStackChanged;
 
     public void ExecuteCommand(UndoRedoCommand command) => ExecuteCommands(Enumerable.Repeat(command, 1));
 
@@ -35,15 +38,26 @@ public class UndoRedoManager
         commands.Add(commandList);
 
         CurrentIndex++;
+
+        OnUndoStackChanged();
+    }
+
+    public void Clear()
+    {
+        commands.Clear();
+
+        CurrentIndex = -1;
+
+        OnUndoStackChanged();
     }
 
     /// <summary>Reverts the last action. </summary>
     /// <returns>A value indicating whether the undo could be performed. </returns>
-    public bool Undo()
+    public void Undo()
     {
         if (!CanUndo)
         {
-            return false;
+            return;
         }
 
         foreach (var command in commands[CurrentIndex])
@@ -53,16 +67,16 @@ public class UndoRedoManager
 
         CurrentIndex--;
 
-        return true;
+        OnUndoStackChanged();
     }
 
     /// <summary>Repeats the last reverted action. </summary>
     /// <returns>A value indicating whether the redo could be performed. </returns>
-    public bool Redo()
+    public void Redo()
     {
         if (!CanRedo)
         {
-            return false;
+            return;
         }
 
         CurrentIndex++;
@@ -72,12 +86,17 @@ public class UndoRedoManager
             command.Redo();
         }
 
-        return true;
+        OnUndoStackChanged();
     }
 
     private void RemoveRedoCommands()
     {
         if (commands.Count > CurrentIndex + 1)
             commands.RemoveRange(CurrentIndex + 1, commands.Count - CurrentIndex - 1);
+    }
+
+    protected virtual void OnUndoStackChanged()
+    {
+        UndoStackChanged?.Invoke(this, EventArgs.Empty);
     }
 }

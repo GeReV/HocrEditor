@@ -1,12 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using HocrEditor.Commands;
+using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Controls;
-using HocrEditor.Helpers;
-using HocrEditor.Models;
 using Microsoft.Toolkit.Mvvm.Input;
 
 namespace HocrEditor.ViewModels
@@ -17,34 +16,33 @@ namespace HocrEditor.ViewModels
 
         public MainWindowViewModel()
         {
-            DeleteCommand = new RelayCommand(DeleteSelectedNodes, CanEdit);
-            MergeCommand = new RelayCommand(MergeSelectedNodes, CanEdit);
-            CropCommand = new RelayCommand(CropSelectedNodes, CanEdit);
+            DeleteCommand = new DeleteNodes(this);
+            MergeCommand = new MergeNodes(this);
+            CropCommand = new CropNodes(this);
+            ConvertToImageCommand = new ConvertToImageCommand(this);
 
             SelectNodesCommand = new RelayCommand<IList<HocrNodeViewModel>>(SelectNodes, CanSelectNodes);
             DeselectNodesCommand = new RelayCommand<IList<HocrNodeViewModel>>(DeselectNodes, CanDeselectNodes);
 
-            ConvertToImageCommand = new ConvertToImageCommand(this);
-
-            UndoCommand = new RelayCommand(Undo, CanUndo);
-            RedoCommand = new RelayCommand(Redo, CanRedo);
+            UndoCommand = new RelayCommand(UndoRedoManager.Undo, CanUndo);
+            RedoCommand = new RelayCommand(UndoRedoManager.Redo, CanRedo);
             UpdateNodesCommand = new RelayCommand<List<NodesChangedEventArgs.NodeChange>>(UpdateNodes, CanUpdateNodes);
 
             PropertyChanged += HandlePropertyChanged;
+
+            UndoRedoManager.UndoStackChanged += UpdateUndoRedoCommands;
         }
 
         public ConvertToImageCommand ConvertToImageCommand { get; set; }
 
-        public IRelayCommand DeleteCommand { get; init; }
-        public IRelayCommand MergeCommand { get; init; }
+        public IRelayCommand<IList<HocrNodeViewModel>> DeleteCommand { get; }
+        public IRelayCommand<IList<HocrNodeViewModel>> MergeCommand { get; }
+        public IRelayCommand<IList<HocrNodeViewModel>> CropCommand { get; init; }
         public IRelayCommand<IList<HocrNodeViewModel>> SelectNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> DeselectNodesCommand { get; }
-        public IRelayCommand UndoCommand { get; init; }
-        public IRelayCommand RedoCommand { get; init; }
-
-        public IRelayCommand CropCommand { get; init; }
-
-        public IRelayCommand<List<NodesChangedEventArgs.NodeChange>> UpdateNodesCommand { get; init; }
+        public IRelayCommand UndoCommand { get; }
+        public IRelayCommand RedoCommand { get; }
+        public IRelayCommand<List<NodesChangedEventArgs.NodeChange>> UpdateNodesCommand { get; }
 
         private void HandlePropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
@@ -75,27 +73,9 @@ namespace HocrEditor.ViewModels
             ConvertToImageCommand.NotifyCanExecuteChanged();
         }
 
-        private void Redo()
-        {
-            UndoRedoManager.Redo();
-
-            UndoCommand.NotifyCanExecuteChanged();
-            RedoCommand.NotifyCanExecuteChanged();
-        }
-
-        private void Undo()
-        {
-            UndoRedoManager.Undo();
-
-            UndoCommand.NotifyCanExecuteChanged();
-            RedoCommand.NotifyCanExecuteChanged();
-        }
-
         private bool CanRedo() => UndoRedoManager.CanRedo;
 
         private bool CanUndo() => UndoRedoManager.CanUndo;
-
-        private bool CanEdit() => Document?.SelectedNodes.Any() ?? false;
 
         private bool CanSelectNodes(IList<HocrNodeViewModel>? nodes) =>
             Document != null && Document.Nodes.Any() && nodes != null && nodes.Any();
@@ -122,7 +102,7 @@ namespace HocrEditor.ViewModels
                 );
             }
 
-            ExecuteUndoableCommand(commands);
+            UndoRedoManager.ExecuteCommands(commands);
         }
 
         private bool CanDeselectNodes(IList<HocrNodeViewModel>? nodes) =>
@@ -153,131 +133,6 @@ namespace HocrEditor.ViewModels
             UndoRedoManager.ExecuteCommands(commands);
         }
 
-        private void DeleteSelectedNodes()
-        {
-            Debug.Assert(Document != null, $"{nameof(Document)} != null");
-
-            var selectedNodes = Document.SelectedNodes.ToList();
-
-            var commands = new List<UndoRedoCommand>
-            {
-                new DocumentRemoveNodesCommand(Document, selectedNodes)
-            };
-
-            if (AutoCrop)
-            {
-                foreach (var node in selectedNodes)
-                {
-                    commands.AddRange(CropParents(node));
-                }
-            }
-
-            commands.AddRange(
-                selectedNodes.Select(
-                        selectedNode => new PropertyChangedCommand(
-                            selectedNode,
-                            nameof(selectedNode.IsSelected),
-                            selectedNode.IsSelected,
-                            false
-                        )
-                    )
-            );
-
-            // SelectedNodes.Clear();
-            commands.Add(new CollectionClearCommand(Document.SelectedNodes));
-
-            ExecuteUndoableCommand(commands);
-        }
-
-        private void MergeSelectedNodes()
-        {
-            Debug.Assert(Document != null, $"{nameof(Document)} != null");
-
-            if (!Document.SelectedNodes.Any())
-            {
-                return;
-            }
-
-            var selectedNodes = Document.SelectedNodes.OrderBy(node => Document.Nodes.IndexOf(node)).ToList();
-
-            // All child nodes will be merged into the first one.
-            var first = selectedNodes.First();
-            var rest = selectedNodes.Skip(1).ToArray();
-
-            if (rest.Any(node => node.HocrNode.NodeType != first.HocrNode.NodeType))
-            {
-                // TODO: Show error.
-                return;
-            }
-
-            var children = rest.SelectMany(node => node.Children).ToList();
-
-            var commands = new List<UndoRedoCommand>();
-
-            foreach (var parent in rest)
-            {
-                commands.Add(new CollectionClearCommand(parent.Children));
-            }
-
-            foreach (var child in children)
-            {
-                // child.Parent = first;
-                commands.Add(new PropertyChangedCommand(child, nameof(child.Parent), child.Parent, first));
-
-                // child.ParentId = first.Id;
-                commands.Add(new PropertyChangedCommand(child, nameof(child.ParentId), child.ParentId, first.Id));
-
-                // first.Children.Add(child);
-                commands.Add(new CollectionAddCommand(first.Children, child));
-            }
-
-            var nodes = first.Descendents.Prepend(first).ToList();
-
-            // first.BBox = NodeHelpers.CalculateUnionRect(nodes);
-            commands.Add(
-                new PropertyChangedCommand(first, nameof(first.BBox), first.BBox, NodeHelpers.CalculateUnionRect(nodes))
-            );
-
-            commands.Add(new DocumentRemoveNodesCommand(Document, rest));
-
-            ExecuteUndoableCommand(commands);
-        }
-
-        private void CropSelectedNodes()
-        {
-            // Order nodes from the latest occurrence (deepest) to earliest, so if a chain of parent-children is selected,
-            // the deepest child is cropped, then its parent and so on, bottom-up.
-            var selectedNodes = Document?.SelectedNodes.OrderBy(node => -Document.Nodes.IndexOf(node)) ??
-                                Enumerable.Empty<HocrNodeViewModel>();
-
-            var commands = selectedNodes.Select(
-                node => new PropertyChangedCommand(
-                    node,
-                    nameof(HocrNodeViewModel.BBox),
-                    node.BBox,
-                    NodeHelpers.CalculateUnionRect(node.Children)
-                )
-            );
-
-            ExecuteUndoableCommand(commands);
-        }
-
-        private IEnumerable<PropertyChangedCommand> CropParents(HocrNodeViewModel node)
-        {
-            Debug.Assert(node.Parent != null, "node.Parent != null");
-
-            var ascendants = node.Ascendants.Where(n => n.NodeType != HocrNodeType.Page);
-
-            return ascendants.Select(
-                parent => new PropertyChangedCommand(
-                    parent,
-                    nameof(parent.BBox),
-                    parent.BBox,
-                    NodeHelpers.CalculateUnionRect(parent.Children)
-                )
-            );
-        }
-
         private static bool CanUpdateNodes(List<NodesChangedEventArgs.NodeChange>? nodeChanges) =>
             nodeChanges is { Count: > 0 };
 
@@ -297,13 +152,11 @@ namespace HocrEditor.ViewModels
                 )
             );
 
-            ExecuteUndoableCommand(commands);
+            UndoRedoManager.ExecuteCommands(commands);
         }
 
-        private void ExecuteUndoableCommand(IEnumerable<UndoRedoCommand> commands)
+        private void UpdateUndoRedoCommands(object? sender, EventArgs eventArgs)
         {
-            UndoRedoManager.ExecuteCommands(commands);
-
             UndoCommand.NotifyCanExecuteChanged();
             RedoCommand.NotifyCanExecuteChanged();
         }

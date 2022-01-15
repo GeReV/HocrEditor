@@ -890,7 +890,6 @@ public partial class DocumentCanvas
 
         var bbox = transformation.MapRect(canvasSelection.Bounds);
 
-
         canvas.DrawRect(
             bbox,
             new SKPaint

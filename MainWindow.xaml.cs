@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using HocrEditor.Commands;
 using HocrEditor.Controls;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
@@ -80,24 +79,18 @@ namespace HocrEditor
                                         string.IsNullOrEmpty(node.InnerText) &&
                                         (node.BBox.Width < averageFontSize * fontInchRatio * dpix  ||
                                          node.BBox.Height < averageFontSize * fontInchRatio * dpiy)
-                            );
+                            ).ToList();
 
-                            ViewModel.Document.SelectedNodes.AddRange(noiseNodes);
-
-                            // TODO: Change command to accept selection as parameter.
-                            ViewModel.DeleteCommand.Execute(null);
+                            ViewModel.DeleteCommand.Execute(noiseNodes);
 
                             var graphics = ViewModel.Document.Nodes.Where(
                                 node => node.NodeType == HocrNodeType.ContentArea &&
                                         string.IsNullOrEmpty(node.InnerText)
-                            );
+                            ).ToList();
 
-                            ViewModel.Document.SelectedNodes.AddRange(graphics);
+                            ViewModel.ConvertToImageCommand.Execute(graphics);
 
-                            // TODO: Change command to accept selection as parameter.
-                            ViewModel.ConvertToImageCommand.Execute(null);
-
-                            ViewModel.Document.SelectedNodes.Clear();
+                            ViewModel.UndoRedoManager.Clear();
                         },
                         TaskScheduler.FromCurrentSynchronizationContext()
                     );

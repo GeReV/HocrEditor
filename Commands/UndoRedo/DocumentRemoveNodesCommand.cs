@@ -3,17 +3,16 @@ using System.Diagnostics;
 using System.Linq;
 using HocrEditor.ViewModels;
 
-namespace HocrEditor.Commands;
+namespace HocrEditor.Commands.UndoRedo;
 
 public class DocumentRemoveNodesCommand : UndoRedoCommand
 {
     private readonly List<HocrNodeViewModel> nodes;
-    private readonly List<HocrNodeViewModel> children;
+    private List<HocrNodeViewModel> children = new();
 
     public DocumentRemoveNodesCommand(HocrDocumentViewModel sender, IEnumerable<HocrNodeViewModel> nodes) : base(sender)
     {
         this.nodes = nodes.ToList();
-        children = this.nodes.SelectMany(node => node.Descendents).ToList();
     }
 
     public override void Undo()
@@ -37,6 +36,8 @@ public class DocumentRemoveNodesCommand : UndoRedoCommand
     public override void Redo()
     {
         var document = (HocrDocumentViewModel)Sender;
+
+        children = nodes.SelectMany(node => node.Descendents).ToList();
 
         document.SelectedNodes.RemoveRange(nodes);
 

@@ -1,4 +1,4 @@
-﻿namespace HocrEditor.Commands;
+﻿namespace HocrEditor.Commands.UndoRedo;
 
 public abstract class UndoRedoCommand
 {

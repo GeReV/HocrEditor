@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Models;
 using HocrEditor.ViewModels;
 using Microsoft.Toolkit.Mvvm.Input;
 
 namespace HocrEditor.Commands;
 
-public class ConvertToImageCommand : IRelayCommand
+public class ConvertToImageCommand : IRelayCommand<IEnumerable<HocrNodeViewModel>>
 {
     private readonly MainWindowViewModel mainWindowViewModel;
 
@@ -16,21 +17,34 @@ public class ConvertToImageCommand : IRelayCommand
         this.mainWindowViewModel = mainWindowViewModel;
     }
 
-    public bool CanExecute(object? parameter) =>
-        mainWindowViewModel.SelectedNodes != null &&
-        mainWindowViewModel.SelectedNodes.Any() &&
-        mainWindowViewModel.SelectedNodes.All(node => node.NodeType == HocrNodeType.ContentArea);
-
-    public void Execute(object? parameter)
+    public bool CanExecute(IEnumerable<HocrNodeViewModel>? parameter)
     {
-        if (!CanExecute(parameter))
+        if (parameter == null)
+        {
+            return false;
+        }
+
+        var list = parameter.ToList();
+
+        return list.Any() &&
+               list.All(node => node.NodeType == HocrNodeType.ContentArea);
+    }
+
+    public void Execute(IEnumerable<HocrNodeViewModel>? parameter)
+    {
+        if (parameter == null)
         {
             return;
         }
 
+        var selectedNodes = parameter.ToList();
+
+        if (!CanExecute(selectedNodes))
+        {
+            return;
+        }
 
         var document = mainWindowViewModel.Document ?? throw new InvalidOperationException();
-        var selectedNodes = mainWindowViewModel.SelectedNodes ?? throw new InvalidOperationException();
 
         var commands = new List<UndoRedoCommand>();
 
@@ -49,6 +63,10 @@ public class ConvertToImageCommand : IRelayCommand
 
         mainWindowViewModel.UndoRedoManager.ExecuteCommands(commands);
     }
+
+    public bool CanExecute(object? parameter) => CanExecute((IEnumerable<HocrNodeViewModel>?)parameter);
+
+    public void Execute(object? parameter) => Execute((IEnumerable<HocrNodeViewModel>?)parameter);
 
     public event EventHandler? CanExecuteChanged;
 

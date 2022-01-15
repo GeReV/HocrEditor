@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace HocrEditor.Commands;
+namespace HocrEditor.Commands.UndoRedo;
 
 public class CollectionClearCommand : UndoRedoCommand
 {
