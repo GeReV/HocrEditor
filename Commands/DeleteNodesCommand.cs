@@ -62,7 +62,11 @@ public class DeleteNodes : CommandBase<IList<HocrNodeViewModel>>
 
         return ascendants.Select(
             parent =>
-                PropertyChangeCommand.FromProperty(parent, p => p.BBox, NodeHelpers.CalculateUnionRect(parent.Children))
+                PropertyChangeCommand.FromProperty(
+                    parent,
+                    p => p.BBox,
+                    () => NodeHelpers.CalculateUnionRect(parent.Children)
+                )
         );
     }
 }

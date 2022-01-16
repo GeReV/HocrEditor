@@ -32,7 +32,7 @@ public class CropNodes : CommandBase<IList<HocrNodeViewModel>>
             node => PropertyChangeCommand.FromProperty(
                 node,
                 n => n.BBox,
-                NodeHelpers.CalculateUnionRect(node.Children)
+                () => NodeHelpers.CalculateUnionRect(node.Children)
             )
         );
 
