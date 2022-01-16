@@ -21,7 +21,6 @@ namespace HocrEditor.Models
             children
         )
         {
-            InnerText = JoinInnerText(ParagraphSeparator, ChildNodes);
             Image = GetAttributeFromTitle("image").Trim('"');
 
             var dpi = GetAttributeFromTitle("scan_res")
@@ -50,13 +49,11 @@ namespace HocrEditor.Models
             children
         )
         {
-            InnerText = JoinInnerText(ParagraphSeparator, ChildNodes);
         }
     }
 
     public record HocrParagraph : HocrNode
     {
-        private static readonly string LineSeparator = Environment.NewLine;
 
         public HocrParagraph(string id, string? parentId, string title, IEnumerable<IHocrNode> children) : base(
             HocrNodeType.Paragraph,
@@ -66,7 +63,6 @@ namespace HocrEditor.Models
             children
         )
         {
-            InnerText = JoinInnerText(LineSeparator, ChildNodes);
         }
 
         public string? Language { get; init; }
@@ -84,8 +80,6 @@ namespace HocrEditor.Models
             children
         )
         {
-            InnerText = JoinInnerText(" ", ChildNodes);
-
             Size = float.Parse(GetAttributeFromTitle("x_size"));
             Descenders = float.Parse(GetAttributeFromTitle("x_descenders"));
             Ascenders = float.Parse(GetAttributeFromTitle("x_ascenders"));
@@ -140,7 +134,7 @@ namespace HocrEditor.Models
         }
     }
 
-    public record HocrWord : HocrNode
+    public sealed record HocrWord : HocrNode
     {
         public HocrWord(string id, string? parentId, string title, string innerText) : base(
             HocrNodeType.Word,
@@ -160,6 +154,7 @@ namespace HocrEditor.Models
             }
         }
 
+        public string InnerText { get; set; }
 
         public string? Language { get; init; }
 
@@ -180,7 +175,6 @@ namespace HocrEditor.Models
             Enumerable.Empty<IHocrNode>()
         )
         {
-            InnerText = "Image";
         }
     }
 }

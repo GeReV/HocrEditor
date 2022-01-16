@@ -39,7 +39,7 @@ public class MergeNodes : CommandBase<IList<HocrNodeViewModel>>
         var first = selectedNodes.First();
         var rest = selectedNodes.Skip(1).ToArray();
 
-        if (rest.Any(node => node.HocrNode.NodeType != first.HocrNode.NodeType))
+        if (rest.Any(node => node.NodeType != first.NodeType))
         {
             // TODO: Show error.
             return;

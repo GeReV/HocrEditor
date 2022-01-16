@@ -7,45 +7,6 @@ namespace HocrEditor.Models
 {
     public abstract record HocrNode : IHocrNode
     {
-        protected static readonly string ParagraphSeparator = Environment.NewLine + Environment.NewLine;
-
-        protected static string JoinInnerText(string separator, IEnumerable<IHocrNode> nodes) =>
-            string.Join(separator, nodes.Select(n => n.InnerText));
-
-        protected string GetAttributeFromTitle(string attribute)
-        {
-            var attributeValueIndex = Title.IndexOf($"{attribute} ", StringComparison.Ordinal);
-
-            if (attributeValueIndex < 0)
-            {
-                return string.Empty;
-            }
-
-            var semicolonIndex = Title.IndexOf(';', attributeValueIndex);
-
-            if (semicolonIndex == -1)
-            {
-                semicolonIndex = Title.Length;
-            }
-
-            return Title[(attributeValueIndex + attribute.Length + 1)..semicolonIndex];
-        }
-
-        protected HocrNode(
-            HocrNodeType nodeType,
-            string id,
-            string? parentId,
-            string title,
-            IEnumerable<IHocrNode> children
-        )
-        {
-            NodeType = nodeType;
-            Id = id;
-            ParentId = parentId;
-            Title = title;
-            ChildNodes = children.ToList();
-            BBox = Rect.FromBboxAttribute(GetAttributeFromTitle("bbox"));
-        }
 
         public static HocrNode FromHtmlNode(HtmlNode htmlNode, string? parentId, IEnumerable<IHocrNode> children)
         {
@@ -86,13 +47,48 @@ namespace HocrEditor.Models
             return node;
         }
 
+        protected HocrNode(
+            HocrNodeType nodeType,
+            string id,
+            string? parentId,
+            string title,
+            IEnumerable<IHocrNode> children
+        )
+        {
+            NodeType = nodeType;
+            Id = id;
+            ParentId = parentId;
+            Title = title;
+            ChildNodes = children.ToList();
+            BBox = Rect.FromBboxAttribute(GetAttributeFromTitle("bbox"));
+        }
+
         public HocrNodeType NodeType { get; init; }
         public virtual HocrNodeType[] MatchingNodeTypes { get; } = Array.Empty<HocrNodeType>();
         public string Title { get; set; } = string.Empty;
         public string Id { get; set; } = string.Empty;
         public string? ParentId { get; set; }
-        public string InnerText { get; set; } = string.Empty;
+
         public Rect BBox { get; set; }
-        public IList<IHocrNode> ChildNodes { get; init; }
+        public List<IHocrNode> ChildNodes { get; }
+
+        protected string GetAttributeFromTitle(string attribute)
+        {
+            var attributeValueIndex = Title.IndexOf($"{attribute} ", StringComparison.Ordinal);
+
+            if (attributeValueIndex < 0)
+            {
+                return string.Empty;
+            }
+
+            var semicolonIndex = Title.IndexOf(';', attributeValueIndex);
+
+            if (semicolonIndex == -1)
+            {
+                semicolonIndex = Title.Length;
+            }
+
+            return Title[(attributeValueIndex + attribute.Length + 1)..semicolonIndex];
+        }
     }
 }

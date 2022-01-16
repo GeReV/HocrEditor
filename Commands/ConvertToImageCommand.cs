@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using HocrEditor.Commands.UndoRedo;
-using HocrEditor.Helpers;
 using HocrEditor.Models;
 using HocrEditor.ViewModels;
 using Microsoft.Toolkit.Mvvm.Input;
@@ -56,8 +55,8 @@ public class ConvertToImageCommand : IRelayCommand<IEnumerable<HocrNodeViewModel
                 node =>
                     PropertyChangeCommand.FromProperty(
                         node,
-                        n => n.HocrNode,
-                        new HocrImage(node.HocrNode.Id, node.ParentId, node.HocrNode.Title) { BBox = node.BBox }
+                        n => n.NodeType,
+                        HocrNodeType.Image
                     )
             )
         );

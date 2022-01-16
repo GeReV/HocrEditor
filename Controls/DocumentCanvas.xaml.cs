@@ -400,7 +400,7 @@ public partial class DocumentCanvas
                             throw new InvalidOperationException("Expected ViewModel to not be null");
 
         if (canvasSelection.Bounds.Contains(normalizedPosition) &&
-            (node.HocrNode.NodeType == HocrNodeType.Page || selectedNodes.Contains(node)))
+            (node.NodeType == HocrNodeType.Page || selectedNodes.Contains(node)))
         {
             // Dragging the selection, no need to select anything else.
             offsetStart = transformation.MapPoint(canvasSelection.Bounds.Location);
@@ -409,7 +409,7 @@ public partial class DocumentCanvas
         }
 
         // Page is unselectable.
-        if (node.HocrNode.NodeType == HocrNodeType.Page)
+        if (node.NodeType == HocrNodeType.Page)
         {
             ClearSelection();
             return;
@@ -808,11 +808,11 @@ public partial class DocumentCanvas
                 Bounds = node.BBox.ToSKRect()
             };
 
-            elements.Add(node.HocrNode.Id, (node, el));
+            elements.Add(node.Id, (node, el));
 
             if (node.HocrNode is HocrPage page)
             {
-                rootId = node.HocrNode.Id;
+                rootId = node.Id;
 
                 el.Background = SKBitmap.Decode(page.Image);
             }
@@ -870,7 +870,7 @@ public partial class DocumentCanvas
                 canvas.DrawRect(bounds, paint);
             }
 
-            foreach (var childKey in node.Children.Select(c => c.HocrNode.Id))
+            foreach (var childKey in node.Children.Select(c => c.Id))
             {
                 Recurse(childKey);
             }

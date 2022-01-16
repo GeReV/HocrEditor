@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Linq;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 
@@ -9,36 +12,59 @@ namespace HocrEditor.ViewModels
     {
         private const int MAX_INNER_TEXT_LENGTH = 15;
         private const char ELLIPSIS = '…';
+        private static readonly string LineSeparator = Environment.NewLine;
+        private static readonly string ParagraphSeparator = Environment.NewLine + Environment.NewLine;
 
         private HocrNodeViewModel? parent;
 
+        private static string JoinInnerText(string separator, IEnumerable<HocrNodeViewModel> nodes) =>
+            string.Join(separator, nodes.Select(n => n.InnerText));
+
+        public string BuildInnerText() => NodeType switch
+        {
+            HocrNodeType.Image => "Image",
+            HocrNodeType.Word => ((HocrWord)HocrNode).InnerText,
+            HocrNodeType.Line or HocrNodeType.Caption or HocrNodeType.TextFloat => JoinInnerText(" ", Children),
+            HocrNodeType.Paragraph => JoinInnerText(LineSeparator, Children),
+            HocrNodeType.Page or HocrNodeType.ContentArea => JoinInnerText(ParagraphSeparator, Children),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        public HocrNodeViewModel(IHocrNode node)
+        {
+            HocrNode = node;
+
+            Id = node.Id;
+            NodeType = node.NodeType;
+
+            BBox = node.BBox;
+
+            Children.CollectionChanged += ChildrenOnCollectionChanged;
+        }
+
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- Setter used by PropertyChangedCommand.
-        public IHocrNode HocrNode { get; set; }
+        public IHocrNode HocrNode { get; }
 
         public string Id { get; }
 
         public string? ParentId { get; set; }
 
         public bool IsRoot { get; set; }
+        public HocrNodeType NodeType { get; set; }
 
-        public HocrNodeType NodeType => HocrNode.NodeType;
+        public string InnerText => BuildInnerText();
 
-        public string InnerText
+        public string DisplayText
         {
-            get => HocrNode.InnerText;
-            set => HocrNode.InnerText = value;
+            get
+            {
+                var result = InnerText.Length > MAX_INNER_TEXT_LENGTH
+                    ? InnerText.Remove(MAX_INNER_TEXT_LENGTH).TrimEnd() + ELLIPSIS
+                    : InnerText;
+
+                return result.ReplaceLineEndings(" ");
+            }
         }
-
-        public string DisplayText => NodeType switch
-        {
-            HocrNodeType.Word or HocrNodeType.Line or HocrNodeType.Image => InnerText,
-            _ => Children[0].DisplayText.Length > MAX_INNER_TEXT_LENGTH ?
-                Children[0].DisplayText.Remove(MAX_INNER_TEXT_LENGTH) + ELLIPSIS :
-                Children[0].DisplayText
-        };
-
-
-
 
         public Rect BBox { get; set; }
 
@@ -53,21 +79,11 @@ namespace HocrEditor.ViewModels
             }
         }
 
-        public ObservableCollection<HocrNodeViewModel> Children { get; set; } = new();
+        public ObservableCollection<HocrNodeViewModel> Children { get; } = new();
 
         public bool IsExpanded { get; set; }
 
         public bool IsSelected { get; set; }
-
-        public HocrNodeViewModel(IHocrNode node)
-        {
-            HocrNode = node;
-
-            Id = node.Id;
-            ParentId = string.IsNullOrEmpty(node.ParentId) ? null : node.ParentId;
-
-            BBox = node.BBox;
-        }
 
         public IEnumerable<HocrNodeViewModel> Descendents => Children.RecursiveSelect(n => n.Children);
 
@@ -75,14 +91,23 @@ namespace HocrEditor.ViewModels
         {
             get
             {
-                var parent = Parent;
+                var item = Parent;
 
-                while (parent is { })
+                while (item is { })
                 {
-                    yield return parent;
+                    yield return item;
 
-                    parent = parent.Parent;
+                    item = item.Parent;
                 }
+            }
+        }
+
+        private void ChildrenOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            foreach (var item in Ascendants.Prepend(this))
+            {
+                item.OnPropertyChanged(nameof(InnerText));
+                item.OnPropertyChanged(nameof(DisplayText));
             }
         }
     }

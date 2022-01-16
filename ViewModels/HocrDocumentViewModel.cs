@@ -10,15 +10,13 @@ namespace HocrEditor.ViewModels
 
         public RangeObservableCollection<HocrNodeViewModel> Nodes { get; }
 
-        public RangeObservableCollection<HocrNodeViewModel> SelectedNodes { get; set; }
+        public RangeObservableCollection<HocrNodeViewModel> SelectedNodes { get; set; } = new();
 
         public HocrDocumentViewModel(HocrDocument hocrDocument)
         {
             NodeCache = BuildNodeCache(hocrDocument.Items.Prepend(hocrDocument.RootNode));
 
             Nodes = new RangeObservableCollection<HocrNodeViewModel>(NodeCache.Values);
-
-            SelectedNodes = new RangeObservableCollection<HocrNodeViewModel>();
         }
 
         private static Dictionary<string, HocrNodeViewModel> BuildNodeCache(IEnumerable<IHocrNode> nodes)
@@ -31,13 +29,13 @@ namespace HocrEditor.ViewModels
 
                 dictionary.Add(hocrNodeViewModel.Id, hocrNodeViewModel);
 
-                if (string.IsNullOrEmpty(hocrNodeViewModel.ParentId))
+                if (string.IsNullOrEmpty(node.ParentId))
                 {
                     hocrNodeViewModel.IsRoot = true;
                 }
                 else
                 {
-                    var parent = dictionary[hocrNodeViewModel.ParentId];
+                    var parent = dictionary[node.ParentId];
 
                     hocrNodeViewModel.Parent = parent;
 
