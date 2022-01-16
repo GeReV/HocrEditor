@@ -65,35 +65,45 @@ namespace HocrEditor
                     .ContinueWith(
                         async hocr =>
                         {
-                            var hocrDocument = await hocr;
+                            try
+                            {
+                                var hocrDocument = await hocr;
 
-                            ViewModel.Document = new HocrDocumentViewModel(hocrDocument);
+                                ViewModel.Document = new HocrDocumentViewModel(hocrDocument);
 
-                            var averageFontSize = hocrDocument.Items.Where(node => node.NodeType == HocrNodeType.Word)
-                                .Cast<HocrWord>()
-                                .Average(node => node.FontSize);
+                                var averageFontSize = hocrDocument.Items
+                                    .Where(node => node.NodeType == HocrNodeType.Word)
+                                    .Cast<HocrWord>()
+                                    .Average(node => node.FontSize);
 
-                            var (dpix, dpiy) = hocrDocument.RootNode.Dpi;
+                                var (dpix, dpiy) = hocrDocument.RootNode.Dpi;
 
-                            const float fontInchRatio = 1.0f / 72f;
+                                const float fontInchRatio = 1.0f / 72f;
 
-                            var noiseNodes = ViewModel.Document.Nodes.Where(
-                                node => node.NodeType == HocrNodeType.ContentArea &&
-                                        string.IsNullOrEmpty(node.InnerText) &&
-                                        (node.BBox.Width < averageFontSize * fontInchRatio * dpix  ||
-                                         node.BBox.Height < averageFontSize * fontInchRatio * dpiy)
-                            ).ToList();
+                                var noiseNodes = ViewModel.Document.Nodes.Where(
+                                        node => node.NodeType == HocrNodeType.ContentArea &&
+                                                string.IsNullOrEmpty(node.InnerText) &&
+                                                (node.BBox.Width < averageFontSize * fontInchRatio * dpix ||
+                                                 node.BBox.Height < averageFontSize * fontInchRatio * dpiy)
+                                    )
+                                    .ToList();
 
-                            ViewModel.DeleteCommand.Execute(noiseNodes);
+                                ViewModel.DeleteCommand.Execute(noiseNodes);
 
-                            var graphics = ViewModel.Document.Nodes.Where(
-                                node => node.NodeType == HocrNodeType.ContentArea &&
-                                        string.IsNullOrEmpty(node.InnerText)
-                            ).ToList();
+                                var graphics = ViewModel.Document.Nodes.Where(
+                                        node => node.NodeType == HocrNodeType.ContentArea &&
+                                                string.IsNullOrEmpty(node.InnerText)
+                                    )
+                                    .ToList();
 
-                            ViewModel.ConvertToImageCommand.Execute(graphics);
+                                ViewModel.ConvertToImageCommand.Execute(graphics);
 
-                            ViewModel.UndoRedoManager.Clear();
+                                ViewModel.UndoRedoManager.Clear();
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show($"{ex.Message}\n{ex.Source}\n\n{ex.StackTrace}");
+                            }
                         },
                         TaskScheduler.FromCurrentSynchronizationContext()
                     );
