@@ -43,7 +43,7 @@ public class DeleteNodes : CommandBase<IList<HocrNodeViewModel>>
 
         commands.AddRange(
             nodes.Select(
-                selectedNode => selectedNode.ToPropertyChangedCommand(n => n.IsSelected, false)
+                selectedNode => PropertyChangeCommand.FromProperty(selectedNode, n => n.IsSelected, false)
             )
         );
 
@@ -54,7 +54,7 @@ public class DeleteNodes : CommandBase<IList<HocrNodeViewModel>>
         mainWindowViewModel.UndoRedoManager.ExecuteCommands(commands);
     }
 
-    private static IEnumerable<PropertyChangedCommand<Rect>> CropParents(HocrNodeViewModel node)
+    private static IEnumerable<PropertyChangeCommand<Rect>> CropParents(HocrNodeViewModel node)
     {
         Debug.Assert(node.Parent != null, "node.Parent != null");
 
@@ -62,7 +62,7 @@ public class DeleteNodes : CommandBase<IList<HocrNodeViewModel>>
 
         return ascendants.Select(
             parent =>
-                parent.ToPropertyChangedCommand(p => p.BBox, NodeHelpers.CalculateUnionRect(parent.Children))
+                PropertyChangeCommand.FromProperty(parent, p => p.BBox, NodeHelpers.CalculateUnionRect(parent.Children))
         );
     }
 }

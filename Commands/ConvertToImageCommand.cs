@@ -54,7 +54,8 @@ public class ConvertToImageCommand : IRelayCommand<IEnumerable<HocrNodeViewModel
         commands.AddRange(
             selectedNodes.Select(
                 node =>
-                    node.ToPropertyChangedCommand(
+                    PropertyChangeCommand.FromProperty(
+                        node,
                         n => n.HocrNode,
                         new HocrImage(node.HocrNode.Id, node.ParentId, node.HocrNode.Title) { BBox = node.BBox }
                     )

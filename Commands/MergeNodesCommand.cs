@@ -57,7 +57,7 @@ public class MergeNodes : CommandBase<IList<HocrNodeViewModel>>
         foreach (var child in children)
         {
             // child.Parent = first;
-            commands.Add(child.ToPropertyChangedCommand(c => c.Parent, first));
+            commands.Add(PropertyChangeCommand.FromProperty(child, c => c.Parent, first));
 
             // first.Children.Add(child);
             commands.Add(first.Children.ToCollectionAddCommand(child));
@@ -67,7 +67,10 @@ public class MergeNodes : CommandBase<IList<HocrNodeViewModel>>
 
         // first.BBox = NodeHelpers.CalculateUnionRect(nodes);
         commands.Add(
-            first.ToPropertyChangedCommand(f => f.BBox, () =>
+            PropertyChangeCommand.FromProperty(
+                first,
+                f => f.BBox,
+                () =>
                 {
                     var newNodes = first.Descendents.Prepend(first).ToList();
 

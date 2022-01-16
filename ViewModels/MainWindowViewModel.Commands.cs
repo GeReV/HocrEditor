@@ -98,7 +98,7 @@ namespace HocrEditor.ViewModels
 
                 commands.AddRange(
                     addedItems.Select(
-                        node => node.ToPropertyChangedCommand(n => n.IsSelected, true)
+                        node => PropertyChangeCommand.FromProperty(node, n => n.IsSelected, true)
                     )
                 );
             }
@@ -126,7 +126,7 @@ namespace HocrEditor.ViewModels
 
                 commands.AddRange(
                     removedItems.Select(
-                        node => node.ToPropertyChangedCommand(n => n.IsSelected, false)
+                        node => PropertyChangeCommand.FromProperty(node, n => n.IsSelected, false)
                     )
                 );
             }
@@ -145,7 +145,8 @@ namespace HocrEditor.ViewModels
             }
 
             var commands = nodeChanges.Select(
-                change => change.Node.ToPropertyChangedCommand(
+                change => PropertyChangeCommand.FromProperty(
+                    change.Node,
                     n => n.BBox,
                     change.NewBounds
                 )
