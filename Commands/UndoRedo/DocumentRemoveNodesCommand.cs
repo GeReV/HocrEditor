@@ -41,8 +41,6 @@ public class DocumentRemoveNodesCommand : UndoRedoCommand
 
         document.SelectedNodes.RemoveRange(nodes);
 
-        Debug.WriteLine(string.Join(' ', nodes.Concat(children).Select(n => n.Id)));
-
         document.Nodes.RemoveRange(nodes.Concat(children));
 
         foreach (var child in nodes.Concat(children))
