@@ -731,6 +731,11 @@ public partial class DocumentCanvas
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
     }
 
+    private void ResetTransformation()
+    {
+        transformation = inverseTransformation = scaleTransformation = inverseScaleTransformation = SKMatrix.Identity;
+    }
+
     private void UpdateTransformation(SKMatrix matrix)
     {
         transformation =
@@ -760,7 +765,7 @@ public partial class DocumentCanvas
             fitBounds.Height / documentBounds.Height
         );
 
-        transformation = SKMatrix.Identity;
+        ResetTransformation();
 
         UpdateTransformation(
             SKMatrix.CreateScaleTranslation(
