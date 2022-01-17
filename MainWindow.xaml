@@ -7,11 +7,20 @@
         xmlns:controls="clr-namespace:HocrEditor.Controls"
         xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
         xmlns:mstv="clr-namespace:System.Windows.Controls;assembly=MultiSelectTreeView"
+        xmlns:converters="clr-namespace:HocrEditor.Converters"
         mc:Ignorable="d"
         Title="hOCR Editor"
         Height="1080"
         Width="1920"
         d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}">
+    <Window.Resources>
+        <converters:ValueConverterGroup x:Key="NullableToVisibilityConverter">
+            <converters:NullableToBooleanConverter />
+            <BooleanToVisibilityConverter />
+        </converters:ValueConverterGroup>
+        <converters:NullableBitmapSourceConverter x:Key="NullableBitmapSourceConverter" />
+
+    </Window.Resources>
     <Window.InputBindings>
         <KeyBinding Key="Delete"
                     Command="{Binding DeleteCommand}"
@@ -117,7 +126,14 @@
                 <mstv:MultiSelectTreeView.Resources>
                     <HierarchicalDataTemplate DataType="{x:Type viewModels:HocrNodeViewModel}"
                                               ItemsSource="{Binding Children}">
-                        <TextBlock Text="{Binding DisplayText}" />
+                        <StackPanel Orientation="Horizontal">
+                            <Image ToolTip="{Binding IconTooltip}"
+                                   Margin="0,0,5,0"
+                                   Opacity="0.5"
+                                   Visibility="{Binding IconPath, Converter={StaticResource NullableToVisibilityConverter}}"
+                                   Source="{Binding IconPath, Converter={StaticResource NullableBitmapSourceConverter}}" />
+                            <TextBlock Text="{Binding DisplayText}" />
+                        </StackPanel>
                     </HierarchicalDataTemplate>
                 </mstv:MultiSelectTreeView.Resources>
             </mstv:MultiSelectTreeView>

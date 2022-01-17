@@ -18,4 +18,17 @@
       <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="Icons\i-cursor.png" />
+      <Resource Include="Icons\i-cursor.png" />
+      <None Remove="Icons\image.png" />
+      <Resource Include="Icons\image.png" />
+      <None Remove="Icons\paragraph.png" />
+      <Resource Include="Icons\paragraph.png" />
+      <None Remove="Icons\object-group.png" />
+      <Resource Include="Icons\object-group.png" />
+      <None Remove="Icons\file-lines.png" />
+      <Resource Include="Icons\file-lines.png" />
+    </ItemGroup>
+
 </Project>

@@ -102,6 +102,19 @@ namespace HocrEditor.ViewModels
             }
         }
 
+        public string? IconPath => NodeType switch
+        {
+            HocrNodeType.Page => "/Icons/file-lines.png",
+            HocrNodeType.ContentArea => "/Icons/object-group.png",
+            HocrNodeType.Paragraph => "/Icons/paragraph.png",
+            HocrNodeType.Line or HocrNodeType.TextFloat or HocrNodeType.Caption => "/Icons/i-cursor.png",
+            HocrNodeType.Image => "/Icons/image.png",
+            HocrNodeType.Word => null,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        public string? IconTooltip => Enum.GetName(NodeType);
+
         private void ChildrenOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             foreach (var item in Ascendants.Prepend(this))
