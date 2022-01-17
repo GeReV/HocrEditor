@@ -103,6 +103,9 @@ internal class CanvasSelection
     public void EndResize()
     {
         initialBounds = SKRect.Empty;
+
+        // Ensure our final size has positive width and height, if it was flipped during resize.
+        bounds = bounds.Standardized;
     }
 
     private void CalculateRectResizeHandles(SKRect r)

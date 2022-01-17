@@ -82,6 +82,9 @@ public partial class DocumentCanvas
 
     private SKRect dragLimit = SKRect.Empty;
 
+    private SKRect resizeLimitInside = SKRect.Empty;
+    private SKRect resizeLimitOutside = SKRect.Empty;
+
     private readonly CanvasSelection canvasSelection = new();
     private ResizeHandle? selectedResizeHandle;
 
@@ -320,6 +323,8 @@ public partial class DocumentCanvas
                     {
                         mouseMoveState = MouseState.Resizing;
 
+                        CaptureKeyDownEvents();
+
                         canvasSelection.BeginResize();
 
                         selectedResizeHandle = selectedHandle;
@@ -460,9 +465,40 @@ public partial class DocumentCanvas
 
     private void UpdateCanvasSelection()
     {
-        var nodes = selectedElements.Select(id => elements[id].Item1);
+        var allNodes = selectedElements.Select(id => elements[id].Item1).ToList();
 
-        canvasSelection.Bounds = NodeHelpers.CalculateUnionRect(nodes).ToSKRect();
+        canvasSelection.Bounds = NodeHelpers.CalculateUnionRect(allNodes).ToSKRect();
+
+        // TODO: Support for multiple selection.
+        // If we have only one item selected, set its resize limits to within its parent and around its children.
+        if (ViewModel != null && ViewModel.SelectedNodes.Count == 1)
+        {
+            var node = ViewModel.SelectedNodes[0];
+
+            var containedChildren = node.Children.Where(c => node.BBox.Contains(c.BBox));
+
+            resizeLimitInside = NodeHelpers.CalculateUnionRect(containedChildren).ToSKRect();
+
+            Debug.Assert(
+                resizeLimitInside.IsEmpty || canvasSelection.Bounds.Contains(resizeLimitInside),
+                "Expected inner resize limit to be contained in the canvas selection bounds."
+            );
+
+            if (node.Parent != null)
+            {
+                resizeLimitOutside = node.Parent.BBox.ToSKRect();
+
+                Debug.Assert(
+                    resizeLimitOutside.Contains(canvasSelection.Bounds),
+                    "Expected outer resize limit to contain the canvas selection bounds."
+                );
+            }
+        }
+        else
+        {
+            // No resize limit (any size within the page).
+            ClearCanvasResizeLimit();
+        }
     }
 
     private void ClearCanvasSelection()
@@ -470,7 +506,15 @@ public partial class DocumentCanvas
         dragLimit = SKRect.Empty;
         canvasSelection.Bounds = SKRect.Empty;
 
+        ClearCanvasResizeLimit();
+
         selectedElements.Clear();
+    }
+
+    private void ClearCanvasResizeLimit()
+    {
+        resizeLimitInside = SKRect.Empty;
+        resizeLimitOutside = elements[rootId ?? throw new ArgumentNullException(nameof(rootId))].Item1.BBox.ToSKRect();
     }
 
     private void ClearSelection()
@@ -517,6 +561,8 @@ public partial class DocumentCanvas
                 if (mouseMoveState == MouseState.Resizing)
                 {
                     canvasSelection.EndResize();
+
+                    ReleaseKeyDownEvents();
                 }
 
                 mouseMoveState = MouseState.None;
@@ -654,61 +700,7 @@ public partial class DocumentCanvas
             }
             case MouseState.Resizing:
             {
-                var newLocation = offsetStart + delta;
-
-                Debug.Assert(selectedResizeHandle != null, $"{nameof(selectedResizeHandle)} != null");
-
-                var resizePivot = canvasSelection.Center;
-
-                if ((selectedResizeHandle.Direction & CardinalDirections.West) != 0)
-                {
-                    canvasSelection.Left = newLocation.X;
-
-                    resizePivot.X = canvasSelection.Right;
-                }
-
-                if ((selectedResizeHandle.Direction & CardinalDirections.North) != 0)
-                {
-                    canvasSelection.Top = newLocation.Y;
-
-                    resizePivot.Y = canvasSelection.Bottom;
-                }
-
-                if ((selectedResizeHandle.Direction & CardinalDirections.East) != 0)
-                {
-                    canvasSelection.Right = newLocation.X;
-
-                    resizePivot.X = canvasSelection.Left;
-                }
-
-                if ((selectedResizeHandle.Direction & CardinalDirections.South) != 0)
-                {
-                    canvasSelection.Bottom = newLocation.Y;
-
-                    resizePivot.Y = canvasSelection.Top;
-                }
-
-                var ratio = canvasSelection.ResizeRatio;
-
-                var matrix = SKMatrix.CreateScale(ratio.X, ratio.Y, resizePivot.X, resizePivot.Y);
-
-                // If more than one element selected, or exactly one element selected _and_ Ctrl is pressed, resize together with children.
-                var includeChildren = ViewModel.SelectedNodes.Count > 1 ||
-                                      (Keyboard.Modifiers & ModifierKeys.Control) != 0;
-
-                foreach (var id in selectedElements)
-                {
-                    // Start with the initial value, so pressing and releasing Ctrl reverts to original size.
-                    var bounds = elements[id].Item1.BBox.ToSKRect();
-
-                    if (includeChildren || ViewModel.SelectedNodes.Any(node => node.Id == id))
-                    {
-                        bounds = matrix.MapRect(bounds);
-                        bounds.Clamp(canvasSelection.Bounds);
-                    }
-
-                    elements[id].Item2.Bounds = bounds;
-                }
+                PerformResize(delta);
 
                 Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
 
@@ -911,6 +903,95 @@ public partial class DocumentCanvas
         }
     }
 
+    private void PerformResize(SKPoint delta)
+    {
+        if (ViewModel == null)
+        {
+            return;
+        }
+
+        var newLocation = offsetStart + delta;
+
+        Debug.Assert(selectedResizeHandle != null, $"{nameof(selectedResizeHandle)} != null");
+
+        var resizePivot = canvasSelection.Center;
+
+        // If more than one element selected, or exactly one element selected _and_ Ctrl is pressed, resize together with children.
+        var resizeWithChildren = ViewModel.SelectedNodes.Count > 1 ||
+                                 (Keyboard.Modifiers & ModifierKeys.Control) != 0;
+
+        if ((selectedResizeHandle.Direction & CardinalDirections.West) != 0)
+        {
+            canvasSelection.Left = Math.Clamp(
+                newLocation.X,
+                resizeLimitOutside.Left,
+                resizeLimitInside.IsEmpty || resizeWithChildren
+                    ? resizeLimitOutside.Right
+                    : resizeLimitInside.Left
+            );
+
+            resizePivot.X = canvasSelection.Right;
+        }
+
+        if ((selectedResizeHandle.Direction & CardinalDirections.North) != 0)
+        {
+            canvasSelection.Top = Math.Clamp(
+                newLocation.Y,
+                resizeLimitOutside.Top,
+                resizeLimitInside.IsEmpty || resizeWithChildren
+                    ? resizeLimitOutside.Bottom
+                    : resizeLimitInside.Top
+            );
+
+            resizePivot.Y = canvasSelection.Bottom;
+        }
+
+        if ((selectedResizeHandle.Direction & CardinalDirections.East) != 0)
+        {
+            canvasSelection.Right = Math.Clamp(
+                newLocation.X,
+                resizeLimitInside.IsEmpty || resizeWithChildren
+                    ? resizeLimitOutside.Left
+                    : resizeLimitInside.Right,
+                resizeLimitOutside.Right
+            );
+
+            resizePivot.X = canvasSelection.Left;
+        }
+
+        if ((selectedResizeHandle.Direction & CardinalDirections.South) != 0)
+        {
+            canvasSelection.Bottom = Math.Clamp(
+                newLocation.Y,
+                resizeLimitInside.IsEmpty || resizeWithChildren
+                    ? resizeLimitOutside.Top
+                    : resizeLimitInside.Bottom,
+                resizeLimitOutside.Bottom
+            );
+
+            resizePivot.Y = canvasSelection.Top;
+        }
+
+
+        var ratio = canvasSelection.ResizeRatio;
+
+        var matrix = SKMatrix.CreateScale(ratio.X, ratio.Y, resizePivot.X, resizePivot.Y);
+
+        foreach (var id in selectedElements)
+        {
+            // Start with the initial value, so pressing and releasing Ctrl reverts to original size.
+            var bounds = elements[id].Item1.BBox.ToSKRect();
+
+            if (resizeWithChildren || ViewModel.SelectedNodes.Any(node => node.Id == id))
+            {
+                bounds = matrix.MapRect(bounds);
+                bounds.Clamp(canvasSelection.Bounds);
+            }
+
+            elements[id].Item2.Bounds = bounds;
+        }
+    }
+
     private string? GetElementKeyAtPoint(SKPoint p)
     {
         var selectedKeys = ViewModel?.SelectedNodes.Select(n => n.Id).ToHashSet() ?? Enumerable.Empty<string>();
@@ -972,6 +1053,43 @@ public partial class DocumentCanvas
         }
 
         return dragLimit;
+    }
+
+    private void CaptureKeyDownEvents()
+    {
+        var window = Window.GetWindow(this);
+
+        Debug.Assert(window != null, $"{nameof(window)} != null");
+
+        window.KeyDown += WindowOnKeyChange;
+        window.KeyUp += WindowOnKeyChange;
+    }
+
+    private void ReleaseKeyDownEvents()
+    {
+        var window = Window.GetWindow(this);
+
+        Debug.Assert(window != null, $"{nameof(window)} != null");
+
+        window.KeyDown -= WindowOnKeyChange;
+        window.KeyUp -= WindowOnKeyChange;
+    }
+
+    private void WindowOnKeyChange(object sender, KeyEventArgs e)
+    {
+        // TODO: Mac support?
+        if (e.Key is not (Key.LeftCtrl or Key.RightCtrl) || mouseMoveState != MouseState.Resizing)
+        {
+            return;
+        }
+
+        var position = Mouse.GetPosition(this).ToSKPoint();
+
+        var delta = inverseScaleTransformation.MapPoint(position - dragStart);
+
+        PerformResize(delta);
+
+        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
     }
 
     protected virtual void OnNodesChanged(NodesChangedEventArgs e)
