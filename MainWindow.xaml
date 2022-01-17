@@ -35,6 +35,9 @@
         <KeyBinding Modifiers="Control"
                     Key="Y"
                     Command="{Binding RedoCommand}" />
+        <KeyBinding Modifiers="Control+Shift"
+                    Key="Z"
+                    Command="{Binding RedoCommand}" />
     </Window.InputBindings>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
