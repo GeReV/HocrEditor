@@ -63,7 +63,7 @@
                           Command="{Binding CropCommand}"
                           CommandParameter="{Binding SelectedNodes}" />
                 <Separator />
-                <MenuItem Header="Convert to _Images"
+                <MenuItem Header="Convert to _Image"
                           Command="{Binding ConvertToImageCommand}"
                           CommandParameter="{Binding SelectedNodes}" />
             </MenuItem>
@@ -92,7 +92,7 @@
                 <ToggleButton Content="Auto Crop"
                               IsChecked="{Binding AutoCrop}" />
                 <Separator />
-                <Button Content="Convert to Images"
+                <Button Content="Convert to Image"
                         Command="{Binding ConvertToImageCommand}"
                         CommandParameter="{Binding SelectedNodes}" />
             </ToolBar>
