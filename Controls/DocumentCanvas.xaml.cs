@@ -484,9 +484,9 @@ public partial class DocumentCanvas
                 "Expected inner resize limit to be contained in the canvas selection bounds."
             );
 
-            if (node.Parent != null)
+            if (node.ParentId != null)
             {
-                resizeLimitOutside = node.Parent.BBox.ToSKRect();
+                resizeLimitOutside = elements[node.ParentId].Item2.Bounds;
 
                 Debug.Assert(
                     resizeLimitOutside.Contains(canvasSelection.Bounds),
@@ -514,7 +514,7 @@ public partial class DocumentCanvas
     private void ClearCanvasResizeLimit()
     {
         resizeLimitInside = SKRect.Empty;
-        resizeLimitOutside = elements[rootId ?? throw new ArgumentNullException(nameof(rootId))].Item1.BBox.ToSKRect();
+        resizeLimitOutside = elements[rootId ?? throw new ArgumentNullException(nameof(rootId))].Item2.Bounds;
     }
 
     private void ClearSelection()
