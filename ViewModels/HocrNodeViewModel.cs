@@ -52,7 +52,21 @@ namespace HocrEditor.ViewModels
         public bool IsRoot { get; set; }
         public HocrNodeType NodeType { get; set; }
 
-        public string InnerText => BuildInnerText();
+        public string InnerText
+        {
+            get => BuildInnerText();
+            set
+            {
+                if (NodeType != HocrNodeType.Word)
+                {
+                    throw new InvalidOperationException($"Cannot change {nameof(InnerText)} on a non-word node.");
+                }
+
+                ((HocrWord)HocrNode).InnerText = value;
+
+                UpdateAscendantsDisplayText();
+            }
+        }
 
         public string DisplayText
         {
@@ -115,7 +129,16 @@ namespace HocrEditor.ViewModels
 
         public string? IconTooltip => Enum.GetName(NodeType);
 
+        public bool IsEditable => NodeType == HocrNodeType.Word;
+
+        public bool IsEditing { get; set; }
+
         private void ChildrenOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            UpdateAscendantsDisplayText();
+        }
+
+        private void UpdateAscendantsDisplayText()
         {
             foreach (var item in Ascendants.Prepend(this))
             {

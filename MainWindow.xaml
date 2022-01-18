@@ -19,7 +19,6 @@
             <BooleanToVisibilityConverter />
         </converters:ValueConverterGroup>
         <converters:NullableBitmapSourceConverter x:Key="NullableBitmapSourceConverter" />
-
     </Window.Resources>
     <Window.InputBindings>
         <KeyBinding Key="Delete"
@@ -113,20 +112,35 @@
                 <mstv:MultiSelectTreeView.ItemContainerStyle>
                     <Style TargetType="{x:Type mstv:MultiSelectTreeViewItem}"
                            d:DataContext="{d:DesignInstance viewModels:HocrNodeViewModel}">
+
+                        <Setter Property="DisplayName"
+                                Value="{Binding InnerText, Mode=TwoWay}" />
                         <Setter Property="IsExpanded"
                                 Value="{Binding IsExpanded, Mode=TwoWay}" />
                         <Setter Property="IsSelected"
                                 Value="{Binding IsSelected, Mode=TwoWay}" />
-                        <!-- <Setter Property="IsEnabled" -->
-                        <!--         Value="{Binding IsEnabled, Mode=TwoWay}" /> -->
-                        <!-- <Setter Property="IsEditable" -->
-                        <!--         Value="{Binding IsEditable, Mode=TwoWay}" /> -->
-                        <!-- <Setter Property="IsEditing" -->
-                        <!--         Value="{Binding IsEditing, Mode=TwoWay}" /> -->
+                        <Setter Property="IsEditable"
+                                Value="{Binding IsEditable, Mode=OneWay}" />
+                        <Setter Property="IsEditing"
+                                Value="{Binding IsEditing, Mode=TwoWay}" />
+                        <Setter Property="ContentTemplateEdit"
+                                Value="{DynamicResource EditTemplate}" />
+
+                        <EventSetter Event="PreviewKeyDown"
+                                     Handler="UIElement_OnKeyDown"
+                                     HandledEventsToo="True" />
                     </Style>
                 </mstv:MultiSelectTreeView.ItemContainerStyle>
 
                 <mstv:MultiSelectTreeView.Resources>
+                    <DataTemplate x:Key="EditTemplate"
+                                  DataType="{x:Type viewModels:HocrNodeViewModel}">
+                        <mstv:EditTextBox
+                            Text="{Binding InnerText, Mode=TwoWay, UpdateSourceTrigger=Explicit, NotifyOnSourceUpdated=True}"
+                            SourceUpdated="FrameworkElement_OnSourceUpdated"
+                            Padding="2,0,0,0" />
+                    </DataTemplate>
+
                     <HierarchicalDataTemplate DataType="{x:Type viewModels:HocrNodeViewModel}"
                                               ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">

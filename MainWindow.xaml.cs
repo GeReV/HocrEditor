@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Input;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Controls;
 using HocrEditor.Helpers;
@@ -171,6 +174,59 @@ namespace HocrEditor
             if (e.RemovedItems.Count > 0)
             {
                 ViewModel.DeselectNodesCommand.TryExecute(e.RemovedItems.Cast<HocrNodeViewModel>().ToList());
+            }
+        }
+
+        private void UIElement_OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (ViewModel.Document == null)
+            {
+                return;
+            }
+
+            var selectedNodes = ViewModel.Document.SelectedNodes;
+
+            if (e.Key == Key.Return && selectedNodes.Any() && selectedNodes.All(n => n.IsEditable))
+            {
+                var first = selectedNodes.First();
+
+                if (!first.IsEditing)
+                {
+                    first.IsEditing = true;
+                }
+                else if (e.OriginalSource is EditTextBox textBox)
+                {
+                    textBox.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+
+                    first.IsEditing = false;
+                }
+
+                e.Handled = true;
+            }
+        }
+
+        private void FrameworkElement_OnSourceUpdated(object? sender, DataTransferEventArgs e)
+        {
+            if (ViewModel.Document == null)
+            {
+                return;
+            }
+
+            var selectedNodes = ViewModel.Document.SelectedNodes;
+
+            if (selectedNodes.Count < 2 || e.Property != TextBox.TextProperty)
+            {
+                return;
+            }
+
+            var value = e.TargetObject.GetValue(e.Property) as string;
+
+            value ??= string.Empty;
+
+            // TODO: Use undoable commands.
+            foreach (var node in selectedNodes.Skip(1))
+            {
+                node.InnerText = value;
             }
         }
     }
