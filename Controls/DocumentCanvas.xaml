@@ -7,8 +7,6 @@
              d:DesignHeight="450"
              xmlns:skia="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
              x:Class="HocrEditor.Controls.DocumentCanvas">
-    <Grid>
-        <skia:SKElement Name="Canvas"
-                        PaintSurface="Canvas_OnPaintSurface" />
-    </Grid>
+    <skia:SKElement Name="Canvas"
+                    PaintSurface="Canvas_OnPaintSurface" />
 </UserControl>
