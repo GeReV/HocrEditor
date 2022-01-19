@@ -3,31 +3,21 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:HocrEditor"
         xmlns:controls="clr-namespace:HocrEditor.Controls"
         xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
-        xmlns:mstv="clr-namespace:System.Windows.Controls;assembly=MultiSelectTreeView"
-        xmlns:converters="clr-namespace:HocrEditor.Converters"
         mc:Ignorable="d"
         Title="hOCR Editor"
         Height="1080"
         Width="1920"
         d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}">
-    <Window.Resources>
-        <converters:ValueConverterGroup x:Key="NullableToVisibilityConverter">
-            <converters:NullableToBooleanConverter />
-            <BooleanToVisibilityConverter />
-        </converters:ValueConverterGroup>
-        <converters:NullableBitmapSourceConverter x:Key="NullableBitmapSourceConverter" />
-    </Window.Resources>
     <Window.InputBindings>
         <KeyBinding Key="Delete"
                     Command="{Binding DeleteCommand}"
-                    CommandParameter="{Binding SelectedNodes}" />
+                    CommandParameter="{Binding SelectedItems}" />
         <KeyBinding Modifiers="Control"
                     Key="M"
                     Command="{Binding MergeCommand}"
-                    CommandParameter="{Binding SelectedNodes}" />
+                    CommandParameter="{Binding SelectedItems}" />
         <KeyBinding Modifiers="Control"
                     Key="Z"
                     Command="{Binding UndoCommand}" />
@@ -54,17 +44,17 @@
                 <Separator />
                 <MenuItem Header="_Delete"
                           Command="{Binding DeleteCommand}"
-                          CommandParameter="{Binding SelectedNodes}" />
+                          CommandParameter="{Binding SelectedItems}" />
                 <MenuItem Header="_Merge"
                           Command="{Binding MergeCommand}"
-                          CommandParameter="{Binding SelectedNodes}" />
+                          CommandParameter="{Binding SelectedItems}" />
                 <MenuItem Header="_Crop"
                           Command="{Binding CropCommand}"
-                          CommandParameter="{Binding SelectedNodes}" />
+                          CommandParameter="{Binding SelectedItems}" />
                 <Separator />
                 <MenuItem Header="Convert to _Image"
                           Command="{Binding ConvertToImageCommand}"
-                          CommandParameter="{Binding SelectedNodes}" />
+                          CommandParameter="{Binding SelectedItems}" />
             </MenuItem>
         </Menu>
         <ToolBarTray DockPanel.Dock="Top">
@@ -81,19 +71,19 @@
                 <Separator />
                 <Button Content="Delete"
                         Command="{Binding DeleteCommand}"
-                        CommandParameter="{Binding SelectedNodes}" />
+                        CommandParameter="{Binding SelectedItems}" />
                 <Button Content="Merge"
                         Command="{Binding MergeCommand}"
-                        CommandParameter="{Binding SelectedNodes}" />
+                        CommandParameter="{Binding SelectedItems}" />
                 <Button Content="Crop"
                         Command="{Binding CropCommand}"
-                        CommandParameter="{Binding SelectedNodes}" />
+                        CommandParameter="{Binding SelectedItems}" />
                 <ToggleButton Content="Auto Crop"
                               IsChecked="{Binding AutoCrop}" />
                 <Separator />
                 <Button Content="Convert to Image"
                         Command="{Binding ConvertToImageCommand}"
-                        CommandParameter="{Binding SelectedNodes}" />
+                        CommandParameter="{Binding SelectedItems}" />
             </ToolBar>
         </ToolBarTray>
         <Grid>
@@ -102,58 +92,13 @@
                 <ColumnDefinition Width="300" />
             </Grid.ColumnDefinitions>
             <controls:DocumentCanvas Grid.Column="0"
-                                     x:Name="Canvas"
                                      DataContext="{Binding Document}"
                                      NodesChanged="Canvas_OnNodesChanged"
                                      SelectionChanged="Canvas_OnSelectionChanged" />
-            <mstv:MultiSelectTreeView Grid.Column="1"
-                                      ItemsSource="{Binding Document.Nodes[0].Children}"
-                                      SelectedItems="{Binding SelectedNodes}">
-                <mstv:MultiSelectTreeView.ItemContainerStyle>
-                    <Style TargetType="{x:Type mstv:MultiSelectTreeViewItem}"
-                           d:DataContext="{d:DesignInstance viewModels:HocrNodeViewModel}">
-
-                        <Setter Property="DisplayName"
-                                Value="{Binding InnerText, Mode=TwoWay}" />
-                        <Setter Property="IsExpanded"
-                                Value="{Binding IsExpanded, Mode=TwoWay}" />
-                        <Setter Property="IsSelected"
-                                Value="{Binding IsSelected, Mode=TwoWay}" />
-                        <Setter Property="IsEditable"
-                                Value="{Binding IsEditable, Mode=OneWay}" />
-                        <Setter Property="IsEditing"
-                                Value="{Binding IsEditing, Mode=TwoWay}" />
-                        <Setter Property="ContentTemplateEdit"
-                                Value="{DynamicResource EditTemplate}" />
-
-                        <EventSetter Event="PreviewKeyDown"
-                                     Handler="UIElement_OnKeyDown"
-                                     HandledEventsToo="True" />
-                    </Style>
-                </mstv:MultiSelectTreeView.ItemContainerStyle>
-
-                <mstv:MultiSelectTreeView.Resources>
-                    <DataTemplate x:Key="EditTemplate"
-                                  DataType="{x:Type viewModels:HocrNodeViewModel}">
-                        <mstv:EditTextBox
-                            Text="{Binding InnerText, Mode=TwoWay, UpdateSourceTrigger=Explicit, NotifyOnSourceUpdated=True}"
-                            SourceUpdated="FrameworkElement_OnSourceUpdated"
-                            Padding="2,0,0,0" />
-                    </DataTemplate>
-
-                    <HierarchicalDataTemplate DataType="{x:Type viewModels:HocrNodeViewModel}"
-                                              ItemsSource="{Binding Children}">
-                        <StackPanel Orientation="Horizontal">
-                            <Image ToolTip="{Binding IconTooltip}"
-                                   Margin="0,0,5,0"
-                                   Opacity="0.5"
-                                   Visibility="{Binding IconPath, Converter={StaticResource NullableToVisibilityConverter}}"
-                                   Source="{Binding IconPath, Converter={StaticResource NullableBitmapSourceConverter}}" />
-                            <TextBlock Text="{Binding DisplayText}" />
-                        </StackPanel>
-                    </HierarchicalDataTemplate>
-                </mstv:MultiSelectTreeView.Resources>
-            </mstv:MultiSelectTreeView>
+            <controls:DocumentTreeView Grid.Column="1"
+                                       ItemsSource="{Binding Document.Nodes[0].Children, FallbackValue={x:Null}}"
+                                       SelectedItems="{Binding SelectedItems}"
+                                       NodeEdited="DocumentTreeView_OnNodeEdited" />
         </Grid>
     </DockPanel>
 </Window>

@@ -1,0 +1,65 @@
+﻿<UserControl x:Class="HocrEditor.Controls.DocumentTreeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:controls="clr-namespace:System.Windows.Controls;assembly=MultiSelectTreeView"
+             xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
+             xmlns:converters="clr-namespace:HocrEditor.Converters"
+             mc:Ignorable="d"
+             d:DesignHeight="300"
+             d:DesignWidth="300"
+             d:DataContext="{d:DesignInstance viewModels:HocrDocumentViewModel}">
+    <controls:MultiSelectTreeView ItemsSource="{Binding  ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                  SelectedItems="{Binding SelectedItems, RelativeSource={RelativeSource AncestorType=UserControl}}">
+        <controls:MultiSelectTreeView.ItemContainerStyle>
+            <Style TargetType="{x:Type controls:MultiSelectTreeViewItem}"
+                   d:DataContext="{d:DesignInstance viewModels:HocrNodeViewModel}">
+
+                <Setter Property="DisplayName"
+                        Value="{Binding InnerText, Mode=TwoWay}" />
+                <Setter Property="IsExpanded"
+                        Value="{Binding IsExpanded, Mode=TwoWay}" />
+                <Setter Property="IsSelected"
+                        Value="{Binding IsSelected, Mode=TwoWay}" />
+                <Setter Property="IsEditable"
+                        Value="{Binding IsEditable, Mode=OneWay}" />
+                <Setter Property="IsEditing"
+                        Value="{Binding IsEditing, Mode=TwoWay}" />
+                <Setter Property="ContentTemplateEdit"
+                        Value="{DynamicResource EditTemplate}" />
+
+                <EventSetter Event="PreviewKeyDown"
+                             Handler="TreeViewItem_OnKeyDown"
+                             HandledEventsToo="True" />
+            </Style>
+        </controls:MultiSelectTreeView.ItemContainerStyle>
+
+        <controls:MultiSelectTreeView.Resources>
+            <converters:ValueConverterGroup x:Key="NullableToVisibilityConverter">
+                <converters:NullableToBooleanConverter />
+                <BooleanToVisibilityConverter />
+            </converters:ValueConverterGroup>
+            <converters:NullableBitmapSourceConverter x:Key="NullableBitmapSourceConverter" />
+
+            <DataTemplate x:Key="EditTemplate"
+                          DataType="{x:Type viewModels:HocrNodeViewModel}">
+                <controls:EditTextBox
+                    Text="{Binding InnerText, Mode=TwoWay, UpdateSourceTrigger=Explicit, NotifyOnSourceUpdated=True}"
+                    Padding="2,0,0,0" />
+            </DataTemplate>
+
+            <HierarchicalDataTemplate DataType="{x:Type viewModels:HocrNodeViewModel}"
+                                      ItemsSource="{Binding Children}">
+                <StackPanel Orientation="Horizontal">
+                    <Image ToolTip="{Binding IconTooltip}"
+                           Margin="0,0,5,0"
+                           Opacity="0.5"
+                           Visibility="{Binding IconPath, Converter={StaticResource NullableToVisibilityConverter}}"
+                           Source="{Binding IconPath, Converter={StaticResource NullableBitmapSourceConverter}}" />
+                    <TextBlock Text="{Binding DisplayText}" />
+                </StackPanel>
+            </HierarchicalDataTemplate>
+        </controls:MultiSelectTreeView.Resources>
+    </controls:MultiSelectTreeView>
+</UserControl>

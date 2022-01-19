@@ -1,24 +1,13 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
-using HocrEditor.Commands;
-using HocrEditor.Controls;
-using HocrEditor.Models;
-using Microsoft.Toolkit.Mvvm.Input;
+﻿using System.Collections.ObjectModel;
 
 namespace HocrEditor.ViewModels
 {
     public partial class MainWindowViewModel : ViewModelBase
     {
-        private ObservableCollection<HocrNodeViewModel>? previousSelectedNodes;
-
         public bool AutoCrop { get; set; } = true;
 
         // Workaround for MultiSelectTreeView not working with Document.SelectedNodes directly.
-        public ObservableCollection<HocrNodeViewModel>? SelectedNodes
+        public ObservableCollection<HocrNodeViewModel>? SelectedItems
         {
             get => Document?.SelectedNodes;
             set

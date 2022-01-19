@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
@@ -15,12 +16,15 @@ namespace HocrEditor.ViewModels
     {
         public readonly UndoRedoManager UndoRedoManager = new();
 
+        private ObservableCollection<HocrNodeViewModel>? previousSelectedNodes;
+
         public MainWindowViewModel()
         {
             DeleteCommand = new DeleteNodes(this);
             MergeCommand = new MergeNodes(this);
             CropCommand = new CropNodes(this);
             ConvertToImageCommand = new ConvertToImageCommand(this);
+            EditNodesCommand = new RelayCommand<string>(EditNodes, CanEditNodes);
 
             SelectNodesCommand = new RelayCommand<IList<HocrNodeViewModel>>(SelectNodes, CanSelectNodes);
             DeselectNodesCommand = new RelayCommand<IList<HocrNodeViewModel>>(DeselectNodes, CanDeselectNodes);
@@ -39,8 +43,10 @@ namespace HocrEditor.ViewModels
         public IRelayCommand<IList<HocrNodeViewModel>> DeleteCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> MergeCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> CropCommand { get; init; }
+        public IRelayCommand<string> EditNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> SelectNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> DeselectNodesCommand { get; }
+
         public IRelayCommand UndoCommand { get; }
         public IRelayCommand RedoCommand { get; }
         public IRelayCommand<List<NodesChangedEventArgs.NodeChange>> UpdateNodesCommand { get; }
@@ -151,6 +157,22 @@ namespace HocrEditor.ViewModels
                     change.NewBounds
                 )
             );
+
+            UndoRedoManager.ExecuteCommands(commands);
+        }
+
+        private bool CanEditNodes(string? _) =>
+            Document?.SelectedNodes is { Count: > 0 } && Document.SelectedNodes.Any(n => n.IsEditable);
+
+        private void EditNodes(string? value)
+        {
+            if (Document?.SelectedNodes is not { Count: > 0 } || !Document.SelectedNodes.Any(n => n.IsEditable))
+            {
+                return;
+            }
+
+            var commands = Document.SelectedNodes.Where(node => node.IsEditable)
+                .Select(node => PropertyChangeCommand.FromProperty(node, n => n.InnerText, value));
 
             UndoRedoManager.ExecuteCommands(commands);
         }
