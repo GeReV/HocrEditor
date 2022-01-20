@@ -92,7 +92,8 @@
                 <ColumnDefinition Width="300" />
             </Grid.ColumnDefinitions>
             <controls:DocumentCanvas Grid.Column="0"
-                                     DataContext="{Binding Document}"
+                                     ItemsSource="{Binding Document.Nodes, FallbackValue={x:Null}}"
+                                     SelectedItems="{Binding SelectedItems}"
                                      NodesChanged="Canvas_OnNodesChanged"
                                      SelectionChanged="Canvas_OnSelectionChanged" />
             <controls:DocumentTreeView Grid.Column="1"

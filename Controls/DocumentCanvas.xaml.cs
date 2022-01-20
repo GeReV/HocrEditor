@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
@@ -41,6 +43,50 @@ public class Element
 
 public partial class DocumentCanvas
 {
+    public static readonly DependencyProperty SelectedItemsProperty = DependencyProperty.Register(
+        nameof(SelectedItems),
+        typeof(ObservableCollection<HocrNodeViewModel>),
+        typeof(DocumentCanvas),
+        new FrameworkPropertyMetadata(
+            new ObservableCollection<HocrNodeViewModel>(),
+            FrameworkPropertyMetadataOptions.BindsTwoWayByDefault
+        )
+    );
+
+    public static readonly DependencyProperty ItemsSourceProperty
+        = DependencyProperty.Register(
+            nameof(ItemsSource),
+            typeof(ObservableCollection<HocrNodeViewModel>),
+            typeof(DocumentCanvas),
+            new FrameworkPropertyMetadata(
+                new ObservableCollection<HocrNodeViewModel>(),
+                FrameworkPropertyMetadataOptions.None,
+                ItemsSourceChangedCallback
+            )
+        );
+
+    public ObservableCollection<HocrNodeViewModel> SelectedItems
+    {
+        get => (ObservableCollection<HocrNodeViewModel>)GetValue(SelectedItemsProperty);
+        set => SetValue(SelectedItemsProperty, value);
+    }
+
+    public ObservableCollection<HocrNodeViewModel>? ItemsSource
+    {
+        get => (ObservableCollection<HocrNodeViewModel>)GetValue(ItemsSourceProperty);
+        set
+        {
+            if (value == null)
+            {
+                ClearValue(ItemsSourceProperty);
+            }
+            else
+            {
+                SetValue(ItemsSourceProperty, value);
+            }
+        }
+    }
+
     private static readonly SKSize CenterPadding = new(-10.0f, -10.0f);
 
     private static readonly SKPaint HandleFillPaint = new()
@@ -88,9 +134,6 @@ public partial class DocumentCanvas
     private readonly CanvasSelection canvasSelection = new();
     private ResizeHandle? selectedResizeHandle;
 
-    private HocrDocumentViewModel? ViewModel => (HocrDocumentViewModel?)DataContext;
-
-
     public event EventHandler<NodesChangedEventArgs>? NodesChanged;
 
     public event SelectionChangedEventHandler? SelectionChanged;
@@ -99,25 +142,23 @@ public partial class DocumentCanvas
     {
         InitializeComponent();
 
-        DataContextChanged += OnDataContextChanged;
-
         ClipToBounds = true;
     }
 
-    private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    private static void ItemsSourceChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (ViewModel == null)
+        if (d is not DocumentCanvas documentCanvas || documentCanvas.ItemsSource == null)
         {
             return;
         }
 
-        elements.Clear();
+        documentCanvas.elements.Clear();
 
-        var rootNode = ViewModel.Nodes[0];
+        var rootNode = documentCanvas.ItemsSource[0];
 
-        BuildDocumentElements(rootNode.Descendents.Prepend(rootNode));
+        documentCanvas.BuildDocumentElements(rootNode.Descendents.Prepend(rootNode));
 
-        ViewModel.Nodes.SubscribeItemPropertyChanged(
+        documentCanvas.ItemsSource.SubscribeItemPropertyChanged(
             (nodeSender, nodePropertyChangedArgs) =>
             {
                 Debug.Assert(nodeSender != null, $"{nameof(nodeSender)} != null");
@@ -127,35 +168,35 @@ public partial class DocumentCanvas
                 switch (nodePropertyChangedArgs.PropertyName)
                 {
                     case nameof(HocrNodeViewModel.BBox):
-                        elements[node.Id].Item2.Bounds = node.BBox.ToSKRect();
+                        documentCanvas.elements[node.Id].Item2.Bounds = node.BBox.ToSKRect();
                         break;
                     case nameof(HocrNodeViewModel.IsSelected):
                         var enumerable = Enumerable.Repeat(node, 1);
 
                         if (node.IsSelected)
                         {
-                            AddSelectedElements(enumerable);
+                            documentCanvas.AddSelectedElements(enumerable);
                         }
                         else
                         {
-                            RemoveSelectedElements(enumerable);
+                            documentCanvas.RemoveSelectedElements(enumerable);
                         }
 
                         break;
                 }
 
-                UpdateCanvasSelection();
+                documentCanvas.UpdateCanvasSelection();
 
-                Refresh();
+                documentCanvas.Refresh();
             }
         );
 
-        ViewModel.Nodes.CollectionChanged += NodesOnCollectionChanged;
-        ViewModel.SelectedNodes.CollectionChanged += SelectedNodesOnCollectionChanged;
+        documentCanvas.ItemsSource.CollectionChanged += documentCanvas.NodesOnCollectionChanged;
+        documentCanvas.SelectedItems.CollectionChanged += documentCanvas.SelectedNodesOnCollectionChanged;
 
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
+        documentCanvas.Dispatcher.InvokeAsync(documentCanvas.Refresh, DispatcherPriority.Send);
 
-        CenterTransformation();
+        documentCanvas.CenterTransformation();
     }
 
     private void AddSelectedElements(IEnumerable<HocrNodeViewModel> nodes)
@@ -297,11 +338,6 @@ public partial class DocumentCanvas
     {
         base.OnMouseDown(e);
 
-        if (ViewModel == null)
-        {
-            return;
-        }
-
         Mouse.Capture(this);
 
         var position = e.GetPosition(this).ToSKPoint();
@@ -401,7 +437,7 @@ public partial class DocumentCanvas
 
         // TODO: Should probably choose node at mouseup, because user intention isn't clear at mouse down
         //  i.e. about to drag selection or choose a different item
-        var selectedNodes = ViewModel?.SelectedNodes ??
+        var selectedNodes = SelectedItems ??
                             throw new InvalidOperationException("Expected ViewModel to not be null");
 
         if (canvasSelection.Bounds.Contains(normalizedPosition) &&
@@ -471,9 +507,9 @@ public partial class DocumentCanvas
 
         // TODO: Support for multiple selection.
         // If we have only one item selected, set its resize limits to within its parent and around its children.
-        if (ViewModel != null && ViewModel.SelectedNodes.Count == 1)
+        if (SelectedItems.Count == 1)
         {
-            var node = ViewModel.SelectedNodes[0];
+            var node = SelectedItems[0];
 
             var containedChildren = node.Children.Where(c => node.BBox.Contains(c.BBox));
 
@@ -521,16 +557,13 @@ public partial class DocumentCanvas
 
     private void ClearSelection()
     {
-        if (ViewModel != null)
-        {
-            OnSelectionChanged(
-                new SelectionChangedEventArgs(
-                    Selector.SelectionChangedEvent,
-                    ViewModel.SelectedNodes.ToList(),
-                    Array.Empty<HocrNodeViewModel>()
-                )
-            );
-        }
+        OnSelectionChanged(
+            new SelectionChangedEventArgs(
+                Selector.SelectionChangedEvent,
+                SelectedItems.ToList(),
+                Array.Empty<HocrNodeViewModel>()
+            )
+        );
 
         ClearCanvasSelection();
     }
@@ -539,11 +572,6 @@ public partial class DocumentCanvas
     protected override void OnMouseUp(MouseButtonEventArgs e)
     {
         base.OnMouseUp(e);
-
-        if (ViewModel == null)
-        {
-            return;
-        }
 
         switch (e.ChangedButton)
         {
@@ -584,7 +612,7 @@ public partial class DocumentCanvas
 
                     OnNodesChanged(new NodesChangedEventArgs(changes));
 
-                    dragLimit = CalculateDragLimitBounds(ViewModel.SelectedNodes);
+                    dragLimit = CalculateDragLimitBounds(SelectedItems);
                 }
 
                 if (!mouseMoved)
@@ -609,11 +637,6 @@ public partial class DocumentCanvas
     protected override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e);
-
-        if (ViewModel == null)
-        {
-            return;
-        }
 
         var position = e.GetPosition(this).ToSKPoint();
 
@@ -674,7 +697,7 @@ public partial class DocumentCanvas
 
                 var newLocation = inverseTransformation.MapPoint(offsetStart) + delta;
 
-                if (ViewModel.SelectedNodes.Any())
+                if (SelectedItems.Any())
                 {
                     // Apply to all selected elements.
                     foreach (var id in selectedElements)
@@ -726,9 +749,7 @@ public partial class DocumentCanvas
 
         UpdateTransformation(SKMatrix.CreateScale(newScale, newScale, p.X, p.Y));
 
-        dragLimit = CalculateDragLimitBounds(
-            ViewModel?.SelectedNodes ?? Enumerable.Empty<HocrNodeViewModel>()
-        );
+        dragLimit = CalculateDragLimitBounds(SelectedItems);
 
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
     }
@@ -752,9 +773,9 @@ public partial class DocumentCanvas
 
     private void CenterTransformation()
     {
-        Debug.Assert(ViewModel != null, $"{nameof(ViewModel)} != null");
+        Debug.Assert(ItemsSource != null, $"{nameof(ItemsSource)} != null");
 
-        var documentBounds = ViewModel.Nodes.First(n => n.IsRoot).BBox.ToSKRect();
+        var documentBounds = ItemsSource.First(n => n.IsRoot).BBox.ToSKRect();
 
         var controlSize = SKRect.Create(RenderSize.ToSKSize());
 
@@ -912,11 +933,6 @@ public partial class DocumentCanvas
 
     private void PerformResize(SKPoint delta)
     {
-        if (ViewModel == null)
-        {
-            return;
-        }
-
         var newLocation = offsetStart + delta;
 
         Debug.Assert(selectedResizeHandle != null, $"{nameof(selectedResizeHandle)} != null");
@@ -924,7 +940,7 @@ public partial class DocumentCanvas
         var resizePivot = canvasSelection.Center;
 
         // If more than one element selected, or exactly one element selected _and_ Ctrl is pressed, resize together with children.
-        var resizeWithChildren = ViewModel.SelectedNodes.Count > 1 ||
+        var resizeWithChildren = SelectedItems.Count > 1 ||
                                  (Keyboard.Modifiers & ModifierKeys.Control) != 0;
 
         if ((selectedResizeHandle.Direction & CardinalDirections.West) != 0)
@@ -989,7 +1005,7 @@ public partial class DocumentCanvas
             // Start with the initial value, so pressing and releasing Ctrl reverts to original size.
             var bounds = elements[id].Item1.BBox.ToSKRect();
 
-            if (resizeWithChildren || ViewModel.SelectedNodes.Any(node => node.Id == id))
+            if (resizeWithChildren || SelectedItems.Any(node => node.Id == id))
             {
                 bounds = matrix.MapRect(bounds);
                 bounds.Clamp(canvasSelection.Bounds);
@@ -1001,7 +1017,7 @@ public partial class DocumentCanvas
 
     private string? GetElementKeyAtPoint(SKPoint p)
     {
-        var selectedKeys = ViewModel?.SelectedNodes.Select(n => n.Id).ToHashSet() ?? Enumerable.Empty<string>();
+        var selectedKeys = SelectedItems.Select(n => n.Id).ToHashSet() ?? Enumerable.Empty<string>();
 
         var key = elements.Keys
             .Where(k => !selectedKeys.Contains(k))
