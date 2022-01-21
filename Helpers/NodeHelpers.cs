@@ -11,7 +11,7 @@ public static class NodeHelpers
         IEnumerable<HocrNodeViewModel> selection
     )
     {
-        var list = selection.ToList();
+        var list = selection.Where(n => !n.BBox.IsEmpty).ToList();
 
         if (!list.Any())
         {
