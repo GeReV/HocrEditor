@@ -1,31 +1,42 @@
-﻿using System.Collections;
+﻿using System.Collections.Generic;
 
 namespace HocrEditor.Commands.UndoRedo;
 
-public class CollectionClearCommand : UndoRedoCommand
+public class CollectionClearCommand<T> : UndoRedoCommand
 {
-    private IList copy = new ArrayList();
+    private ICollection<T> copy = new List<T>();
 
     // ReSharper disable once SuggestBaseTypeForParameterInConstructor
-    public CollectionClearCommand(IList sender) : base(sender)
+    public CollectionClearCommand(ICollection<T> sender) : base(sender)
     {
     }
 
     public override void Undo()
     {
-        var list = (IList)Sender;
-
-        foreach (var o in copy)
+        if (Sender is ISet<T> set)
         {
-            list.Add(o);
+            foreach (var o in copy)
+            {
+                set.Add(o);
+            }
+        }
+        else
+        {
+
+            var list = (IList<T>)Sender;
+
+            foreach (var o in copy)
+            {
+                list.Add(o);
+            }
         }
     }
 
     public override void Redo()
     {
-        var list = (IList)Sender;
+        var list = (ICollection<T>)Sender;
 
-        copy = new ArrayList(list);
+        copy = new List<T>(list);
 
         list.Clear();
     }

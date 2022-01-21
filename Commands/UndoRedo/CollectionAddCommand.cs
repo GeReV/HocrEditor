@@ -1,38 +1,60 @@
-﻿using System.Collections;
+﻿using System.Collections.Generic;
 
 namespace HocrEditor.Commands.UndoRedo;
 
-public class CollectionAddCommand : UndoRedoCommand
+public class CollectionAddCommand<T> : UndoRedoCommand
 {
-    private readonly IList children;
+    private readonly ICollection<T> children;
 
     // ReSharper disable once SuggestBaseTypeForParameterInConstructor
-    public CollectionAddCommand(IList sender, object child) : base(sender)
+    public CollectionAddCommand(ICollection<T> sender, T child) : base(sender)
     {
-        children = child switch
-        {
-            IList list => list,
-            _ => new ArrayList { child }
-        };
+        children = new List<T> { child };
+    }
+
+    public CollectionAddCommand(ICollection<T> sender, ICollection<T> children) : base(sender)
+    {
+        this.children = children;
     }
 
     public override void Undo()
     {
-        var list = (IList)Sender;
-
-        foreach (var child in children)
+        if (Sender is ISet<T> set)
         {
-            list.Remove(child);
+            foreach (var child in children)
+            {
+                set.Remove(child);
+            }
         }
+        else
+        {
+            var list = (IList<T>)Sender;
+
+            foreach (var child in children)
+            {
+                list.Remove(child);
+            }
+        }
+
     }
 
     public override void Redo()
     {
-        var list = (IList)Sender;
-
-        foreach (var child in children)
+        if (Sender is ISet<T> set)
         {
-            list.Add(child);
+            foreach (var child in children)
+            {
+                set.Add(child);
+            }
+        }
+        else
+        {
+            var list = (IList<T>)Sender;
+
+            foreach (var child in children)
+            {
+                list.Add(child);
+            }
         }
     }
 }
