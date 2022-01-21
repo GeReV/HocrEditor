@@ -52,7 +52,11 @@
                           Command="{Binding CropCommand}"
                           CommandParameter="{Binding SelectedItems}" />
                 <Separator />
-                <MenuItem Header="Convert to _Image"
+
+                <MenuItem Header="_Select Identical Nodes"
+                          Command="{Binding SelectIdenticalNodesCommand}"
+                          CommandParameter="{Binding SelectedItems}" />
+                <MenuItem Header="Convert Nodes to _Image"
                           Command="{Binding ConvertToImageCommand}"
                           CommandParameter="{Binding SelectedItems}" />
             </MenuItem>
@@ -81,7 +85,10 @@
                 <ToggleButton Content="Auto Crop"
                               IsChecked="{Binding AutoCrop}" />
                 <Separator />
-                <Button Content="Convert to Image"
+                <Button Content="Select Identical Nodes"
+                        Command="{Binding SelectIdenticalNodesCommand}"
+                        CommandParameter="{Binding SelectedItems}" />
+                <Button Content="Convert Nodes to Image"
                         Command="{Binding ConvertToImageCommand}"
                         CommandParameter="{Binding SelectedItems}" />
             </ToolBar>

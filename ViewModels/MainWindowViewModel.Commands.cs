@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
@@ -8,6 +7,7 @@ using HocrEditor.Commands;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Controls;
 using HocrEditor.Helpers;
+using HocrEditor.Models;
 using Microsoft.Toolkit.Mvvm.Input;
 
 namespace HocrEditor.ViewModels
@@ -16,7 +16,7 @@ namespace HocrEditor.ViewModels
     {
         public readonly UndoRedoManager UndoRedoManager = new();
 
-        private ObservableCollection<HocrNodeViewModel>? previousSelectedNodes;
+        private RangeObservableCollection<HocrNodeViewModel>? previousSelectedNodes;
 
         public MainWindowViewModel()
         {
@@ -29,13 +29,51 @@ namespace HocrEditor.ViewModels
             SelectNodesCommand = new RelayCommand<IList<HocrNodeViewModel>>(SelectNodes, CanSelectNodes);
             DeselectNodesCommand = new RelayCommand<IList<HocrNodeViewModel>>(DeselectNodes, CanDeselectNodes);
 
+            SelectIdenticalNodesCommand =
+                new RelayCommand<IList<HocrNodeViewModel>>(SelectIdenticalNodes, CanSelectIdenticalNodes);
+
+            UpdateNodesCommand = new RelayCommand<List<NodesChangedEventArgs.NodeChange>>(UpdateNodes, CanUpdateNodes);
+
             UndoCommand = new RelayCommand(UndoRedoManager.Undo, CanUndo);
             RedoCommand = new RelayCommand(UndoRedoManager.Redo, CanRedo);
-            UpdateNodesCommand = new RelayCommand<List<NodesChangedEventArgs.NodeChange>>(UpdateNodes, CanUpdateNodes);
 
             PropertyChanged += HandlePropertyChanged;
 
             UndoRedoManager.UndoStackChanged += UpdateUndoRedoCommands;
+        }
+
+        private bool CanSelectIdenticalNodes(IList<HocrNodeViewModel>? list) => Document != null && list is { Count: 1 };
+
+        private void SelectIdenticalNodes(IList<HocrNodeViewModel>? list)
+        {
+            if (Document == null || list is not { Count: 1 })
+            {
+                return;
+            }
+
+            var item = list[0];
+
+            switch (item.NodeType)
+            {
+                case HocrNodeType.Page:
+                case HocrNodeType.ContentArea:
+                case HocrNodeType.Paragraph:
+                case HocrNodeType.Line:
+                case HocrNodeType.TextFloat:
+                case HocrNodeType.Caption:
+                case HocrNodeType.Word:
+                    SelectNodesCommand.TryExecute(
+                        Document.Nodes.Where(n => n.NodeType == item.NodeType && n.InnerText == item.InnerText).ToList()
+                    );
+                    break;
+                case HocrNodeType.Image:
+                    SelectNodesCommand.TryExecute(
+                        Document.Nodes.Where(n => n.NodeType == item.NodeType).ToList()
+                    );
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         public ConvertToImageCommand ConvertToImageCommand { get; set; }
@@ -46,6 +84,7 @@ namespace HocrEditor.ViewModels
         public IRelayCommand<string> EditNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> SelectNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> DeselectNodesCommand { get; }
+        public IRelayCommand<IList<HocrNodeViewModel>> SelectIdenticalNodesCommand { get; }
 
         public IRelayCommand UndoCommand { get; }
         public IRelayCommand RedoCommand { get; }
@@ -78,6 +117,8 @@ namespace HocrEditor.ViewModels
             MergeCommand.NotifyCanExecuteChanged();
             CropCommand.NotifyCanExecuteChanged();
             ConvertToImageCommand.NotifyCanExecuteChanged();
+            EditNodesCommand.NotifyCanExecuteChanged();
+            SelectIdenticalNodesCommand.NotifyCanExecuteChanged();
         }
 
         private bool CanRedo() => UndoRedoManager.CanRedo;
@@ -100,6 +141,8 @@ namespace HocrEditor.ViewModels
 
             if (addedItems.Any())
             {
+                commands.Add(Document.SelectedNodes.ToCollectionClearCommand());
+
                 commands.Add(Document.SelectedNodes.ToCollectionAddCommand(addedItems));
 
                 commands.AddRange(
