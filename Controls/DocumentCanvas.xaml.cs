@@ -247,8 +247,6 @@ public partial class DocumentCanvas
                 {
                     var list = e.OldItems.Cast<HocrNodeViewModel>().ToList();
 
-                    Debug.WriteLine(string.Join(' ', list.Select(n => n.Id)));
-
                     RemoveSelectedElements(list);
 
                     foreach (var node in list)
