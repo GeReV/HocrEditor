@@ -18,6 +18,10 @@
                     Key="M"
                     Command="{Binding MergeCommand}"
                     CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
+        <KeyBinding Modifiers="Control+Shift"
+                    Key="A"
+                    Command="{Binding SelectIdenticalNodesCommand}"
+                    CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
         <KeyBinding Modifiers="Control"
                     Key="Z"
                     Command="{Binding UndoCommand}" />
