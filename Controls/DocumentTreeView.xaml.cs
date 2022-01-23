@@ -94,6 +94,7 @@ public partial class DocumentTreeView
 
         OnNodeEdited(editableTextBlock.Text);
 
+        // TODO: Is it possible to avoid this call?
         editableTextBlock.GetBindingExpression(EditableTextBlock.TextProperty)?.UpdateSource();
     }
 
