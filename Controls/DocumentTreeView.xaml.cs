@@ -3,13 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
+using HocrEditor.Helpers;
 using HocrEditor.ViewModels;
 
 namespace HocrEditor.Controls;
 
-public partial class DocumentTreeView : UserControl
+public partial class DocumentTreeView
 {
     public class NodeEditedEventArgs : EventArgs
     {
@@ -74,22 +75,31 @@ public partial class DocumentTreeView : UserControl
 
         var first = SelectedItems.First(n => n.IsEditable);
 
-        if (!first.IsEditing)
+        if (first.IsEditing)
         {
-            first.IsEditing = true;
+            return;
         }
-        else if (e.OriginalSource is EditTextBox textBox)
-        {
-            OnNodeEdited((string)(textBox.GetValue(TextBox.TextProperty) ?? string.Empty));
 
-            first.IsEditing = false;
-        }
+        first.IsEditing = true;
 
         e.Handled = true;
     }
 
-    protected void OnNodeEdited(string value)
+    private void EditableTextBlock_OnTextChanged(object? sender, RoutedEventArgs e)
+    {
+        if (e.Source is not EditableTextBlock editableTextBlock)
+        {
+            return;
+        }
+
+        OnNodeEdited(editableTextBlock.Text);
+
+        editableTextBlock.GetBindingExpression(EditableTextBlock.TextProperty)?.UpdateSource();
+    }
+
+    private void OnNodeEdited(string value)
     {
         NodeEdited?.Invoke(this, new NodeEditedEventArgs(value));
     }
+
 }
