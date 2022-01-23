@@ -72,11 +72,24 @@ namespace HocrEditor.ViewModels
         {
             get
             {
-                var result = InnerText.Length > MAX_INNER_TEXT_LENGTH
-                    ? InnerText.Remove(MAX_INNER_TEXT_LENGTH).TrimEnd() + ELLIPSIS
-                    : InnerText;
+                var innerText = InnerText;
+
+                var result = innerText.Length > MAX_INNER_TEXT_LENGTH
+                    ? innerText.Remove(MAX_INNER_TEXT_LENGTH).TrimEnd() + ELLIPSIS
+                    : innerText;
 
                 return result.ReplaceLineEndings(" ");
+            }
+            set
+            {
+                if (IsEditable)
+                {
+                    InnerText = value;
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Cannot edit {nameof(DisplayText)} for this node");
+                }
             }
         }
 
