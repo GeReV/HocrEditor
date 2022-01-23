@@ -37,6 +37,7 @@ public class DeleteNodes : CommandBase<ICollection<HocrNodeViewModel>>
         {
             foreach (var node in nodes)
             {
+                commands.Add(RemoveEmptyParents(mainWindowViewModel.Document, node));
                 commands.AddRange(CropParents(node));
             }
         }
@@ -52,6 +53,15 @@ public class DeleteNodes : CommandBase<ICollection<HocrNodeViewModel>>
 
         // ExecuteUndoableCommand(commands);
         mainWindowViewModel.UndoRedoManager.ExecuteCommands(commands);
+    }
+
+    private static DocumentRemoveNodesCommand RemoveEmptyParents(HocrDocumentViewModel document, HocrNodeViewModel node)
+    {
+        Debug.Assert(node.Parent != null, "node.Parent != null");
+
+        var ascendants = node.Ascendants.TakeWhile(n => n.NodeType != HocrNodeType.Page && n.Children.Count == 1);
+
+        return new DocumentRemoveNodesCommand(document, ascendants);
     }
 
     private static IEnumerable<PropertyChangeCommand<Rect>> CropParents(HocrNodeViewModel node)
