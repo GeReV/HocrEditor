@@ -25,11 +25,14 @@ public class DocumentRemoveNodesCommand : UndoRedoCommand
 
         var document = (HocrDocumentViewModel)Sender;
 
+        // Probably better to update NodeCache before the event-raising Nodes.
         foreach (var child in children)
         {
             document.NodeCache.Add(child.Id, child);
         }
 
+        // NOTE: Ordering is important here. Updating the node array must occur before inserting the children, as
+        //  the latter affects selected items, which should update after the nodes.
         document.Nodes.AddRange(nodes.Concat(children));
 
         for (var index = 0; index < nodes.Count; index++)
