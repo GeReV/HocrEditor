@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using HocrEditor.Helpers;
+using HocrEditor.ViewModels;
 using Microsoft.Xaml.Behaviors;
 
 namespace HocrEditor.Behaviors;
@@ -25,16 +26,16 @@ public class TreeViewMultipleSelectionBehavior : Behavior<TreeView>
     /// </summary>
     public static readonly DependencyProperty SelectedItemsProperty = DependencyProperty.Register(
         "SelectedItems",
-        typeof(IList),
+        typeof(ISet<HocrNodeViewModel>),
         typeof(TreeViewMultipleSelectionBehavior)
     );
 
     /// <summary>
     /// Gets or sets the selected items.
     /// </summary>
-    public IList SelectedItems
+    public ISet<HocrNodeViewModel> SelectedItems
     {
-        get => (IList)GetValue(SelectedItemsProperty);
+        get => (ISet<HocrNodeViewModel>)GetValue(SelectedItemsProperty);
         set => SetValue(SelectedItemsProperty, value);
     }
 
@@ -117,13 +118,15 @@ public class TreeViewMultipleSelectionBehavior : Behavior<TreeView>
             return;
         }
 
+        var node = (HocrNodeViewModel)treeViewItem.DataContext;
+
         if (GetIsItemSelected(treeViewItem))
         {
-            selectedItems.Add(treeViewItem.DataContext);
+            selectedItems.Add(node);
         }
         else
         {
-            selectedItems.Remove(treeViewItem.DataContext);
+            selectedItems.Remove(node);
         }
     }
 

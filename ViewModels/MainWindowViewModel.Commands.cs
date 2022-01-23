@@ -16,7 +16,7 @@ namespace HocrEditor.ViewModels
     {
         public readonly UndoRedoManager UndoRedoManager = new();
 
-        private RangeObservableCollection<HocrNodeViewModel>? previousSelectedNodes;
+        private ObservableHashSet<HocrNodeViewModel>? previousSelectedNodes;
 
         public MainWindowViewModel()
         {
@@ -26,11 +26,11 @@ namespace HocrEditor.ViewModels
             ConvertToImageCommand = new ConvertToImageCommand(this);
             EditNodesCommand = new RelayCommand<string>(EditNodes, CanEditNodes);
 
-            SelectNodesCommand = new RelayCommand<IList<HocrNodeViewModel>>(SelectNodes, CanSelectNodes);
-            DeselectNodesCommand = new RelayCommand<IList<HocrNodeViewModel>>(DeselectNodes, CanDeselectNodes);
+            SelectNodesCommand = new RelayCommand<IEnumerable<HocrNodeViewModel>>(SelectNodes, CanSelectNodes);
+            DeselectNodesCommand = new RelayCommand<IEnumerable<HocrNodeViewModel>>(DeselectNodes, CanDeselectNodes);
 
             SelectIdenticalNodesCommand =
-                new RelayCommand<IList<HocrNodeViewModel>>(SelectIdenticalNodes, CanSelectIdenticalNodes);
+                new RelayCommand<ICollection<HocrNodeViewModel>>(SelectIdenticalNodes, CanSelectIdenticalNodes);
 
             UpdateNodesCommand = new RelayCommand<List<NodesChangedEventArgs.NodeChange>>(UpdateNodes, CanUpdateNodes);
 
@@ -42,16 +42,16 @@ namespace HocrEditor.ViewModels
             UndoRedoManager.UndoStackChanged += UpdateUndoRedoCommands;
         }
 
-        private bool CanSelectIdenticalNodes(IList<HocrNodeViewModel>? list) => Document != null && list is { Count: 1 };
+        private bool CanSelectIdenticalNodes(ICollection<HocrNodeViewModel>? list) => Document != null && list is { Count: 1 };
 
-        private void SelectIdenticalNodes(IList<HocrNodeViewModel>? list)
+        private void SelectIdenticalNodes(ICollection<HocrNodeViewModel>? list)
         {
             if (Document == null || list is not { Count: 1 })
             {
                 return;
             }
 
-            var item = list[0];
+            var item = list.First();
 
             switch (item.NodeType)
             {
@@ -78,9 +78,9 @@ namespace HocrEditor.ViewModels
 
         public ConvertToImageCommand ConvertToImageCommand { get; set; }
 
-        public IRelayCommand<IList<HocrNodeViewModel>> DeleteCommand { get; }
-        public IRelayCommand<IList<HocrNodeViewModel>> MergeCommand { get; }
-        public IRelayCommand<IList<HocrNodeViewModel>> CropCommand { get; init; }
+        public IRelayCommand<ICollection<HocrNodeViewModel>> DeleteCommand { get; }
+        public IRelayCommand<ICollection<HocrNodeViewModel>> MergeCommand { get; }
+        public IRelayCommand<ICollection<HocrNodeViewModel>> CropCommand { get; init; }
         public IRelayCommand<string> EditNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> SelectNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> DeselectNodesCommand { get; }
@@ -125,10 +125,10 @@ namespace HocrEditor.ViewModels
 
         private bool CanUndo() => UndoRedoManager.CanUndo;
 
-        private bool CanSelectNodes(IList<HocrNodeViewModel>? nodes) =>
+        private bool CanSelectNodes(IEnumerable<HocrNodeViewModel>? nodes) =>
             Document != null && Document.Nodes.Any() && nodes != null && nodes.Any();
 
-        private void SelectNodes(IList<HocrNodeViewModel>? nodes)
+        private void SelectNodes(IEnumerable<HocrNodeViewModel>? nodes)
         {
             if (Document == null || nodes == null)
             {
@@ -155,10 +155,10 @@ namespace HocrEditor.ViewModels
             UndoRedoManager.ExecuteCommands(commands);
         }
 
-        private bool CanDeselectNodes(IList<HocrNodeViewModel>? nodes) =>
+        private bool CanDeselectNodes(IEnumerable<HocrNodeViewModel>? nodes) =>
             Document != null && Document.SelectedNodes.Any() && nodes != null && nodes.Any();
 
-        private void DeselectNodes(IList<HocrNodeViewModel>? nodes)
+        private void DeselectNodes(IEnumerable<HocrNodeViewModel>? nodes)
         {
             if (Document == null || nodes == null)
             {

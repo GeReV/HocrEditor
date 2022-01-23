@@ -6,7 +6,7 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class CropNodes : CommandBase<IList<HocrNodeViewModel>>
+public class CropNodes : CommandBase<ICollection<HocrNodeViewModel>>
 {
     private readonly MainWindowViewModel mainWindowViewModel;
 
@@ -15,9 +15,9 @@ public class CropNodes : CommandBase<IList<HocrNodeViewModel>>
         this.mainWindowViewModel = mainWindowViewModel;
     }
 
-    public override bool CanExecute(IList<HocrNodeViewModel>? nodes) => nodes is { Count: > 0 };
+    public override bool CanExecute(ICollection<HocrNodeViewModel>? nodes) => nodes is { Count: > 0 };
 
-    public override void Execute(IList<HocrNodeViewModel>? nodes)
+    public override void Execute(ICollection<HocrNodeViewModel>? nodes)
     {
         if (nodes == null || mainWindowViewModel.Document == null)
         {

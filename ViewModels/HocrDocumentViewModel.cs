@@ -11,7 +11,7 @@ namespace HocrEditor.ViewModels
         public RangeObservableCollection<HocrNodeViewModel> Nodes { get; }
 
         // TODO: Use a set here? Need to deduplicate items.
-        public RangeObservableCollection<HocrNodeViewModel> SelectedNodes { get; set; } = new();
+        public ObservableHashSet<HocrNodeViewModel> SelectedNodes { get; set; } = new();
 
         public HocrDocumentViewModel(HocrDocument hocrDocument)
         {

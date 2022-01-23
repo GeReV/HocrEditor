@@ -3,12 +3,11 @@ using System.Diagnostics;
 using System.Linq;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Helpers;
-using HocrEditor.Models;
 using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class MergeNodes : CommandBase<IList<HocrNodeViewModel>>
+public class MergeNodes : CommandBase<ICollection<HocrNodeViewModel>>
 {
     private readonly MainWindowViewModel mainWindowViewModel;
 
@@ -17,9 +16,9 @@ public class MergeNodes : CommandBase<IList<HocrNodeViewModel>>
         this.mainWindowViewModel = mainWindowViewModel;
     }
 
-    public override bool CanExecute(IList<HocrNodeViewModel>? nodes) => nodes is { Count: > 0 };
+    public override bool CanExecute(ICollection<HocrNodeViewModel>? nodes) => nodes is { Count: > 0 };
 
-    public override void Execute(IList<HocrNodeViewModel>? nodes)
+    public override void Execute(ICollection<HocrNodeViewModel>? nodes)
     {
         if (nodes == null)
         {

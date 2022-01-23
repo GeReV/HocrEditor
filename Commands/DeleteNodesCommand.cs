@@ -8,7 +8,7 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class DeleteNodes : CommandBase<IList<HocrNodeViewModel>>
+public class DeleteNodes : CommandBase<ICollection<HocrNodeViewModel>>
 {
     private readonly MainWindowViewModel mainWindowViewModel;
 
@@ -17,9 +17,9 @@ public class DeleteNodes : CommandBase<IList<HocrNodeViewModel>>
         this.mainWindowViewModel = mainWindowViewModel;
     }
 
-    public override bool CanExecute(IList<HocrNodeViewModel>? nodes) => nodes is { Count: > 0 };
+    public override bool CanExecute(ICollection<HocrNodeViewModel>? nodes) => nodes is { Count: > 0 };
 
-    public override void Execute(IList<HocrNodeViewModel>? nodes)
+    public override void Execute(ICollection<HocrNodeViewModel>? nodes)
     {
         if (nodes == null)
         {

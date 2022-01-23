@@ -29,7 +29,11 @@ public class DocumentRemoveNodesCommand : UndoRedoCommand
         }
 
         document.Nodes.AddRange(nodes.Concat(children));
-        document.SelectedNodes.AddRange(nodes);
+
+        foreach (var node in nodes)
+        {
+            document.SelectedNodes.Add(node);
+        }
     }
 
     public override void Redo()
@@ -38,7 +42,10 @@ public class DocumentRemoveNodesCommand : UndoRedoCommand
 
         children = nodes.SelectMany(node => node.Descendents).ToList();
 
-        document.SelectedNodes.RemoveRange(nodes);
+        foreach (var node in nodes)
+        {
+            document.SelectedNodes.Remove(node);
+        }
 
         document.Nodes.RemoveRange(nodes.Concat(children));
 

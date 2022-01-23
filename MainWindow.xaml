@@ -13,11 +13,11 @@
     <Window.InputBindings>
         <KeyBinding Key="Delete"
                     Command="{Binding DeleteCommand}"
-                    CommandParameter="{Binding SelectedItems}" />
+                    CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
         <KeyBinding Modifiers="Control"
                     Key="M"
                     Command="{Binding MergeCommand}"
-                    CommandParameter="{Binding SelectedItems}" />
+                    CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
         <KeyBinding Modifiers="Control"
                     Key="Z"
                     Command="{Binding UndoCommand}" />
@@ -44,21 +44,21 @@
                 <Separator />
                 <MenuItem Header="_Delete"
                           Command="{Binding DeleteCommand}"
-                          CommandParameter="{Binding SelectedItems}" />
+                          CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
                 <MenuItem Header="_Merge"
                           Command="{Binding MergeCommand}"
-                          CommandParameter="{Binding SelectedItems}" />
+                          CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
                 <MenuItem Header="_Crop"
                           Command="{Binding CropCommand}"
-                          CommandParameter="{Binding SelectedItems}" />
+                          CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
                 <Separator />
 
                 <MenuItem Header="_Select Identical Nodes"
                           Command="{Binding SelectIdenticalNodesCommand}"
-                          CommandParameter="{Binding SelectedItems}" />
+                          CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
                 <MenuItem Header="Convert Nodes to _Image"
                           Command="{Binding ConvertToImageCommand}"
-                          CommandParameter="{Binding SelectedItems}" />
+                          CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
             </MenuItem>
         </Menu>
         <ToolBarTray DockPanel.Dock="Top">
@@ -75,22 +75,22 @@
                 <Separator />
                 <Button Content="Delete"
                         Command="{Binding DeleteCommand}"
-                        CommandParameter="{Binding SelectedItems}" />
+                        CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
                 <Button Content="Merge"
                         Command="{Binding MergeCommand}"
-                        CommandParameter="{Binding SelectedItems}" />
+                        CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
                 <Button Content="Crop"
                         Command="{Binding CropCommand}"
-                        CommandParameter="{Binding SelectedItems}" />
+                        CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
                 <ToggleButton Content="Auto Crop"
                               IsChecked="{Binding AutoCrop}" />
                 <Separator />
                 <Button Content="Select Identical Nodes"
                         Command="{Binding SelectIdenticalNodesCommand}"
-                        CommandParameter="{Binding SelectedItems}" />
+                        CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
                 <Button Content="Convert Nodes to Image"
                         Command="{Binding ConvertToImageCommand}"
-                        CommandParameter="{Binding SelectedItems}" />
+                        CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
             </ToolBar>
         </ToolBarTray>
         <Grid>
@@ -100,12 +100,12 @@
             </Grid.ColumnDefinitions>
             <controls:DocumentCanvas Grid.Column="0"
                                      ItemsSource="{Binding Document.Nodes, FallbackValue={x:Null}}"
-                                     SelectedItems="{Binding SelectedItems}"
+                                     SelectedItems="{Binding Document.SelectedNodes, FallbackValue={x:Null}}"
                                      NodesChanged="Canvas_OnNodesChanged"
                                      SelectionChanged="Canvas_OnSelectionChanged" />
             <controls:DocumentTreeView Grid.Column="1"
                                        ItemsSource="{Binding Document.Nodes[0].Children, FallbackValue={x:Null}}"
-                                       SelectedItems="{Binding SelectedItems}"
+                                       SelectedItems="{Binding Document.SelectedNodes, FallbackValue={x:Null}}"
                                        NodeEdited="DocumentTreeView_OnNodeEdited" />
         </Grid>
     </DockPanel>

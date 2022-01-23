@@ -24,7 +24,7 @@ public partial class DocumentTreeView
 
     public static readonly DependencyProperty SelectedItemsProperty = DependencyProperty.Register(
         nameof(SelectedItems),
-        typeof(IList<HocrNodeViewModel>),
+        typeof(ICollection<HocrNodeViewModel>),
         typeof(DocumentTreeView),
         new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault)
     );
@@ -37,9 +37,9 @@ public partial class DocumentTreeView
             new FrameworkPropertyMetadata(null)
         );
 
-    public IList<HocrNodeViewModel>? SelectedItems
+    public ICollection<HocrNodeViewModel>? SelectedItems
     {
-        get => (IList<HocrNodeViewModel>?)GetValue(SelectedItemsProperty);
+        get => (ICollection<HocrNodeViewModel>?)GetValue(SelectedItemsProperty);
         set => SetValue(SelectedItemsProperty, value);
     }
 

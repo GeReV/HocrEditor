@@ -44,11 +44,12 @@ public partial class DocumentCanvas
 {
     public static readonly DependencyProperty SelectedItemsProperty = DependencyProperty.Register(
         nameof(SelectedItems),
-        typeof(ObservableCollection<HocrNodeViewModel>),
+        typeof(ObservableHashSet<HocrNodeViewModel>),
         typeof(DocumentCanvas),
         new FrameworkPropertyMetadata(
-            new ObservableCollection<HocrNodeViewModel>(),
-            FrameworkPropertyMetadataOptions.BindsTwoWayByDefault
+            null,
+            FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+            SelectedItemsChangedCallback
         )
     );
 
@@ -58,15 +59,15 @@ public partial class DocumentCanvas
             typeof(ObservableCollection<HocrNodeViewModel>),
             typeof(DocumentCanvas),
             new FrameworkPropertyMetadata(
-                new ObservableCollection<HocrNodeViewModel>(),
+                null,
                 FrameworkPropertyMetadataOptions.None,
                 ItemsSourceChangedCallback
             )
         );
 
-    public ObservableCollection<HocrNodeViewModel> SelectedItems
+    public ObservableHashSet<HocrNodeViewModel>? SelectedItems
     {
-        get => (ObservableCollection<HocrNodeViewModel>)GetValue(SelectedItemsProperty);
+        get => (ObservableHashSet<HocrNodeViewModel>?)GetValue(SelectedItemsProperty);
         set => SetValue(SelectedItemsProperty, value);
     }
 
@@ -191,11 +192,22 @@ public partial class DocumentCanvas
         );
 
         documentCanvas.ItemsSource.CollectionChanged += documentCanvas.NodesOnCollectionChanged;
-        documentCanvas.SelectedItems.CollectionChanged += documentCanvas.SelectedNodesOnCollectionChanged;
 
         documentCanvas.Dispatcher.InvokeAsync(documentCanvas.Refresh, DispatcherPriority.Send);
 
         documentCanvas.CenterTransformation();
+    }
+
+    private static void SelectedItemsChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not DocumentCanvas documentCanvas || documentCanvas.SelectedItems == null)
+        {
+            return;
+        }
+
+        documentCanvas.SelectedItems.CollectionChanged += documentCanvas.SelectedNodesOnCollectionChanged;
+
+        documentCanvas.Dispatcher.InvokeAsync(documentCanvas.Refresh, DispatcherPriority.Send);
     }
 
     private void AddSelectedElements(IEnumerable<HocrNodeViewModel> nodes)
@@ -506,7 +518,7 @@ public partial class DocumentCanvas
         // If we have only one item selected, set its resize limits to within its parent and around its children.
         if (SelectedItems.Count == 1)
         {
-            var node = SelectedItems[0];
+            var node = SelectedItems.First();
 
             var containedChildren = node.Children.Where(c => node.BBox.Contains(c.BBox));
 
@@ -1014,7 +1026,7 @@ public partial class DocumentCanvas
 
     private string? GetElementKeyAtPoint(SKPoint p)
     {
-        var selectedKeys = SelectedItems.Select(n => n.Id).ToHashSet() ?? Enumerable.Empty<string>();
+        var selectedKeys = SelectedItems.Select(n => n.Id).ToHashSet();
 
         var key = elements.Keys
             .Where(k => !selectedKeys.Contains(k))
