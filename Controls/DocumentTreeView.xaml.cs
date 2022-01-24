@@ -101,9 +101,4 @@ public partial class DocumentTreeView
     {
         NodeEdited?.Invoke(this, new NodeEditedEventArgs(value));
     }
-
-    private void TreeViewDragDropBehavior_OnDrop(object? sender, TreeViewDropEventArgs e)
-    {
-
-    }
 }
