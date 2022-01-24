@@ -3,9 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using System.Windows.Data;
 using System.Windows.Input;
-using HocrEditor.Helpers;
+using HocrEditor.Behaviors;
 using HocrEditor.ViewModels;
 
 namespace HocrEditor.Controls;
@@ -103,4 +102,8 @@ public partial class DocumentTreeView
         NodeEdited?.Invoke(this, new NodeEditedEventArgs(value));
     }
 
+    private void TreeViewDragDropBehavior_OnDrop(object? sender, TreeViewDropEventArgs e)
+    {
+
+    }
 }

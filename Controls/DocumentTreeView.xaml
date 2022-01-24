@@ -8,6 +8,7 @@
              xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:behaviors="clr-namespace:HocrEditor.Behaviors"
              xmlns:controls="clr-namespace:HocrEditor.Controls"
+             xmlns:hocrEditor="clr-namespace:HocrEditor"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance viewModels:HocrDocumentViewModel}">
     <Grid>
@@ -15,6 +16,9 @@
             <b:Interaction.Behaviors>
                 <behaviors:TreeViewMultipleSelectionBehavior
                     SelectedItems="{Binding SelectedItems, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+
+                <behaviors:TreeViewDragDropBehavior Drop="TreeViewDragDropBehavior_OnDrop"
+                                                    DataObject="{Binding SelectedItems, RelativeSource={RelativeSource AncestorType=UserControl}}" />
             </b:Interaction.Behaviors>
 
             <TreeView.Resources>
@@ -116,7 +120,18 @@
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition />
                                     </Grid.RowDefinitions>
-                                    <ToggleButton x:Name="Expander"
+
+                                    <Border Grid.Row="0"
+                                            Grid.Column="0"
+                                            Grid.ColumnSpan="3"
+                                            x:Name="dropTargetCue"
+                                            BorderBrush="{x:Static SystemColors.ControlDarkBrush}"
+                                            SnapsToDevicePixels="True"
+                                            Visibility="Collapsed" />
+
+                                    <ToggleButton Grid.Row="0"
+                                                  Grid.Column="0"
+                                                  x:Name="Expander"
                                                   Style="{StaticResource ExpandCollapseToggleStyle}"
                                                   ClickMode="Press"
                                                   IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}" />
@@ -287,6 +302,54 @@
                                              Value="False">
                                         <Setter Property="TextElement.Foreground"
                                                 Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                                    </Trigger>
+
+                                    <Trigger Property="hocrEditor:DragDropAttachedProperties.IsBeingDragged"
+                                             Value="True">
+                                        <Setter Property="Opacity"
+                                                Value="0.5" />
+                                    </Trigger>
+                                    <Trigger Property="hocrEditor:DragDropAttachedProperties.IsDropAboveTarget"
+                                             Value="True">
+                                        <Setter TargetName="dropTargetCue"
+                                                Property="Visibility"
+                                                Value="Visible" />
+                                        <Setter TargetName="dropTargetCue"
+                                                Property="VerticalAlignment"
+                                                Value="Top" />
+                                        <Setter TargetName="dropTargetCue"
+                                                Property="BorderThickness"
+                                                Value="0,2,0,0" />
+                                        <Setter TargetName="dropTargetCue"
+                                                Property="Margin"
+                                                Value="0,-2,0,0" />
+                                    </Trigger>
+                                    <Trigger Property="hocrEditor:DragDropAttachedProperties.IsDropBelowTarget"
+                                             Value="True">
+                                        <Setter TargetName="dropTargetCue"
+                                                Property="Visibility"
+                                                Value="Visible" />
+                                        <Setter TargetName="dropTargetCue"
+                                                Property="VerticalAlignment"
+                                                Value="Bottom" />
+                                        <Setter TargetName="dropTargetCue"
+                                                Property="BorderThickness"
+                                                Value="0,0,0,2" />
+                                        <Setter TargetName="dropTargetCue"
+                                                Property="Margin"
+                                                Value="0,0,0,-2" />
+                                    </Trigger>
+                                    <Trigger Property="hocrEditor:DragDropAttachedProperties.IsDropOnTarget"
+                                             Value="True">
+                                        <Setter TargetName="dropTargetCue"
+                                                Property="Visibility"
+                                                Value="Visible" />
+                                        <Setter TargetName="dropTargetCue"
+                                                Property="BorderThickness"
+                                                Value="2" />
+                                        <Setter TargetName="dropTargetCue"
+                                                Property="Margin"
+                                                Value="0,-2,0,-2" />
                                     </Trigger>
 
                                     <!-- Use a different template and colours in edit mode -->
