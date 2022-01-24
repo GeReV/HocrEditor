@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using PropertyChanged;
 
 namespace HocrEditor;
 
@@ -17,6 +18,7 @@ namespace HocrEditor;
 ///     examples.
 /// </remarks>
 /// <typeparam name="T">The type of elements in the hash set.</typeparam>
+[DoNotNotify]
 public class ObservableHashSet<T>
     : ISet<T>, IReadOnlyCollection<T>, INotifyCollectionChanged, INotifyPropertyChanged, INotifyPropertyChanging
 {
