@@ -5,12 +5,47 @@ using System.Windows;
 using System.Windows.Controls;
 using GongSolutions.Wpf.DragDrop;
 using GongSolutions.Wpf.DragDrop.Utilities;
+using HocrEditor.Helpers;
+using HocrEditor.ViewModels;
 
 
 namespace HocrEditor.Controls;
 
 public class DocumentTreeViewDropHandler : DefaultDropHandler
 {
+    private new static bool CanAcceptData(IDropInfo dropInfo)
+    {
+        if (!DefaultDropHandler.CanAcceptData(dropInfo))
+        {
+            return false;
+        }
+
+        var data = ExtractData(dropInfo.Data).OfType<HocrNodeViewModel>().ToList();
+
+        if (data.DistinctBy(n => n.NodeType).Count() > 1)
+        {
+            return false;
+        }
+
+
+        if (dropInfo.TargetItem is HocrNodeViewModel targetItem)
+        {
+            var isDroppingInto = dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.TargetItemCenter);
+
+            if (isDroppingInto)
+            {
+                return targetItem.NodeType == HocrNodeTypeHelper.GetParentNodeType(data.First().NodeType);
+            }
+
+            if (dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.BeforeTargetItem) || dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.AfterTargetItem))
+            {
+                return targetItem.Parent?.NodeType == HocrNodeTypeHelper.GetParentNodeType(data.First().NodeType);
+            }
+        }
+
+        return false;
+    }
+
     public override void DragOver(IDropInfo? dropInfo)
     {
         if (dropInfo == null || !CanAcceptData(dropInfo))

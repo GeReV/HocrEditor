@@ -1,8 +1,9 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using GongSolutions.Wpf.DragDrop;
 using HocrEditor.Behaviors;
+using HocrEditor.ViewModels;
 using Microsoft.Xaml.Behaviors;
 
 
@@ -16,7 +17,15 @@ public class DocumentTreeViewDragHandler : DefaultDragHandler
             .OfType<TreeViewMultipleSelectionBehavior>()
             .FirstOrDefault();
 
-        dragInfo.Data = selectionBehavior?.SelectedItems;
+        var selectedItems = selectionBehavior?.SelectedItems;
+
+        // Ensure the dragged item is selected so it's definitely in the collection.
+        if (selectedItems != null && !selectedItems.Contains((HocrNodeViewModel)dragInfo.SourceItem))
+        {
+            selectionBehavior?.SelectSingleItem((TreeViewItem)dragInfo.VisualSourceItem);
+        }
+
+        dragInfo.Data = selectedItems;
 
         dragInfo.Effects = dragInfo.Data != null ? DragDropEffects.Copy | DragDropEffects.Move : DragDropEffects.None;
     }
