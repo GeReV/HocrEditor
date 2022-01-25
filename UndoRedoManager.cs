@@ -17,7 +17,23 @@ public class UndoRedoManager
 
     public event EventHandler? UndoStackChanged;
 
-    public void ExecuteCommand(UndoRedoCommand command) => ExecuteCommands(Enumerable.Repeat(command, 1));
+    private bool isBatching = false;
+
+    private List<UndoRedoCommand> batchCommands = new();
+
+    public void BeginBatch()
+    {
+        isBatching = true;
+    }
+
+    public void ExecuteBatch()
+    {
+        isBatching = false;
+
+        ExecuteCommands(batchCommands);
+
+        batchCommands = new List<UndoRedoCommand>();
+    }
 
     public void ExecuteCommands(IEnumerable<UndoRedoCommand> commandSet)
     {
@@ -25,6 +41,13 @@ public class UndoRedoManager
 
         if (commandList.Count <= 0)
         {
+            return;
+        }
+
+        if (isBatching)
+        {
+            batchCommands.AddRange(commandList);
+
             return;
         }
 

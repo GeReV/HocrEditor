@@ -4,23 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using HocrEditor.Behaviors;
+using GongSolutions.Wpf.DragDrop;
 using HocrEditor.ViewModels;
 
 namespace HocrEditor.Controls;
 
 public partial class DocumentTreeView
 {
-    public class NodeEditedEventArgs : EventArgs
-    {
-        public string Value { get; }
-
-        public NodeEditedEventArgs(string value)
-        {
-            Value = value;
-        }
-    }
-
     public static readonly DependencyProperty SelectedItemsProperty = DependencyProperty.Register(
         nameof(SelectedItems),
         typeof(ICollection<HocrNodeViewModel>),
@@ -58,12 +48,42 @@ public partial class DocumentTreeView
         }
     }
 
-    public event EventHandler<NodeEditedEventArgs>? NodeEdited;
+    public static readonly RoutedEvent NodesEditedEvent = EventManager.RegisterRoutedEvent(
+        "NodesEdited",
+        RoutingStrategy.Bubble,
+        typeof(EventHandler<NodesEditedEventArgs>),
+        typeof(DocumentTreeView)
+    );
+
+    public event EventHandler<NodesEditedEventArgs> NodesEdited
+    {
+        add => AddHandler(NodesEditedEvent, value);
+        remove => RemoveHandler(NodesEditedEvent, value);
+    }
+
+    public static readonly RoutedEvent NodesMovedEvent = EventManager.RegisterRoutedEvent(
+        "NodesMoved",
+        RoutingStrategy.Bubble,
+        typeof(EventHandler<NodesMovedEventArgs>),
+        typeof(DocumentTreeView)
+    );
+
+    public event EventHandler<NodesMovedEventArgs> NodesMoved
+    {
+        add => AddHandler(NodesMovedEvent, value);
+        remove => RemoveHandler(NodesMovedEvent, value);
+    }
 
     public DocumentTreeView()
     {
         InitializeComponent();
+
+        DropHandler = new DocumentTreeViewDropHandler(this);
+        DragHandler = new DocumentTreeViewDragHandler();
     }
+
+    public IDragSource DragHandler { get; }
+    public IDropTarget DropHandler { get; }
 
     private void TreeViewItem_OnKeyDown(object sender, KeyEventArgs e)
     {
@@ -99,6 +119,6 @@ public partial class DocumentTreeView
 
     private void OnNodeEdited(string value)
     {
-        NodeEdited?.Invoke(this, new NodeEditedEventArgs(value));
+        RaiseEvent(new NodesEditedEventArgs(value));
     }
 }

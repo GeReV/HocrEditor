@@ -13,6 +13,13 @@ namespace HocrEditor.Controls;
 
 public class DocumentTreeViewDropHandler : DefaultDropHandler
 {
+    private readonly DocumentTreeView owner;
+
+    public DocumentTreeViewDropHandler(DocumentTreeView owner)
+    {
+        this.owner = owner;
+    }
+
     private new static bool CanAcceptData(IDropInfo dropInfo)
     {
         if (!DefaultDropHandler.CanAcceptData(dropInfo))
@@ -67,85 +74,8 @@ public class DocumentTreeViewDropHandler : DefaultDropHandler
         }
 
         var insertIndex = GetInsertIndex(dropInfo);
-        var destinationList = dropInfo.TargetCollection.TryGetList();
         var data = ExtractData(dropInfo.Data).OfType<object>().ToList();
-        var isSameCollection = false;
 
-        var copyData = ShouldCopyData(dropInfo);
-        if (!copyData)
-        {
-            var sourceList = dropInfo.DragInfo.SourceCollection.TryGetList();
-            if (sourceList != null)
-            {
-                isSameCollection = sourceList.IsSameObservableCollection(destinationList);
-                if (!isSameCollection)
-                {
-                    foreach (var o in data)
-                    {
-                        var index = sourceList.IndexOf(o);
-                        if (index == -1)
-                        {
-                            continue;
-                        }
-
-                        sourceList.RemoveAt(index);
-
-                        // If source is destination too fix the insertion index
-                        if (destinationList != null && ReferenceEquals(sourceList, destinationList) &&
-                            index < insertIndex)
-                        {
-                            --insertIndex;
-                        }
-                    }
-                }
-            }
-        }
-
-        if (destinationList == null)
-        {
-            return;
-        }
-
-        var objects2Insert = new List<object>();
-
-        // check for cloning
-        var cloneData = dropInfo.Effects.HasFlag(DragDropEffects.Copy) ||
-                        dropInfo.Effects.HasFlag(DragDropEffects.Link);
-
-        foreach (var o in data)
-        {
-            var obj2Insert = o;
-            if (cloneData)
-            {
-                if (o is ICloneable cloneable)
-                {
-                    obj2Insert = cloneable.Clone();
-                }
-            }
-
-            objects2Insert.Add(obj2Insert);
-
-            if (!cloneData && isSameCollection)
-            {
-                var index = destinationList.IndexOf(o);
-                if (index == -1)
-                {
-                    continue;
-                }
-
-                if (insertIndex > index)
-                {
-                    insertIndex--;
-                }
-
-                Move(destinationList, index, insertIndex++);
-            }
-            else
-            {
-                destinationList.Insert(insertIndex++, obj2Insert);
-            }
-        }
-
-        SelectDroppedItems(dropInfo, objects2Insert);
+        owner.RaiseEvent(new NodesMovedEventArgs(DocumentTreeView.NodesMovedEvent, owner, dropInfo.DragInfo.SourceCollection, dropInfo.TargetCollection, data, insertIndex));
     }
 }

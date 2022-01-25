@@ -110,7 +110,8 @@
             <controls:DocumentTreeView Grid.Column="1"
                                        ItemsSource="{Binding Document.Nodes[0].Children, FallbackValue={x:Null}}"
                                        SelectedItems="{Binding Document.SelectedNodes, FallbackValue={x:Null}}"
-                                       NodeEdited="DocumentTreeView_OnNodeEdited" />
+                                       NodesEdited="DocumentTreeView_OnNodeEdited"
+                                       NodesMoved="DocumentTreeView_OnNodesMoved"/>
         </Grid>
     </DockPanel>
 </Window>

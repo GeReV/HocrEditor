@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows;
+using GongSolutions.Wpf.DragDrop.Utilities;
 using HocrEditor.Commands;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Controls;
@@ -24,10 +26,11 @@ namespace HocrEditor.ViewModels
             MergeCommand = new MergeNodes(this);
             CropCommand = new CropNodes(this);
             ConvertToImageCommand = new ConvertToImageCommand(this);
+            MoveNodesCommand = new MoveNodesCommand(this);
             EditNodesCommand = new RelayCommand<string>(EditNodes, CanEditNodes);
 
-            SelectNodesCommand = new RelayCommand<IEnumerable<HocrNodeViewModel>>(SelectNodes, CanSelectNodes);
-            DeselectNodesCommand = new RelayCommand<IEnumerable<HocrNodeViewModel>>(DeselectNodes, CanDeselectNodes);
+            SelectNodesCommand = new SelectNodesCommand(this);
+            DeselectNodesCommand = new DeselectNodesCommand(this);
 
             SelectIdenticalNodesCommand =
                 new RelayCommand<ICollection<HocrNodeViewModel>>(SelectIdenticalNodes, CanSelectIdenticalNodes);
@@ -42,7 +45,8 @@ namespace HocrEditor.ViewModels
             UndoRedoManager.UndoStackChanged += UpdateUndoRedoCommands;
         }
 
-        private bool CanSelectIdenticalNodes(ICollection<HocrNodeViewModel>? list) => Document != null && list is { Count: 1 };
+        private bool CanSelectIdenticalNodes(ICollection<HocrNodeViewModel>? list) =>
+            Document != null && list is { Count: 1 };
 
         private void SelectIdenticalNodes(ICollection<HocrNodeViewModel>? list)
         {
@@ -80,8 +84,10 @@ namespace HocrEditor.ViewModels
 
         public IRelayCommand<ICollection<HocrNodeViewModel>> DeleteCommand { get; }
         public IRelayCommand<ICollection<HocrNodeViewModel>> MergeCommand { get; }
-        public IRelayCommand<ICollection<HocrNodeViewModel>> CropCommand { get; init; }
+        public IRelayCommand<ICollection<HocrNodeViewModel>> CropCommand { get; }
         public IRelayCommand<string> EditNodesCommand { get; }
+
+        public IRelayCommand<NodesMovedEventArgs> MoveNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> SelectNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> DeselectNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> SelectIdenticalNodesCommand { get; }
@@ -124,65 +130,7 @@ namespace HocrEditor.ViewModels
         private bool CanRedo() => UndoRedoManager.CanRedo;
 
         private bool CanUndo() => UndoRedoManager.CanUndo;
-
-        private bool CanSelectNodes(IEnumerable<HocrNodeViewModel>? nodes) =>
-            Document != null && Document.Nodes.Any() && nodes != null && nodes.Any();
-
-        private void SelectNodes(IEnumerable<HocrNodeViewModel>? nodes)
-        {
-            if (Document == null || nodes == null)
-            {
-                return;
-            }
-
-            var commands = new List<UndoRedoCommand>();
-
-            var addedItems = nodes.ToList();
-
-            if (addedItems.Any())
-            {
-                commands.Add(Document.SelectedNodes.ToCollectionClearCommand());
-
-                commands.Add(Document.SelectedNodes.ToCollectionAddCommand(addedItems));
-
-                commands.AddRange(
-                    addedItems.Select(
-                        node => PropertyChangeCommand.FromProperty(node, n => n.IsSelected, true)
-                    )
-                );
-            }
-
-            UndoRedoManager.ExecuteCommands(commands);
-        }
-
-        private bool CanDeselectNodes(IEnumerable<HocrNodeViewModel>? nodes) =>
-            Document != null && Document.SelectedNodes.Any() && nodes != null && nodes.Any();
-
-        private void DeselectNodes(IEnumerable<HocrNodeViewModel>? nodes)
-        {
-            if (Document == null || nodes == null)
-            {
-                return;
-            }
-
-            var commands = new List<UndoRedoCommand>();
-
-            var removedItems = nodes.ToList();
-
-            if (removedItems.Any())
-            {
-                commands.Add(Document.SelectedNodes.ToCollectionRemoveCommand(removedItems));
-
-                commands.AddRange(
-                    removedItems.Select(
-                        node => PropertyChangeCommand.FromProperty(node, n => n.IsSelected, false)
-                    )
-                );
-            }
-
-            UndoRedoManager.ExecuteCommands(commands);
-        }
-
+        
         private static bool CanUpdateNodes(List<NodesChangedEventArgs.NodeChange>? nodeChanges) =>
             nodeChanges is { Count: > 0 };
 

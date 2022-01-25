@@ -11,17 +11,12 @@
              xmlns:dd="urn:gong-wpf-dragdrop"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance viewModels:HocrDocumentViewModel}">
-    <UserControl.Resources>
-        <controls:DocumentTreeViewDragHandler x:Key="DragHandler" />
-        <controls:DocumentTreeViewDropHandler x:Key="DropHandler" />
-    </UserControl.Resources>
     <Grid>
         <TreeView ItemsSource="{Binding  ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   dd:DragDrop.IsDragSource="True"
                   dd:DragDrop.IsDropTarget="True"
-                  dd:DragDrop.DragHandler="{StaticResource DragHandler}"
-                  dd:DragDrop.DropHandler="{StaticResource DropHandler}"
-                  >
+                  dd:DragDrop.DragHandler="{Binding DragHandler, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                  dd:DragDrop.DropHandler="{Binding DropHandler, RelativeSource={RelativeSource AncestorType=UserControl}}">
             <b:Interaction.Behaviors>
                 <behaviors:TreeViewMultipleSelectionBehavior
                     SelectedItems="{Binding SelectedItems, RelativeSource={RelativeSource AncestorType=UserControl}}" />
