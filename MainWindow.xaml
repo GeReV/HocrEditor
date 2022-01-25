@@ -86,8 +86,8 @@
                 <Button Content="Crop"
                         Command="{Binding CropCommand}"
                         CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
-                <ToggleButton Content="Auto Crop"
-                              IsChecked="{Binding AutoCrop}" />
+                <ToggleButton Content="Auto Clean"
+                              IsChecked="{Binding AutoClean}" />
                 <Separator />
                 <Button Content="Select Identical Nodes"
                         Command="{Binding SelectIdenticalNodesCommand}"

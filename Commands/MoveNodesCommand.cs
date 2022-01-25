@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using GongSolutions.Wpf.DragDrop;
 using GongSolutions.Wpf.DragDrop.Utilities;
@@ -64,12 +65,11 @@ public class MoveNodesCommand : CommandBase<NodesMovedEventArgs>
             return;
         }
 
-        var objects2Insert = new List<object>();
+        var document = mainWindowViewModel.Document ??
+                       throw new InvalidOperationException("Expected Document to not be null");
 
         foreach (var o in data)
         {
-            objects2Insert.Add(o);
-
             if (isSameCollection)
             {
                 var index = destinationList.IndexOf(o);
@@ -87,7 +87,23 @@ public class MoveNodesCommand : CommandBase<NodesMovedEventArgs>
             }
             else
             {
+
                 commands.Add(new CollectionInsertCommand(destinationList, o, insertIndex++));
+
+                if (o is not HocrNodeViewModel { Parent: { } } node)
+                {
+                    continue;
+                }
+
+                var oldParent = node.Parent;
+
+                commands.Add(PropertyChangeCommand.FromProperty(node, n => n.Parent, e.TargetOwner));
+
+                if (mainWindowViewModel.AutoClean)
+                {
+                    commands.AddRange(NodeCommands.CropParents(oldParent));
+                    commands.Add(NodeCommands.RemoveEmptyParents(document, oldParent));
+                }
             }
         }
 

@@ -33,12 +33,17 @@ public class DeleteNodes : CommandBase<ICollection<HocrNodeViewModel>>
             new DocumentRemoveNodesCommand(mainWindowViewModel.Document, nodes)
         };
 
-        if (mainWindowViewModel.AutoCrop)
+        if (mainWindowViewModel.AutoClean)
         {
             foreach (var node in nodes)
             {
-                commands.Add(RemoveEmptyParents(mainWindowViewModel.Document, node));
-                commands.AddRange(CropParents(node));
+                if (node.Parent == null)
+                {
+                    continue;
+                }
+
+                commands.AddRange(NodeCommands.CropParents(node.Parent));
+                commands.Add(NodeCommands.RemoveEmptyParents(mainWindowViewModel.Document, node.Parent));
             }
         }
 
@@ -53,30 +58,5 @@ public class DeleteNodes : CommandBase<ICollection<HocrNodeViewModel>>
 
         // ExecuteUndoableCommand(commands);
         mainWindowViewModel.UndoRedoManager.ExecuteCommands(commands);
-    }
-
-    private static DocumentRemoveNodesCommand RemoveEmptyParents(HocrDocumentViewModel document, HocrNodeViewModel node)
-    {
-        Debug.Assert(node.Parent != null, "node.Parent != null");
-
-        var ascendants = node.Ascendants.TakeWhile(n => n.NodeType != HocrNodeType.Page && n.Children.Count == 1);
-
-        return new DocumentRemoveNodesCommand(document, ascendants);
-    }
-
-    private static IEnumerable<PropertyChangeCommand<Rect>> CropParents(HocrNodeViewModel node)
-    {
-        Debug.Assert(node.Parent != null, "node.Parent != null");
-
-        var ascendants = node.Ascendants.Where(n => n.NodeType != HocrNodeType.Page);
-
-        return ascendants.Select(
-            parent =>
-                PropertyChangeCommand.FromProperty(
-                    parent,
-                    p => p.BBox,
-                    () => NodeHelpers.CalculateUnionRect(parent.Children)
-                )
-        );
     }
 }

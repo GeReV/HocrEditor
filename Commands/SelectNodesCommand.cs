@@ -36,7 +36,7 @@ public class SelectNodesCommand : CommandBase<IEnumerable<HocrNodeViewModel>>
         {
             commands.AddRange(
                 mainWindowViewModel.Document.SelectedNodes.Select(
-                    node => PropertyChangeCommand.FromProperty(node, n => n.IsSelected, true)
+                    node => PropertyChangeCommand.FromProperty(node, n => n.IsSelected, false)
                 )
             );
 

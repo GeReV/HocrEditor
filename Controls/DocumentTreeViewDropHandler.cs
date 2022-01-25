@@ -44,7 +44,8 @@ public class DocumentTreeViewDropHandler : DefaultDropHandler
                 return targetItem.NodeType == HocrNodeTypeHelper.GetParentNodeType(data.First().NodeType);
             }
 
-            if (dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.BeforeTargetItem) || dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.AfterTargetItem))
+            if (dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.BeforeTargetItem) ||
+                dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.AfterTargetItem))
             {
                 return targetItem.Parent?.NodeType == HocrNodeTypeHelper.GetParentNodeType(data.First().NodeType);
             }
@@ -62,7 +63,8 @@ public class DocumentTreeViewDropHandler : DefaultDropHandler
 
         dropInfo.Effects = DragDropEffects.Move;
 
-        var isTreeViewItem = dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.TargetItemCenter) && dropInfo.VisualTargetItem is TreeViewItem;
+        var isTreeViewItem = dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.TargetItemCenter) &&
+                             dropInfo.VisualTargetItem is TreeViewItem;
         dropInfo.DropTargetAdorner = isTreeViewItem ? DropTargetAdorners.Highlight : DropTargetAdorners.Insert;
     }
 
@@ -76,6 +78,26 @@ public class DocumentTreeViewDropHandler : DefaultDropHandler
         var insertIndex = GetInsertIndex(dropInfo);
         var data = ExtractData(dropInfo.Data).OfType<object>().ToList();
 
-        owner.RaiseEvent(new NodesMovedEventArgs(DocumentTreeView.NodesMovedEvent, owner, dropInfo.DragInfo.SourceCollection, dropInfo.TargetCollection, data, insertIndex));
+        var isDroppedOnTarget = dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.TargetItemCenter) &&
+                             dropInfo.VisualTargetItem is TreeViewItem;
+
+        var targetOwner = (HocrNodeViewModel)dropInfo.TargetItem;
+
+        if (!isDroppedOnTarget)
+        {
+            targetOwner = targetOwner.Parent ?? throw new InvalidOperationException($"Items cannot be dropped above or below a page. Expected {nameof(targetOwner.Parent)} to not be null.");
+        }
+
+        owner.RaiseEvent(
+            new NodesMovedEventArgs(
+                DocumentTreeView.NodesMovedEvent,
+                owner,
+                dropInfo.DragInfo.SourceCollection,
+                dropInfo.TargetCollection,
+                data,
+                targetOwner,
+                insertIndex
+            )
+        );
     }
 }
