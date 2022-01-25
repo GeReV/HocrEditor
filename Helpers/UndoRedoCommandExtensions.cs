@@ -26,7 +26,7 @@ public static class UndoRedoCommandExtensions
     public static CollectionRemoveCommand<T> ToCollectionRemoveCommand<T>(this ICollection<T> obj, T item)
         where T : notnull => new(obj, item);
 
-    public static CollectionAddCommand<T> ToCollectionRemoveCommand<T>(
+    public static CollectionRemoveCommand<T> ToCollectionRemoveCommand<T>(
         this ICollection<T> obj,
         ICollection<T> items
     ) where T : notnull =>
