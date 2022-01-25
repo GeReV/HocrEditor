@@ -20,7 +20,7 @@
                     CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
         <KeyBinding Modifiers="Control"
                     Key="A"
-                    Command="{Binding SelectNodesCommand}"
+                    Command="{Binding ExclusiveSelectNodesCommand}"
                     CommandParameter="{Binding Document.Nodes, FallbackValue={x:Null}}" />
         <KeyBinding Modifiers="Control"
                     Key="D"
@@ -71,7 +71,7 @@
             </MenuItem>
             <MenuItem Header="_Select">
                 <MenuItem Header="_All"
-                          Command="{Binding SelectNodesCommand}"
+                          Command="{Binding ExclusiveSelectNodesCommand}"
                           CommandParameter="{Binding Document.Nodes, FallbackValue={x:Null}}" />
                 <MenuItem Header="Deselect A_ll"
                           Command="{Binding DeselectNodesCommand}"

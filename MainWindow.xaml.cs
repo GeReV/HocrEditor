@@ -135,18 +135,6 @@ namespace HocrEditor
             return tesseractPath;
         }
 
-        private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-        {
-            var selectedNodes = ViewModel.Document?.SelectedNodes;
-
-            if (e.NewValue is not HocrNodeViewModel node)
-            {
-                return;
-            }
-
-            // selectedNodes?.ReplaceRange(new []{ node });
-        }
-
         private void Canvas_OnNodesChanged(object? sender, NodesChangedEventArgs e)
         {
             ViewModel.UpdateNodesCommand.Execute(e.Changes);
@@ -157,7 +145,7 @@ namespace HocrEditor
             if (e.AddedItems.Count > 0)
             {
                 var items = e.AddedItems.Cast<HocrNodeViewModel>().ToList();
-                ViewModel.SelectNodesCommand.TryExecute(items);
+                ViewModel.AppendSelectNodesCommand.TryExecute(items);
 
                 foreach (var parent in items.SelectMany(n => n.Ascendants))
                 {

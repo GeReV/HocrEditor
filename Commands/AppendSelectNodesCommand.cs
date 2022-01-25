@@ -6,11 +6,11 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class SelectNodesCommand : CommandBase<IEnumerable<HocrNodeViewModel>>
+public class AppendSelectNodesCommand : CommandBase<IEnumerable<HocrNodeViewModel>>
 {
     private readonly MainWindowViewModel mainWindowViewModel;
 
-    public SelectNodesCommand(MainWindowViewModel mainWindowViewModel)
+    public AppendSelectNodesCommand(MainWindowViewModel mainWindowViewModel)
     {
         this.mainWindowViewModel = mainWindowViewModel;
     }
@@ -34,14 +34,6 @@ public class SelectNodesCommand : CommandBase<IEnumerable<HocrNodeViewModel>>
 
         if (addedItems.Any())
         {
-            commands.AddRange(
-                mainWindowViewModel.Document.SelectedNodes.Select(
-                    node => PropertyChangeCommand.FromProperty(node, n => n.IsSelected, false)
-                )
-            );
-
-            commands.Add(mainWindowViewModel.Document.SelectedNodes.ToCollectionClearCommand());
-
             commands.AddRange(
                 addedItems.Select(
                     node => PropertyChangeCommand.FromProperty(node, n => n.IsSelected, true)

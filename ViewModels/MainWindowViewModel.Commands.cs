@@ -27,7 +27,8 @@ namespace HocrEditor.ViewModels
             MoveNodesCommand = new MoveNodesCommand(this);
             EditNodesCommand = new RelayCommand<string>(EditNodes, CanEditNodes);
 
-            SelectNodesCommand = new SelectNodesCommand(this);
+            ExclusiveSelectNodesCommand = new ExclusiveSelectNodesCommand(this);
+            AppendSelectNodesCommand = new AppendSelectNodesCommand(this);
             DeselectNodesCommand = new DeselectNodesCommand(this);
 
             SelectIdenticalNodesCommand =
@@ -64,12 +65,12 @@ namespace HocrEditor.ViewModels
                 case HocrNodeType.TextFloat:
                 case HocrNodeType.Caption:
                 case HocrNodeType.Word:
-                    SelectNodesCommand.TryExecute(
+                    ExclusiveSelectNodesCommand.TryExecute(
                         Document.Nodes.Where(n => n.NodeType == item.NodeType && n.InnerText == item.InnerText).ToList()
                     );
                     break;
                 case HocrNodeType.Image:
-                    SelectNodesCommand.TryExecute(
+                    ExclusiveSelectNodesCommand.TryExecute(
                         Document.Nodes.Where(n => n.NodeType == item.NodeType).ToList()
                     );
                     break;
@@ -86,7 +87,8 @@ namespace HocrEditor.ViewModels
         public IRelayCommand<string> EditNodesCommand { get; }
         public IRelayCommand<NodesMovedEventArgs> MoveNodesCommand { get; }
 
-        public IRelayCommand<IList<HocrNodeViewModel>> SelectNodesCommand { get; }
+        public IRelayCommand<IList<HocrNodeViewModel>> ExclusiveSelectNodesCommand { get; }
+        public IRelayCommand<IList<HocrNodeViewModel>> AppendSelectNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> DeselectNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> SelectIdenticalNodesCommand { get; }
 
@@ -123,7 +125,7 @@ namespace HocrEditor.ViewModels
             CropCommand.NotifyCanExecuteChanged();
             ConvertToImageCommand.NotifyCanExecuteChanged();
             EditNodesCommand.NotifyCanExecuteChanged();
-            SelectNodesCommand.NotifyCanExecuteChanged();
+            ExclusiveSelectNodesCommand.NotifyCanExecuteChanged();
             DeselectNodesCommand.NotifyCanExecuteChanged();
             SelectIdenticalNodesCommand.NotifyCanExecuteChanged();
         }
