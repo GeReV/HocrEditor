@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Windows;
-using GongSolutions.Wpf.DragDrop.Utilities;
 using HocrEditor.Commands;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Controls;
@@ -80,21 +78,22 @@ namespace HocrEditor.ViewModels
             }
         }
 
-        public ConvertToImageCommand ConvertToImageCommand { get; set; }
 
         public IRelayCommand<ICollection<HocrNodeViewModel>> DeleteCommand { get; }
         public IRelayCommand<ICollection<HocrNodeViewModel>> MergeCommand { get; }
         public IRelayCommand<ICollection<HocrNodeViewModel>> CropCommand { get; }
+        public ConvertToImageCommand ConvertToImageCommand { get; set; }
         public IRelayCommand<string> EditNodesCommand { get; }
-
         public IRelayCommand<NodesMovedEventArgs> MoveNodesCommand { get; }
+
         public IRelayCommand<IList<HocrNodeViewModel>> SelectNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> DeselectNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> SelectIdenticalNodesCommand { get; }
 
+        public IRelayCommand<List<NodesChangedEventArgs.NodeChange>> UpdateNodesCommand { get; }
+
         public IRelayCommand UndoCommand { get; }
         public IRelayCommand RedoCommand { get; }
-        public IRelayCommand<List<NodesChangedEventArgs.NodeChange>> UpdateNodesCommand { get; }
 
         private void HandlePropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
@@ -124,13 +123,15 @@ namespace HocrEditor.ViewModels
             CropCommand.NotifyCanExecuteChanged();
             ConvertToImageCommand.NotifyCanExecuteChanged();
             EditNodesCommand.NotifyCanExecuteChanged();
+            SelectNodesCommand.NotifyCanExecuteChanged();
+            DeselectNodesCommand.NotifyCanExecuteChanged();
             SelectIdenticalNodesCommand.NotifyCanExecuteChanged();
         }
 
         private bool CanRedo() => UndoRedoManager.CanRedo;
 
         private bool CanUndo() => UndoRedoManager.CanUndo;
-        
+
         private static bool CanUpdateNodes(List<NodesChangedEventArgs.NodeChange>? nodeChanges) =>
             nodeChanges is { Count: > 0 };
 

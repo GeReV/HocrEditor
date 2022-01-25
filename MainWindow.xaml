@@ -18,6 +18,14 @@
                     Key="M"
                     Command="{Binding MergeCommand}"
                     CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
+        <KeyBinding Modifiers="Control"
+                    Key="A"
+                    Command="{Binding SelectNodesCommand}"
+                    CommandParameter="{Binding Document.Nodes, FallbackValue={x:Null}}" />
+        <KeyBinding Modifiers="Control"
+                    Key="D"
+                    Command="{Binding DeselectNodesCommand}"
+                    CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
         <KeyBinding Modifiers="Control+Shift"
                     Key="A"
                     Command="{Binding SelectIdenticalNodesCommand}"
@@ -57,11 +65,20 @@
                           CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
                 <Separator />
 
-                <MenuItem Header="_Select Identical Nodes"
-                          Command="{Binding SelectIdenticalNodesCommand}"
-                          CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
-                <MenuItem Header="Convert Nodes to _Image"
+                <MenuItem Header="C_onvert Nodes to Image"
                           Command="{Binding ConvertToImageCommand}"
+                          CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
+            </MenuItem>
+            <MenuItem Header="_Select">
+                <MenuItem Header="_All"
+                          Command="{Binding SelectNodesCommand}"
+                          CommandParameter="{Binding Document.Nodes, FallbackValue={x:Null}}" />
+                <MenuItem Header="Deselect A_ll"
+                          Command="{Binding DeselectNodesCommand}"
+                          CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
+                <MenuItem Header="Inve_rse" />
+                <MenuItem Header="_Identical Nodes"
+                          Command="{Binding SelectIdenticalNodesCommand}"
                           CommandParameter="{Binding Document.SelectedNodes, FallbackValue={x:Null}}" />
             </MenuItem>
         </Menu>
@@ -111,7 +128,7 @@
                                        ItemsSource="{Binding Document.Nodes[0].Children, FallbackValue={x:Null}}"
                                        SelectedItems="{Binding Document.SelectedNodes, FallbackValue={x:Null}}"
                                        NodesEdited="DocumentTreeView_OnNodeEdited"
-                                       NodesMoved="DocumentTreeView_OnNodesMoved"/>
+                                       NodesMoved="DocumentTreeView_OnNodesMoved" />
         </Grid>
     </DockPanel>
 </Window>
