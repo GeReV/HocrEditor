@@ -1,21 +1,22 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using HocrEditor.Models;
 using HtmlAgilityPack;
 
 namespace HocrEditor.Services
 {
-    public class HocrDocumentParser
+    public class HocrPageParser
     {
-        public HocrDocument Parse(HtmlDocument document)
+        public HocrPage Parse(HtmlDocument document)
         {
             var pageNode = document.DocumentNode.SelectSingleNode("//body/div[@class='ocr_page']");
 
             var page = Parse(pageNode, null);
 
-            return new HocrDocument((HocrPage)page);
+            return (HocrPage)page;
         }
 
-        private IHocrNode Parse(HtmlNode node, string? parentId)
+        private static IHocrNode Parse(HtmlNode node, string? parentId)
         {
             var nodeId = node.GetAttributeValue("id", string.Empty);
 

@@ -1,17 +1,16 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using HocrEditor.Helpers;
 
 namespace HocrEditor.Models
 {
     public class HocrDocument
     {
-        public HocrDocument(HocrPage rootNode)
+        public HocrDocument(IEnumerable<HocrPage> pages)
         {
-            RootNode = rootNode;
+            Pages = new ObservableCollection<HocrPage>(pages);
         }
 
-        public HocrPage RootNode { get; }
-
-        public IEnumerable<IHocrNode> Items => RootNode.ChildNodes.RecursiveSelect(n => n.ChildNodes);
+        public ObservableCollection<HocrPage> Pages { get; }
     }
 }

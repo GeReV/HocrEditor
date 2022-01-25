@@ -10,7 +10,7 @@
              xmlns:controls="clr-namespace:HocrEditor.Controls"
              xmlns:dd="urn:gong-wpf-dragdrop"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance viewModels:HocrDocumentViewModel}">
+             d:DataContext="{d:DesignInstance viewModels:HocrPageViewModel}">
     <Grid>
         <TreeView ItemsSource="{Binding  ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   dd:DragDrop.IsDragSource="True"

@@ -16,14 +16,14 @@ public class AppendSelectNodesCommand : CommandBase<IEnumerable<HocrNodeViewMode
     }
 
     public override bool CanExecute(IEnumerable<HocrNodeViewModel>? nodes) =>
-        mainWindowViewModel.Document != null &&
-        mainWindowViewModel.Document.Nodes
+        mainWindowViewModel.Document.CurrentPage != null &&
+        mainWindowViewModel.Document.CurrentPage.Nodes
             .Any() && nodes != null &&
         nodes.Any();
 
     public override void Execute(IEnumerable<HocrNodeViewModel>? nodes)
     {
-        if (mainWindowViewModel.Document == null || nodes == null)
+        if (mainWindowViewModel.Document.CurrentPage == null || nodes == null)
         {
             return;
         }
@@ -40,7 +40,7 @@ public class AppendSelectNodesCommand : CommandBase<IEnumerable<HocrNodeViewMode
                 )
             );
 
-            commands.Add(mainWindowViewModel.Document.SelectedNodes.ToCollectionAddCommand(addedItems));
+            commands.Add(mainWindowViewModel.Document.CurrentPage.SelectedNodes.ToCollectionAddCommand(addedItems));
         }
 
         mainWindowViewModel.UndoRedoManager.ExecuteCommands(commands);

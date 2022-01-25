@@ -1,50 +1,45 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using System.Windows.Data;
 using HocrEditor.Models;
 
-namespace HocrEditor.ViewModels
+namespace HocrEditor.ViewModels;
+
+public class HocrDocumentViewModel : ViewModelBase
 {
-    public class HocrDocumentViewModel : ViewModelBase
+    public ObservableCollection<HocrPageViewModel> Pages { get; } = new();
+
+    public ICollectionView PagesCollectionView { get; }
+
+    public HocrPageViewModel? CurrentPage
     {
-        public Dictionary<string, HocrNodeViewModel> NodeCache { get; }
+        get => (HocrPageViewModel?)PagesCollectionView.CurrentItem;
+        set => PagesCollectionView.MoveCurrentTo(value);
+    }
 
-        public RangeObservableCollection<HocrNodeViewModel> Nodes { get; }
+    public HocrDocumentViewModel() : this(Enumerable.Empty<HocrPageViewModel>())
+    {
+    }
 
-        // TODO: Use a set here? Need to deduplicate items.
-        public ObservableHashSet<HocrNodeViewModel> SelectedNodes { get; set; } = new();
+    private HocrDocumentViewModel(IEnumerable<HocrPageViewModel> pages)
+    {
+        Pages = new ObservableCollection<HocrPageViewModel>(pages);
 
-        public HocrDocumentViewModel(HocrDocument hocrDocument)
-        {
-            NodeCache = BuildNodeCache(hocrDocument.Items.Prepend(hocrDocument.RootNode));
+        PagesCollectionView = CollectionViewSource.GetDefaultView(Pages);
+        PagesCollectionView.CurrentChanged += PagesCollectionViewOnCurrentChanged;
+    }
 
-            Nodes = new RangeObservableCollection<HocrNodeViewModel>(NodeCache.Values);
-        }
+    public HocrDocumentViewModel(HocrDocument hocrDocument) : this(
+        hocrDocument.Pages.Select(p => new HocrPageViewModel(p))
+    )
+    {
+    }
 
-        private static Dictionary<string, HocrNodeViewModel> BuildNodeCache(IEnumerable<IHocrNode> nodes)
-        {
-            var dictionary = new Dictionary<string, HocrNodeViewModel>();
-
-            foreach (var node in nodes)
-            {
-                var hocrNodeViewModel = new HocrNodeViewModel(node);
-
-                dictionary.Add(hocrNodeViewModel.Id, hocrNodeViewModel);
-
-                if (string.IsNullOrEmpty(node.ParentId))
-                {
-                    hocrNodeViewModel.IsRoot = true;
-                }
-                else
-                {
-                    var parent = dictionary[node.ParentId];
-
-                    hocrNodeViewModel.Parent = parent;
-
-                    parent.Children.Add(hocrNodeViewModel);
-                }
-            }
-
-            return dictionary;
-        }
+    private void PagesCollectionViewOnCurrentChanged(object? sender, EventArgs e)
+    {
+        OnPropertyChanged(nameof(CurrentPage));
     }
 }

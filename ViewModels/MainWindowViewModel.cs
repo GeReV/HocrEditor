@@ -1,11 +1,9 @@
-﻿using System.Collections.ObjectModel;
-
-namespace HocrEditor.ViewModels
+﻿namespace HocrEditor.ViewModels
 {
     public partial class MainWindowViewModel : ViewModelBase
     {
         public bool AutoClean { get; set; } = true;
 
-        public HocrDocumentViewModel? Document { get; set; }
+        public HocrDocumentViewModel Document { get; set; } = new();
     }
 }

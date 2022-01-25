@@ -16,7 +16,7 @@ namespace HocrEditor
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
         public MainWindowViewModel ViewModel => (MainWindowViewModel)DataContext;
 
@@ -40,61 +40,69 @@ namespace HocrEditor
             {
                 Title = "Pick Images",
                 Filter =
-                    "Image files (*.bmp;*.gif;*.tif;*.tiff;*.tga;*.jpg;*.jpeg;*.png)|*.bmp;*.gif;*.tif;*.tiff;*.tga;*.jpg;*.jpeg;*.png"
+                    "Image files (*.bmp;*.gif;*.tif;*.tiff;*.tga;*.jpg;*.jpeg;*.png)|*.bmp;*.gif;*.tif;*.tiff;*.tga;*.jpg;*.jpeg;*.png",
+                Multiselect = true
             };
 
             if (dialog.ShowDialog(this) == true)
             {
-                Task.Run(
-                        async () =>
-                        {
-                            var imagePath = dialog.FileName;
+                var imagePaths = dialog.FileNames;
 
-                            var service = new TesseractService(tesseractPath);
+                Task.WhenAll(
+                        imagePaths.Select(
+                            path => Task.Run(
+                                async () =>
+                                {
+                                    var service = new TesseractService(tesseractPath);
 
-                            var body = await service.PerformOcr(imagePath, new[] { "script/Hebrew", "eng" });
+                                    var body = await service.PerformOcr(path, new[] { "script/Hebrew", "eng" });
 
-                            var doc = new HtmlDocument();
-                            doc.LoadHtml(body);
+                                    var doc = new HtmlDocument();
+                                    doc.LoadHtml(body);
 
-                            return new HocrDocumentParser().Parse(doc);
-                        }
+                                    return new HocrPageParser().Parse(doc);
+                                }
+                            )
+                        )
                     )
                     .ContinueWith(
-                        async hocr =>
+                        async pages =>
                         {
                             try
                             {
-                                var hocrDocument = await hocr;
+                                var hocrDocuments = new HocrDocument(await pages);
 
-                                ViewModel.Document = new HocrDocumentViewModel(hocrDocument);
+                                ViewModel.Document = new HocrDocumentViewModel(hocrDocuments);
 
-                                var averageFontSize = hocrDocument.Items
-                                    .Where(node => node.NodeType == HocrNodeType.Word)
-                                    .Cast<HocrWord>()
-                                    .Average(node => node.FontSize);
+                                foreach (var page in ViewModel.Document.Pages)
+                                {
+                                    var averageFontSize = page.HocrPage.Items
+                                        .Where(node => node.NodeType == HocrNodeType.Word)
+                                        .Cast<HocrWord>()
+                                        .Average(node => node.FontSize);
 
-                                var (dpix, dpiy) = hocrDocument.RootNode.Dpi;
+                                    var (dpix, dpiy) = page.HocrPage.Dpi;
 
-                                const float fontInchRatio = 1.0f / 72f;
+                                    const float fontInchRatio = 1.0f / 72f;
 
-                                var noiseNodes = ViewModel.Document.Nodes.Where(
-                                        node => node.NodeType == HocrNodeType.ContentArea &&
-                                                string.IsNullOrEmpty(node.InnerText) &&
-                                                (node.BBox.Width < averageFontSize * fontInchRatio * dpix ||
-                                                 node.BBox.Height < averageFontSize * fontInchRatio * dpiy)
-                                    )
-                                    .ToList();
+                                    var noiseNodes = page.Nodes.Where(
+                                            node => node.NodeType == HocrNodeType.ContentArea &&
+                                                    string.IsNullOrEmpty(node.InnerText) &&
+                                                    (node.BBox.Width < averageFontSize * fontInchRatio * dpix ||
+                                                     node.BBox.Height < averageFontSize * fontInchRatio * dpiy)
+                                        )
+                                        .ToList();
 
-                                ViewModel.DeleteCommand.Execute(noiseNodes);
+                                    ViewModel.DeleteCommand.Execute(noiseNodes);
 
-                                var graphics = ViewModel.Document.Nodes.Where(
-                                        node => node.NodeType == HocrNodeType.ContentArea &&
-                                                string.IsNullOrEmpty(node.InnerText)
-                                    )
-                                    .ToList();
+                                    var graphics = page.Nodes.Where(
+                                            node => node.NodeType == HocrNodeType.ContentArea &&
+                                                    string.IsNullOrEmpty(node.InnerText)
+                                        )
+                                        .ToList();
 
-                                ViewModel.ConvertToImageCommand.Execute(graphics);
+                                    ViewModel.ConvertToImageCommand.Execute(graphics);
+                                }
 
                                 ViewModel.UndoRedoManager.Clear();
                             }

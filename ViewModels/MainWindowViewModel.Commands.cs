@@ -45,11 +45,11 @@ namespace HocrEditor.ViewModels
         }
 
         private bool CanSelectIdenticalNodes(ICollection<HocrNodeViewModel>? list) =>
-            Document != null && list is { Count: 1 };
+            Document.CurrentPage != null && list is { Count: 1 };
 
         private void SelectIdenticalNodes(ICollection<HocrNodeViewModel>? list)
         {
-            if (Document == null || list is not { Count: 1 })
+            if (Document.CurrentPage == null || list is not { Count: 1 })
             {
                 return;
             }
@@ -66,12 +66,12 @@ namespace HocrEditor.ViewModels
                 case HocrNodeType.Caption:
                 case HocrNodeType.Word:
                     ExclusiveSelectNodesCommand.TryExecute(
-                        Document.Nodes.Where(n => n.NodeType == item.NodeType && n.InnerText == item.InnerText).ToList()
+                        Document.CurrentPage.Nodes.Where(n => n.NodeType == item.NodeType && n.InnerText == item.InnerText).ToList()
                     );
                     break;
                 case HocrNodeType.Image:
                     ExclusiveSelectNodesCommand.TryExecute(
-                        Document.Nodes.Where(n => n.NodeType == item.NodeType).ToList()
+                        Document.CurrentPage.Nodes.Where(n => n.NodeType == item.NodeType).ToList()
                     );
                     break;
                 default:
@@ -107,11 +107,11 @@ namespace HocrEditor.ViewModels
                         previousSelectedNodes.CollectionChanged -= HandleSelectedNodesChanged;
                     }
 
-                    if (Document != null)
+                    if (Document.CurrentPage != null)
                     {
-                        Document.SelectedNodes.CollectionChanged += HandleSelectedNodesChanged;
+                        Document.CurrentPage.SelectedNodes.CollectionChanged += HandleSelectedNodesChanged;
 
-                        previousSelectedNodes = Document.SelectedNodes;
+                        previousSelectedNodes = Document.CurrentPage.SelectedNodes;
                     }
 
                     break;
@@ -156,16 +156,16 @@ namespace HocrEditor.ViewModels
         }
 
         private bool CanEditNodes(string? _) =>
-            Document?.SelectedNodes is { Count: > 0 } && Document.SelectedNodes.Any(n => n.IsEditable);
+            Document.CurrentPage?.SelectedNodes is { Count: > 0 } && Document.CurrentPage.SelectedNodes.Any(n => n.IsEditable);
 
         private void EditNodes(string? value)
         {
-            if (Document?.SelectedNodes is not { Count: > 0 } || !Document.SelectedNodes.Any(n => n.IsEditable))
+            if (Document.CurrentPage?.SelectedNodes is not { Count: > 0 } || !Document.CurrentPage.SelectedNodes.Any(n => n.IsEditable))
             {
                 return;
             }
 
-            var commands = Document.SelectedNodes.Where(node => node.IsEditable)
+            var commands = Document.CurrentPage.SelectedNodes.Where(node => node.IsEditable)
                 .Select(node => PropertyChangeCommand.FromProperty(node, n => n.InnerText, value));
 
             UndoRedoManager.ExecuteCommands(commands);

@@ -52,8 +52,10 @@ namespace HocrEditor.Helpers;
                 }
 
                 var descendant = FindVisualChild<T>(child);
-
-                return descendant;
+                if (descendant != null)
+                {
+                    return descendant;
+                }
             }
 
             return null;

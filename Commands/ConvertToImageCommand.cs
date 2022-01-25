@@ -44,11 +44,11 @@ public class ConvertToImageCommand : IRelayCommand<IEnumerable<HocrNodeViewModel
             return;
         }
 
-        var document = mainWindowViewModel.Document ?? throw new InvalidOperationException();
+        var page = mainWindowViewModel.Document.CurrentPage ?? throw new InvalidOperationException();
 
         var commands = new List<UndoRedoCommand>();
 
-        commands.Add(new DocumentRemoveNodesCommand(document, selectedNodes.SelectMany(node => node.Children)));
+        commands.Add(new PageRemoveNodesCommand(page, selectedNodes.SelectMany(node => node.Children)));
 
         commands.AddRange(
             selectedNodes.Select(

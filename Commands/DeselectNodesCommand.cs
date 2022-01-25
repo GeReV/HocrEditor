@@ -16,20 +16,20 @@ public class DeselectNodesCommand : CommandBase<IEnumerable<HocrNodeViewModel>>
     }
 
     public override bool CanExecute(IEnumerable<HocrNodeViewModel>? nodes) =>
-        mainWindowViewModel.Document != null &&
-        mainWindowViewModel.Document.SelectedNodes.Any() && nodes != null &&
+        mainWindowViewModel.Document.CurrentPage != null &&
+        mainWindowViewModel.Document.CurrentPage.SelectedNodes.Any() && nodes != null &&
         nodes.Any();
 
     public override void Execute(IEnumerable<HocrNodeViewModel>? nodes)
     {
-        if (mainWindowViewModel.Document == null)
+        if (mainWindowViewModel.Document.CurrentPage == null)
         {
             return;
         }
 
         var commands = new List<UndoRedoCommand>();
 
-        var removedItems = nodes?.ToList() ?? mainWindowViewModel.Document.SelectedNodes.ToList();
+        var removedItems = nodes?.ToList() ?? mainWindowViewModel.Document.CurrentPage.SelectedNodes.ToList();
 
         if (removedItems.Any())
         {
@@ -39,7 +39,7 @@ public class DeselectNodesCommand : CommandBase<IEnumerable<HocrNodeViewModel>>
                 )
             );
 
-            commands.Add(mainWindowViewModel.Document.SelectedNodes.ToCollectionRemoveCommand(removedItems));
+            commands.Add(mainWindowViewModel.Document.CurrentPage.SelectedNodes.ToCollectionRemoveCommand(removedItems));
         }
 
         mainWindowViewModel.UndoRedoManager.ExecuteCommands(commands);

@@ -65,7 +65,7 @@ public class MoveNodesCommand : CommandBase<NodesMovedEventArgs>
             return;
         }
 
-        var document = mainWindowViewModel.Document ??
+        var page = mainWindowViewModel.Document.CurrentPage ??
                        throw new InvalidOperationException("Expected Document to not be null");
 
         foreach (var o in data)
@@ -102,7 +102,7 @@ public class MoveNodesCommand : CommandBase<NodesMovedEventArgs>
                 if (mainWindowViewModel.AutoClean)
                 {
                     commands.AddRange(NodeCommands.CropParents(oldParent));
-                    commands.Add(NodeCommands.RemoveEmptyParents(document, oldParent));
+                    commands.Add(NodeCommands.RemoveEmptyParents(page, oldParent));
                 }
             }
         }

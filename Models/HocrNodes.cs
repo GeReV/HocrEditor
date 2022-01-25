@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using HocrEditor.Helpers;
 using HtmlAgilityPack;
 
 namespace HocrEditor.Models
@@ -37,6 +38,8 @@ namespace HocrEditor.Models
         public (int, int) Dpi { get; }
 
         public string Image { get; }
+
+        public IEnumerable<IHocrNode> Items => ChildNodes.RecursiveSelect(n => n.ChildNodes);
     }
 
     public record HocrContentArea : HocrNode

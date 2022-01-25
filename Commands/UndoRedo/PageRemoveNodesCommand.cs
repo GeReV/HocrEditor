@@ -4,14 +4,14 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands.UndoRedo;
 
-public class DocumentRemoveNodesCommand : UndoRedoCommand
+public class PageRemoveNodesCommand : UndoRedoCommand
 {
     private readonly List<HocrNodeViewModel> nodes;
     private readonly List<int> indices = new();
 
     private readonly List<HocrNodeViewModel> children = new();
 
-    public DocumentRemoveNodesCommand(HocrDocumentViewModel sender, IEnumerable<HocrNodeViewModel> nodes) : base(sender)
+    public PageRemoveNodesCommand(HocrPageViewModel sender, IEnumerable<HocrNodeViewModel> nodes) : base(sender)
     {
         this.nodes = nodes.ToList();
     }
@@ -23,7 +23,7 @@ public class DocumentRemoveNodesCommand : UndoRedoCommand
             return;
         }
 
-        var document = (HocrDocumentViewModel)Sender;
+        var document = (HocrPageViewModel)Sender;
 
         // Probably better to update NodeCache before the event-raising Nodes.
         foreach (var child in children)
@@ -58,7 +58,7 @@ public class DocumentRemoveNodesCommand : UndoRedoCommand
             return;
         }
 
-        var document = (HocrDocumentViewModel)Sender;
+        var document = (HocrPageViewModel)Sender;
 
         children.AddRange(
             nodes

@@ -347,6 +347,11 @@ public partial class DocumentCanvas
     {
         base.OnMouseDown(e);
 
+        if (ItemsSource == null)
+        {
+            return;
+        }
+
         Mouse.Capture(this);
 
         var position = e.GetPosition(this).ToSKPoint();
@@ -516,7 +521,7 @@ public partial class DocumentCanvas
 
         // TODO: Support for multiple selection.
         // If we have only one item selected, set its resize limits to within its parent and around its children.
-        if (SelectedItems.Count == 1)
+        if (SelectedItems?.Count == 1)
         {
             var node = SelectedItems.First();
 
@@ -566,10 +571,17 @@ public partial class DocumentCanvas
 
     private void ClearSelection()
     {
+        var selectedItems = SelectedItems;
+
+        if (selectedItems == null)
+        {
+            return;
+        }
+
         OnSelectionChanged(
             new SelectionChangedEventArgs(
                 Selector.SelectionChangedEvent,
-                SelectedItems.ToList(),
+                selectedItems.ToList(),
                 Array.Empty<HocrNodeViewModel>()
             )
         );
@@ -581,6 +593,12 @@ public partial class DocumentCanvas
     protected override void OnMouseUp(MouseButtonEventArgs e)
     {
         base.OnMouseUp(e);
+
+        var selectedItems = SelectedItems;
+        if (selectedItems == null)
+        {
+            return;
+        }
 
         switch (e.ChangedButton)
         {
@@ -621,7 +639,7 @@ public partial class DocumentCanvas
 
                     OnNodesChanged(new NodesChangedEventArgs(changes));
 
-                    dragLimit = CalculateDragLimitBounds(SelectedItems);
+                    dragLimit = CalculateDragLimitBounds(selectedItems);
                 }
 
                 if (!mouseMoved)
@@ -646,6 +664,12 @@ public partial class DocumentCanvas
     protected override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e);
+
+        var selectedItems = SelectedItems;
+        if (selectedItems == null)
+        {
+            return;
+        }
 
         var position = e.GetPosition(this).ToSKPoint();
 
@@ -706,7 +730,7 @@ public partial class DocumentCanvas
 
                 var newLocation = inverseTransformation.MapPoint(offsetStart) + delta;
 
-                if (SelectedItems.Any())
+                if (selectedItems.Any())
                 {
                     // Apply to all selected elements.
                     foreach (var id in selectedElements)
@@ -749,6 +773,12 @@ public partial class DocumentCanvas
     {
         base.OnMouseWheel(e);
 
+        var selectedItems = SelectedItems;
+        if (selectedItems == null)
+        {
+            return;
+        }
+
         var delta = Math.Sign(e.Delta) * 3;
 
         var pointerP = e.GetPosition(this).ToSKPoint();
@@ -758,7 +788,7 @@ public partial class DocumentCanvas
 
         UpdateTransformation(SKMatrix.CreateScale(newScale, newScale, p.X, p.Y));
 
-        dragLimit = CalculateDragLimitBounds(SelectedItems);
+        dragLimit = CalculateDragLimitBounds(selectedItems);
 
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
     }
@@ -949,7 +979,7 @@ public partial class DocumentCanvas
         var resizePivot = canvasSelection.Center;
 
         // If more than one element selected, or exactly one element selected _and_ Ctrl is pressed, resize together with children.
-        var resizeWithChildren = SelectedItems.Count > 1 ||
+        var resizeWithChildren = SelectedItems?.Count > 1 ||
                                  (Keyboard.Modifiers & ModifierKeys.Control) != 0;
 
         if ((selectedResizeHandle.Direction & CardinalDirections.West) != 0)
@@ -1026,7 +1056,7 @@ public partial class DocumentCanvas
 
     private string? GetElementKeyAtPoint(SKPoint p)
     {
-        var selectedKeys = SelectedItems.Select(n => n.Id).ToHashSet();
+        var selectedKeys = SelectedItems?.Select(n => n.Id).ToHashSet() ?? new HashSet<string>();
 
         var key = elements.Keys
             .Where(k => !selectedKeys.Contains(k))

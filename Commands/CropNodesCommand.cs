@@ -19,14 +19,14 @@ public class CropNodes : CommandBase<ICollection<HocrNodeViewModel>>
 
     public override void Execute(ICollection<HocrNodeViewModel>? nodes)
     {
-        if (nodes == null || mainWindowViewModel.Document == null)
+        if (nodes == null || mainWindowViewModel.Document.CurrentPage == null)
         {
             return;
         }
 
         // Order nodes from the latest occurrence (deepest) to earliest, so if a chain of parent-children is selected,
         // the deepest child is cropped, then its parent and so on, bottom-up.
-        var selectedNodes = nodes.OrderBy(node => -mainWindowViewModel.Document.Nodes.IndexOf(node));
+        var selectedNodes = nodes.OrderBy(node => -mainWindowViewModel.Document.CurrentPage.Nodes.IndexOf(node));
 
         var commands = selectedNodes.Select(
             node => PropertyChangeCommand.FromProperty(

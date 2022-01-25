@@ -17,21 +17,21 @@ public class ExclusiveSelectNodesCommand : CommandBase<IEnumerable<HocrNodeViewM
     }
 
     public override bool CanExecute(IEnumerable<HocrNodeViewModel>? nodes) =>
-        mainWindowViewModel.Document != null &&
-        mainWindowViewModel.Document.Nodes
+        mainWindowViewModel.Document.CurrentPage != null &&
+        mainWindowViewModel.Document.CurrentPage.Nodes
             .Any() && nodes != null &&
         nodes.Any();
 
     public override void Execute(IEnumerable<HocrNodeViewModel>? nodes)
     {
-        if (mainWindowViewModel.Document == null || nodes == null)
+        if (mainWindowViewModel.Document.CurrentPage == null || nodes == null)
         {
             return;
         }
 
         mainWindowViewModel.UndoRedoManager.BeginBatch();
 
-        new DeselectNodesCommand(mainWindowViewModel).TryExecute(mainWindowViewModel.Document.SelectedNodes);
+        new DeselectNodesCommand(mainWindowViewModel).TryExecute(mainWindowViewModel.Document.CurrentPage.SelectedNodes);
 
         new AppendSelectNodesCommand(mainWindowViewModel).TryExecute(nodes);
 
