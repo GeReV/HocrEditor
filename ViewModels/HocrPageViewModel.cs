@@ -1,10 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using HocrEditor.Commands;
+using HocrEditor.Controls;
 using HocrEditor.Models;
+using Microsoft.Toolkit.Mvvm.Input;
 
 namespace HocrEditor.ViewModels
 {
-    public class HocrPageViewModel : ViewModelBase
+    public partial class HocrPageViewModel : ViewModelBase
     {
         public HocrPage HocrPage { get; }
         public Dictionary<string, HocrNodeViewModel> NodeCache { get; }
@@ -22,6 +25,30 @@ namespace HocrEditor.ViewModels
             NodeCache = BuildNodeCache(hocrPage.Items.Prepend(hocrPage));
 
             Nodes = new RangeObservableCollection<HocrNodeViewModel>(NodeCache.Values);
+
+
+            DeleteCommand = new DeleteNodes(this);
+            MergeCommand = new MergeNodes(this);
+            CropCommand = new CropNodes(this);
+            ConvertToImageCommand = new ConvertToImageCommand(this);
+            MoveNodesCommand = new MoveNodesCommand(this);
+            EditNodesCommand = new RelayCommand<string>(EditNodes, CanEditNodes);
+
+            ExclusiveSelectNodesCommand = new ExclusiveSelectNodesCommand(this);
+            AppendSelectNodesCommand = new AppendSelectNodesCommand(this);
+            DeselectNodesCommand = new DeselectNodesCommand(this);
+
+            SelectIdenticalNodesCommand =
+                new RelayCommand<ICollection<HocrNodeViewModel>>(SelectIdenticalNodes, CanSelectIdenticalNodes);
+
+            UpdateNodesCommand = new RelayCommand<List<NodesChangedEventArgs.NodeChange>>(UpdateNodes, CanUpdateNodes);
+
+            UndoCommand = new RelayCommand(UndoRedoManager.Undo, CanUndo);
+            RedoCommand = new RelayCommand(UndoRedoManager.Redo, CanRedo);
+
+            SelectedNodes.CollectionChanged += HandleSelectedNodesChanged;
+
+            UndoRedoManager.UndoStackChanged += UpdateUndoRedoCommands;
         }
 
         private static Dictionary<string, HocrNodeViewModel> BuildNodeCache(IEnumerable<IHocrNode> nodes)

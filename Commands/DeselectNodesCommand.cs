@@ -6,30 +6,23 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class DeselectNodesCommand : CommandBase<IEnumerable<HocrNodeViewModel>>
+public class DeselectNodesCommand : UndoableCommandBase<IEnumerable<HocrNodeViewModel>>
 {
-    private readonly MainWindowViewModel mainWindowViewModel;
+    private readonly HocrPageViewModel hocrPageViewModel;
 
-    public DeselectNodesCommand(MainWindowViewModel mainWindowViewModel)
+    public DeselectNodesCommand(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
     {
-        this.mainWindowViewModel = mainWindowViewModel;
+        this.hocrPageViewModel = hocrPageViewModel;
     }
 
     public override bool CanExecute(IEnumerable<HocrNodeViewModel>? nodes) =>
-        mainWindowViewModel.Document.CurrentPage != null &&
-        mainWindowViewModel.Document.CurrentPage.SelectedNodes.Any() && nodes != null &&
-        nodes.Any();
+        hocrPageViewModel.SelectedNodes.Any() && nodes != null && nodes.Any();
 
     public override void Execute(IEnumerable<HocrNodeViewModel>? nodes)
     {
-        if (mainWindowViewModel.Document.CurrentPage == null)
-        {
-            return;
-        }
-
         var commands = new List<UndoRedoCommand>();
 
-        var removedItems = nodes?.ToList() ?? mainWindowViewModel.Document.CurrentPage.SelectedNodes.ToList();
+        var removedItems = nodes?.ToList() ?? hocrPageViewModel.SelectedNodes.ToList();
 
         if (removedItems.Any())
         {
@@ -39,9 +32,11 @@ public class DeselectNodesCommand : CommandBase<IEnumerable<HocrNodeViewModel>>
                 )
             );
 
-            commands.Add(mainWindowViewModel.Document.CurrentPage.SelectedNodes.ToCollectionRemoveCommand(removedItems));
+            commands.Add(
+                hocrPageViewModel.SelectedNodes.ToCollectionRemoveCommand(removedItems)
+            );
         }
 
-        mainWindowViewModel.UndoRedoManager.ExecuteCommands(commands);
+        UndoRedoManager.ExecuteCommands(commands);
     }
 }

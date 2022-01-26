@@ -1,7 +1,5 @@
-﻿using System;
+﻿using System.Collections.Specialized;
 using System.Configuration;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
 
 namespace HocrEditor
 {
@@ -12,15 +10,25 @@ namespace HocrEditor
             get => GetSetting(nameof(TesseractPath));
             set
             {
-                Debug.Assert(value != null, nameof(value) + " != null");
+                Ensure.IsNotNullOrWhitespace(nameof(value), value);
 
-                SetSetting(nameof(TesseractPath), value);
+                SetSetting(nameof(TesseractPath), value!);
             }
         }
 
-        private static string? GetSetting(string key) => ConfigurationManager.AppSettings[key];
+        public static bool AutoClean
+        {
+            get => GetSettingAs(nameof(AutoClean), true);
+            set => SetSetting(nameof(AutoClean), value);
+        }
 
-        private static void SetSetting(string key, string value)
+        private static string? GetSetting(string key) => GetSettingAs<string>(key);
+
+        private static T? GetSettingAs<T>(string key) => GetValueAs<T>(ConfigurationManager.AppSettings, key);
+
+        private static T GetSettingAs<T>(string key, T defaultValue) => GetValueAs<T>(ConfigurationManager.AppSettings, key) ?? defaultValue;
+
+        private static void SetSetting<T>(string key, T value) where T : notnull
         {
             // try
             // {
@@ -29,11 +37,11 @@ namespace HocrEditor
 
                 if (settings[key] == null)
                 {
-                    settings.Add(key, value);
+                    settings.Add(key, value.ToString());
                 }
                 else
                 {
-                    settings[key].Value = value;
+                    settings[key].Value = value.ToString();
                 }
 
                 configFile.Save(ConfigurationSaveMode.Modified);
@@ -44,6 +52,22 @@ namespace HocrEditor
             // {
             //
             // }
+        }
+
+        /// <summary>
+        /// Gets the value associated with the specified key from the <see cref='NameValueCollection'/>.
+        /// </summary>
+        /// <typeparam name="T">The type to cast the value to.</typeparam>
+        /// <param name="collection">The <see cref="NameValueCollection"/> to retrieve the value from.</param>
+        /// <param name="key">The key associated with the value being retrieved.</param>
+        /// <returns>The value associated with the specified key.</returns>
+        private static T? GetValueAs<T>(NameValueCollection collection, string key)
+        {
+            Ensure.IsNotNullOrWhitespace(nameof(key), key);
+
+            var stringValue = collection[key];
+
+            return Converter.ConvertValue<T>(stringValue);
         }
     }
 }

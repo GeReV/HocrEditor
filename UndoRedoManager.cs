@@ -5,7 +5,7 @@ using HocrEditor.Commands.UndoRedo;
 
 namespace HocrEditor;
 
-public class UndoRedoManager
+public sealed class UndoRedoManager
 {
     private readonly List<List<UndoRedoCommand>> commands = new();
 
@@ -118,7 +118,7 @@ public class UndoRedoManager
             commands.RemoveRange(CurrentIndex + 1, commands.Count - CurrentIndex - 1);
     }
 
-    protected virtual void OnUndoStackChanged()
+    private void OnUndoStackChanged()
     {
         UndoStackChanged?.Invoke(this, EventArgs.Empty);
     }

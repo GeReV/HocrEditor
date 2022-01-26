@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows;
@@ -147,55 +148,65 @@ public partial class DocumentCanvas
 
     private static void ItemsSourceChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not DocumentCanvas documentCanvas || documentCanvas.ItemsSource == null)
+        if (d is not DocumentCanvas documentCanvas)
         {
             return;
         }
 
         documentCanvas.elements.Clear();
 
-        var rootNode = documentCanvas.ItemsSource[0];
+        if (e.OldValue is ObservableCollection<HocrNodeViewModel> oldNodes)
+        {
+            oldNodes.UnsubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
 
-        documentCanvas.BuildDocumentElements(rootNode.Descendents.Prepend(rootNode));
+            oldNodes.CollectionChanged -= documentCanvas.NodesOnCollectionChanged;
+        }
 
-        documentCanvas.ItemsSource.SubscribeItemPropertyChanged(
-            (nodeSender, nodePropertyChangedArgs) =>
-            {
-                Debug.Assert(nodeSender != null, $"{nameof(nodeSender)} != null");
+        if (e.NewValue is ObservableCollection<HocrNodeViewModel> newNodes)
+        {
+            var rootNode = newNodes[0];
 
-                var node = (HocrNodeViewModel)nodeSender;
+            documentCanvas.BuildDocumentElements(rootNode.Descendents.Prepend(rootNode));
 
-                switch (nodePropertyChangedArgs.PropertyName)
-                {
-                    case nameof(HocrNodeViewModel.BBox):
-                        documentCanvas.elements[node.Id].Item2.Bounds = node.BBox.ToSKRect();
-                        break;
-                    case nameof(HocrNodeViewModel.IsSelected):
-                        var enumerable = Enumerable.Repeat(node, 1);
+            newNodes.SubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
 
-                        if (node.IsSelected)
-                        {
-                            documentCanvas.AddSelectedElements(enumerable);
-                        }
-                        else
-                        {
-                            documentCanvas.RemoveSelectedElements(enumerable);
-                        }
-
-                        break;
-                }
-
-                documentCanvas.UpdateCanvasSelection();
-
-                documentCanvas.Refresh();
-            }
-        );
-
-        documentCanvas.ItemsSource.CollectionChanged += documentCanvas.NodesOnCollectionChanged;
-
-        documentCanvas.Dispatcher.InvokeAsync(documentCanvas.Refresh, DispatcherPriority.Send);
+            newNodes.CollectionChanged += documentCanvas.NodesOnCollectionChanged;
+        }
 
         documentCanvas.CenterTransformation();
+
+        documentCanvas.Dispatcher.InvokeAsync(documentCanvas.Refresh, DispatcherPriority.Render);
+    }
+
+    private void NodesOnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        Ensure.IsNotNull(nameof(sender), sender);
+
+        var node = (HocrNodeViewModel)sender!;
+
+        switch (e.PropertyName)
+        {
+            case nameof(HocrNodeViewModel.BBox):
+                elements[node.Id].Item2.Bounds = node.BBox.ToSKRect();
+                break;
+            case nameof(HocrNodeViewModel.IsSelected):
+                var enumerable = Enumerable.Repeat(node, 1);
+
+                if (node.IsSelected)
+                {
+                    AddSelectedElements(enumerable);
+                }
+                else
+                {
+                    RemoveSelectedElements(enumerable);
+                }
+
+                break;
+        }
+
+        UpdateCanvasSelection();
+
+        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
     }
 
     private static void SelectedItemsChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -1044,7 +1055,7 @@ public partial class DocumentCanvas
             // Start with the initial value, so pressing and releasing Ctrl reverts to original size.
             var bounds = elements[id].Item1.BBox.ToSKRect();
 
-            if (resizeWithChildren || SelectedItems.Any(node => node.Id == id))
+            if (resizeWithChildren || (SelectedItems != null && SelectedItems.Any(node => node.Id == id)))
             {
                 bounds = matrix.MapRect(bounds);
                 bounds.Clamp(canvasSelection.Bounds);

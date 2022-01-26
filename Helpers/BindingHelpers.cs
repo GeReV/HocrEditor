@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 
@@ -6,19 +7,22 @@ namespace HocrEditor.Helpers;
 
 public static class BindingHelpers
 {
+    private static readonly Dictionary<INotifyCollectionChanged, NotifyCollectionChangedEventHandler>
+        CollectionChangedHandlerDictionary = new();
+
     public static void SubscribeItemPropertyChanged<T>(
         this ObservableCollection<T> collection,
         PropertyChangedEventHandler handler
     )
         where T : INotifyPropertyChanged
     {
-        void CollectionOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        void CollectionChangedHandler(object? _, NotifyCollectionChangedEventArgs e)
         {
             if (e.OldItems != null)
             {
                 foreach (var oldItem in e.OldItems)
                 {
-                    ((INotifyPropertyChanged)oldItem).PropertyChanged -= ItemOnPropertyChanged;
+                    ((INotifyPropertyChanged)oldItem).PropertyChanged -= handler;
                 }
             }
 
@@ -26,21 +30,36 @@ public static class BindingHelpers
             {
                 foreach (var newItem in e.NewItems)
                 {
-                    ((INotifyPropertyChanged)newItem).PropertyChanged += ItemOnPropertyChanged;
+                    ((INotifyPropertyChanged)newItem).PropertyChanged += handler;
                 }
             }
         }
 
-        void ItemOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            handler.Invoke(sender, e);
-        }
+        CollectionChangedHandlerDictionary.Add(collection, CollectionChangedHandler);
 
-        collection.CollectionChanged += CollectionOnCollectionChanged;
+        collection.CollectionChanged += CollectionChangedHandler;
 
         foreach (var item in collection)
         {
-            item.PropertyChanged += ItemOnPropertyChanged;
+            item.PropertyChanged += handler;
+        }
+    }
+
+    public static void UnsubscribeItemPropertyChanged<T>(
+        this ObservableCollection<T> collection,
+        PropertyChangedEventHandler handler
+    )
+        where T : INotifyPropertyChanged
+    {
+        var collectionChangedHandler = CollectionChangedHandlerDictionary[collection];
+
+        CollectionChangedHandlerDictionary.Remove(collection);
+
+        collection.CollectionChanged -= collectionChangedHandler;
+
+        foreach (var item in collection)
+        {
+            item.PropertyChanged -= handler;
         }
     }
 }

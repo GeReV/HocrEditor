@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using GongSolutions.Wpf.DragDrop;
 using GongSolutions.Wpf.DragDrop.Utilities;
@@ -9,13 +8,13 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class MoveNodesCommand : CommandBase<NodesMovedEventArgs>
+public class MoveNodesCommand : UndoableCommandBase<NodesMovedEventArgs>
 {
-    private readonly MainWindowViewModel mainWindowViewModel;
+    private readonly HocrPageViewModel hocrPageViewModel;
 
-    public MoveNodesCommand(MainWindowViewModel mainWindowViewModel)
+    public MoveNodesCommand(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
     {
-        this.mainWindowViewModel = mainWindowViewModel;
+        this.hocrPageViewModel = hocrPageViewModel;
     }
 
     public override bool CanExecute(NodesMovedEventArgs? e) => e != null;
@@ -65,9 +64,6 @@ public class MoveNodesCommand : CommandBase<NodesMovedEventArgs>
             return;
         }
 
-        var page = mainWindowViewModel.Document.CurrentPage ??
-                       throw new InvalidOperationException("Expected Document to not be null");
-
         foreach (var o in data)
         {
             if (isSameCollection)
@@ -99,14 +95,14 @@ public class MoveNodesCommand : CommandBase<NodesMovedEventArgs>
 
                 commands.Add(PropertyChangeCommand.FromProperty(node, n => n.Parent, e.TargetOwner));
 
-                if (mainWindowViewModel.AutoClean)
+                if (Settings.AutoClean)
                 {
                     commands.AddRange(NodeCommands.CropParents(oldParent));
-                    commands.Add(NodeCommands.RemoveEmptyParents(page, oldParent));
+                    commands.Add(NodeCommands.RemoveEmptyParents(hocrPageViewModel, oldParent));
                 }
             }
         }
 
-        mainWindowViewModel.UndoRedoManager.ExecuteCommands(commands);
+        UndoRedoManager.ExecuteCommands(commands);
     }
 }

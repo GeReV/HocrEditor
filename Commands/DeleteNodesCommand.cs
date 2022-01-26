@@ -7,13 +7,13 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class DeleteNodes : CommandBase<ICollection<HocrNodeViewModel>>
+public class DeleteNodes : UndoableCommandBase<ICollection<HocrNodeViewModel>>
 {
-    private readonly MainWindowViewModel mainWindowViewModel;
+    private readonly HocrPageViewModel hocrPageViewModel;
 
-    public DeleteNodes(MainWindowViewModel mainWindowViewModel)
+    public DeleteNodes(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
     {
-        this.mainWindowViewModel = mainWindowViewModel;
+        this.hocrPageViewModel = hocrPageViewModel;
     }
 
     public override bool CanExecute(ICollection<HocrNodeViewModel>? nodes) => nodes is { Count: > 0 };
@@ -25,16 +25,13 @@ public class DeleteNodes : CommandBase<ICollection<HocrNodeViewModel>>
             return;
         }
 
-        var page = mainWindowViewModel.Document.CurrentPage ?? throw new InvalidOperationException(
-            $"Expected {nameof(mainWindowViewModel.Document.CurrentPage)} to not be null"
-        );
-
         var commands = new List<UndoRedoCommand>
         {
-            new PageRemoveNodesCommand(mainWindowViewModel.Document.CurrentPage, nodes)
+            new PageRemoveNodesCommand(hocrPageViewModel, nodes)
         };
 
-        if (mainWindowViewModel.AutoClean)
+
+        if (Settings.AutoClean)
         {
             foreach (var node in nodes)
             {
@@ -44,7 +41,7 @@ public class DeleteNodes : CommandBase<ICollection<HocrNodeViewModel>>
                 }
 
                 commands.AddRange(NodeCommands.CropParents(node.Parent));
-                commands.Add(NodeCommands.RemoveEmptyParents(mainWindowViewModel.Document.CurrentPage, node.Parent));
+                commands.Add(NodeCommands.RemoveEmptyParents(hocrPageViewModel, node.Parent));
             }
         }
 
@@ -54,10 +51,8 @@ public class DeleteNodes : CommandBase<ICollection<HocrNodeViewModel>>
             )
         );
 
-        // SelectedNodes.Clear();
-        commands.Add(mainWindowViewModel.Document.CurrentPage.SelectedNodes.ToCollectionClearCommand());
+        commands.Add(hocrPageViewModel.SelectedNodes.ToCollectionClearCommand());
 
-        // ExecuteUndoableCommand(commands);
-        mainWindowViewModel.UndoRedoManager.ExecuteCommands(commands);
+        UndoRedoManager.ExecuteCommands(commands);
     }
 }

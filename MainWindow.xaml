@@ -12,33 +12,33 @@
         d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}">
     <Window.InputBindings>
         <KeyBinding Key="Delete"
-                    Command="{Binding DeleteCommand}"
+                    Command="{Binding Document.CurrentPage.DeleteCommand}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
         <KeyBinding Modifiers="Control"
                     Key="M"
-                    Command="{Binding MergeCommand}"
+                    Command="{Binding Document.CurrentPage.MergeCommand}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
         <KeyBinding Modifiers="Control"
                     Key="A"
-                    Command="{Binding ExclusiveSelectNodesCommand}"
+                    Command="{Binding Document.CurrentPage.ExclusiveSelectNodesCommand}"
                     CommandParameter="{Binding Document.CurrentPage.Nodes, FallbackValue={x:Null}}" />
         <KeyBinding Modifiers="Control"
                     Key="D"
-                    Command="{Binding DeselectNodesCommand}"
+                    Command="{Binding Document.CurrentPage.DeselectNodesCommand}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
         <KeyBinding Modifiers="Control+Shift"
                     Key="A"
-                    Command="{Binding SelectIdenticalNodesCommand}"
+                    Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
         <KeyBinding Modifiers="Control"
                     Key="Z"
-                    Command="{Binding UndoCommand}" />
+                    Command="{Binding Document.CurrentPage.UndoCommand}" />
         <KeyBinding Modifiers="Control"
                     Key="Y"
-                    Command="{Binding RedoCommand}" />
+                    Command="{Binding Document.CurrentPage.RedoCommand}" />
         <KeyBinding Modifiers="Control+Shift"
                     Key="Z"
-                    Command="{Binding RedoCommand}" />
+                    Command="{Binding Document.CurrentPage.RedoCommand}" />
     </Window.InputBindings>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
@@ -50,35 +50,35 @@
             </MenuItem>
             <MenuItem Header="_Edit">
                 <MenuItem Header="_Undo"
-                          Command="{Binding UndoCommand}" />
+                          Command="{Binding Document.CurrentPage.UndoCommand}" />
                 <MenuItem Header="_Redo"
-                          Command="{Binding RedoCommand}" />
+                          Command="{Binding Document.CurrentPage.RedoCommand}" />
                 <Separator />
                 <MenuItem Header="_Delete"
-                          Command="{Binding DeleteCommand}"
+                          Command="{Binding Document.CurrentPage.DeleteCommand}"
                           CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
                 <MenuItem Header="_Merge"
-                          Command="{Binding MergeCommand}"
+                          Command="{Binding Document.CurrentPage.MergeCommand}"
                           CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
                 <MenuItem Header="_Crop"
-                          Command="{Binding CropCommand}"
+                          Command="{Binding Document.CurrentPage.CropCommand}"
                           CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
                 <Separator />
 
                 <MenuItem Header="C_onvert Nodes to Image"
-                          Command="{Binding ConvertToImageCommand}"
+                          Command="{Binding Document.CurrentPage.ConvertToImageCommand}"
                           CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
             </MenuItem>
             <MenuItem Header="_Select">
                 <MenuItem Header="_All"
-                          Command="{Binding ExclusiveSelectNodesCommand}"
+                          Command="{Binding Document.CurrentPage.ExclusiveSelectNodesCommand}"
                           CommandParameter="{Binding Document.CurrentPage.Nodes, FallbackValue={x:Null}}" />
                 <MenuItem Header="Deselect A_ll"
-                          Command="{Binding DeselectNodesCommand}"
+                          Command="{Binding Document.CurrentPage.DeselectNodesCommand}"
                           CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
                 <MenuItem Header="Inve_rse" />
                 <MenuItem Header="_Identical Nodes"
-                          Command="{Binding SelectIdenticalNodesCommand}"
+                          Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand}"
                           CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
             </MenuItem>
         </Menu>
@@ -90,27 +90,27 @@
             </ToolBar>
             <ToolBar>
                 <Button Content="Undo"
-                        Command="{Binding UndoCommand}" />
+                        Command="{Binding Document.CurrentPage.UndoCommand}" />
                 <Button Content="Redo"
-                        Command="{Binding RedoCommand}" />
+                        Command="{Binding Document.CurrentPage.RedoCommand}" />
                 <Separator />
                 <Button Content="Delete"
-                        Command="{Binding DeleteCommand}"
+                        Command="{Binding Document.CurrentPage.DeleteCommand}"
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
                 <Button Content="Merge"
-                        Command="{Binding MergeCommand}"
+                        Command="{Binding Document.CurrentPage.MergeCommand}"
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
                 <Button Content="Crop"
-                        Command="{Binding CropCommand}"
+                        Command="{Binding Document.CurrentPage.CropCommand}"
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
                 <ToggleButton Content="Auto Clean"
                               IsChecked="{Binding AutoClean}" />
                 <Separator />
                 <Button Content="Select Identical Nodes"
-                        Command="{Binding SelectIdenticalNodesCommand}"
+                        Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand}"
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
                 <Button Content="Convert Nodes to Image"
-                        Command="{Binding ConvertToImageCommand}"
+                        Command="{Binding Document.CurrentPage.ConvertToImageCommand}"
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
             </ToolBar>
         </ToolBarTray>

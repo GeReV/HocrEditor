@@ -18,7 +18,7 @@ namespace HocrEditor
     /// </summary>
     public partial class MainWindow
     {
-        public MainWindowViewModel ViewModel => (MainWindowViewModel)DataContext;
+        private MainWindowViewModel ViewModel => (MainWindowViewModel)DataContext;
 
         public MainWindow()
         {
@@ -93,7 +93,7 @@ namespace HocrEditor
                                         )
                                         .ToList();
 
-                                    ViewModel.DeleteCommand.Execute(noiseNodes);
+                                    ViewModel.Document.CurrentPage?.DeleteCommand.Execute(noiseNodes);
 
                                     var graphics = page.Nodes.Where(
                                             node => node.NodeType == HocrNodeType.ContentArea &&
@@ -101,10 +101,10 @@ namespace HocrEditor
                                         )
                                         .ToList();
 
-                                    ViewModel.ConvertToImageCommand.Execute(graphics);
+                                    ViewModel.Document.CurrentPage?.ConvertToImageCommand.Execute(graphics);
                                 }
 
-                                ViewModel.UndoRedoManager.Clear();
+                                ViewModel.Document.CurrentPage?.UndoRedoManager.Clear();
                             }
                             catch (Exception ex)
                             {
@@ -145,7 +145,7 @@ namespace HocrEditor
 
         private void Canvas_OnNodesChanged(object? sender, NodesChangedEventArgs e)
         {
-            ViewModel.UpdateNodesCommand.Execute(e.Changes);
+            ViewModel.Document.CurrentPage?.UpdateNodesCommand.Execute(e.Changes);
         }
 
         private void Canvas_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -153,7 +153,7 @@ namespace HocrEditor
             if (e.AddedItems.Count > 0)
             {
                 var items = e.AddedItems.Cast<HocrNodeViewModel>().ToList();
-                ViewModel.AppendSelectNodesCommand.TryExecute(items);
+                ViewModel.Document.CurrentPage?.AppendSelectNodesCommand.TryExecute(items);
 
                 foreach (var parent in items.SelectMany(n => n.Ascendants))
                 {
@@ -164,18 +164,18 @@ namespace HocrEditor
 
             if (e.RemovedItems.Count > 0)
             {
-                ViewModel.DeselectNodesCommand.TryExecute(e.RemovedItems.Cast<HocrNodeViewModel>().ToList());
+                ViewModel.Document.CurrentPage?.DeselectNodesCommand.TryExecute(e.RemovedItems.Cast<HocrNodeViewModel>().ToList());
             }
         }
 
         private void DocumentTreeView_OnNodeEdited(object? sender, NodesEditedEventArgs e)
         {
-            ViewModel.EditNodesCommand.Execute(e.Value);
+            ViewModel.Document.CurrentPage?.EditNodesCommand.Execute(e.Value);
         }
 
         private void DocumentTreeView_OnNodesMoved(object? sender, NodesMovedEventArgs e)
         {
-            ViewModel.MoveNodesCommand.Execute(e);
+            ViewModel.Document.CurrentPage?.MoveNodesCommand.Execute(e);
         }
     }
 }

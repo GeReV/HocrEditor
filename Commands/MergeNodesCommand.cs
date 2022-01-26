@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Helpers;
@@ -7,13 +6,13 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class MergeNodes : CommandBase<ICollection<HocrNodeViewModel>>
+public class MergeNodes : UndoableCommandBase<ICollection<HocrNodeViewModel>>
 {
-    private readonly MainWindowViewModel mainWindowViewModel;
+    private readonly HocrPageViewModel hocrPageViewModel;
 
-    public MergeNodes(MainWindowViewModel mainWindowViewModel)
+    public MergeNodes(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
     {
-        this.mainWindowViewModel = mainWindowViewModel;
+        this.hocrPageViewModel = hocrPageViewModel;
     }
 
     public override bool CanExecute(ICollection<HocrNodeViewModel>? nodes) => nodes is { Count: > 0 };
@@ -25,11 +24,7 @@ public class MergeNodes : CommandBase<ICollection<HocrNodeViewModel>>
             return;
         }
 
-        var page = mainWindowViewModel.Document.CurrentPage ?? throw new InvalidOperationException(
-            $"Expected {nameof(mainWindowViewModel.Document.CurrentPage)} to not be null"
-        );
-
-        var selectedNodes = nodes.OrderBy(node => page.Nodes.IndexOf(node)).ToList();
+        var selectedNodes = nodes.OrderBy(node => hocrPageViewModel.Nodes.IndexOf(node)).ToList();
 
         if (!selectedNodes.Any())
         {
@@ -73,7 +68,7 @@ public class MergeNodes : CommandBase<ICollection<HocrNodeViewModel>>
             )
             .ToList();
 
-        commands.Add(new PageRemoveNodesCommand(page, rest.Concat(emptyAscendants)));
+        commands.Add(new PageRemoveNodesCommand(hocrPageViewModel, rest.Concat(emptyAscendants)));
 
         var ascendants = first.Ascendants.Prepend(first);
 
@@ -93,6 +88,6 @@ public class MergeNodes : CommandBase<ICollection<HocrNodeViewModel>>
 
         commands.AddRange(updateBoundsCommands);
 
-        mainWindowViewModel.UndoRedoManager.ExecuteCommands(commands);
+        UndoRedoManager.ExecuteCommands(commands);
     }
 }

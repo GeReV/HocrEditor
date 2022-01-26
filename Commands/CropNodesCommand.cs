@@ -6,27 +6,27 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class CropNodes : CommandBase<ICollection<HocrNodeViewModel>>
+public class CropNodes : UndoableCommandBase<ICollection<HocrNodeViewModel>>
 {
-    private readonly MainWindowViewModel mainWindowViewModel;
+    private readonly HocrPageViewModel hocrPageViewModel;
 
-    public CropNodes(MainWindowViewModel mainWindowViewModel)
+    public CropNodes(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
     {
-        this.mainWindowViewModel = mainWindowViewModel;
+        this.hocrPageViewModel = hocrPageViewModel;
     }
 
     public override bool CanExecute(ICollection<HocrNodeViewModel>? nodes) => nodes is { Count: > 0 };
 
     public override void Execute(ICollection<HocrNodeViewModel>? nodes)
     {
-        if (nodes == null || mainWindowViewModel.Document.CurrentPage == null)
+        if (nodes == null)
         {
             return;
         }
 
         // Order nodes from the latest occurrence (deepest) to earliest, so if a chain of parent-children is selected,
         // the deepest child is cropped, then its parent and so on, bottom-up.
-        var selectedNodes = nodes.OrderBy(node => -mainWindowViewModel.Document.CurrentPage.Nodes.IndexOf(node));
+        var selectedNodes = nodes.OrderBy(node => -hocrPageViewModel.Nodes.IndexOf(node));
 
         var commands = selectedNodes.Select(
             node => PropertyChangeCommand.FromProperty(
@@ -37,6 +37,6 @@ public class CropNodes : CommandBase<ICollection<HocrNodeViewModel>>
         );
 
         // ExecuteUndoableCommand(commands);
-        mainWindowViewModel.UndoRedoManager.ExecuteCommands(commands);
+        UndoRedoManager.ExecuteCommands(commands);
     }
 }

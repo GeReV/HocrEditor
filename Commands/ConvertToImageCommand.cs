@@ -1,23 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Models;
 using HocrEditor.ViewModels;
-using Microsoft.Toolkit.Mvvm.Input;
 
 namespace HocrEditor.Commands;
 
-public class ConvertToImageCommand : IRelayCommand<IEnumerable<HocrNodeViewModel>>
+public class ConvertToImageCommand : UndoableCommandBase<IEnumerable<HocrNodeViewModel>>
 {
-    private readonly MainWindowViewModel mainWindowViewModel;
+    private readonly HocrPageViewModel hocrPageViewModel;
 
-    public ConvertToImageCommand(MainWindowViewModel mainWindowViewModel)
+    public ConvertToImageCommand(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
     {
-        this.mainWindowViewModel = mainWindowViewModel;
+        this.hocrPageViewModel = hocrPageViewModel;
     }
 
-    public bool CanExecute(IEnumerable<HocrNodeViewModel>? parameter)
+    public override bool CanExecute(IEnumerable<HocrNodeViewModel>? parameter)
     {
         if (parameter == null)
         {
@@ -30,7 +28,7 @@ public class ConvertToImageCommand : IRelayCommand<IEnumerable<HocrNodeViewModel
                list.All(node => node.NodeType == HocrNodeType.ContentArea);
     }
 
-    public void Execute(IEnumerable<HocrNodeViewModel>? parameter)
+    public override void Execute(IEnumerable<HocrNodeViewModel>? parameter)
     {
         if (parameter == null)
         {
@@ -44,11 +42,9 @@ public class ConvertToImageCommand : IRelayCommand<IEnumerable<HocrNodeViewModel
             return;
         }
 
-        var page = mainWindowViewModel.Document.CurrentPage ?? throw new InvalidOperationException();
-
         var commands = new List<UndoRedoCommand>();
 
-        commands.Add(new PageRemoveNodesCommand(page, selectedNodes.SelectMany(node => node.Children)));
+        commands.Add(new PageRemoveNodesCommand(hocrPageViewModel, selectedNodes.SelectMany(node => node.Children)));
 
         commands.AddRange(
             selectedNodes.Select(
@@ -61,17 +57,6 @@ public class ConvertToImageCommand : IRelayCommand<IEnumerable<HocrNodeViewModel
             )
         );
 
-        mainWindowViewModel.UndoRedoManager.ExecuteCommands(commands);
-    }
-
-    public bool CanExecute(object? parameter) => CanExecute((IEnumerable<HocrNodeViewModel>?)parameter);
-
-    public void Execute(object? parameter) => Execute((IEnumerable<HocrNodeViewModel>?)parameter);
-
-    public event EventHandler? CanExecuteChanged;
-
-    public void NotifyCanExecuteChanged()
-    {
-        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        UndoRedoManager.ExecuteCommands(commands);
     }
 }

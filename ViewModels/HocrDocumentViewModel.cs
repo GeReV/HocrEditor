@@ -10,7 +10,7 @@ namespace HocrEditor.ViewModels;
 
 public class HocrDocumentViewModel : ViewModelBase
 {
-    public ObservableCollection<HocrPageViewModel> Pages { get; } = new();
+    public ObservableCollection<HocrPageViewModel> Pages { get; }
 
     public ICollectionView PagesCollectionView { get; }
 

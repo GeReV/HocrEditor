@@ -1,8 +1,12 @@
 ﻿namespace HocrEditor.ViewModels
 {
-    public partial class MainWindowViewModel : ViewModelBase
+    public class MainWindowViewModel : ViewModelBase
     {
-        public bool AutoClean { get; set; } = true;
+        public bool AutoClean
+        {
+            get => Settings.AutoClean;
+            set => Settings.AutoClean = value;
+        }
 
         public HocrDocumentViewModel Document { get; set; } = new();
     }

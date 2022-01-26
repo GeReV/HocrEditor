@@ -6,24 +6,21 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class AppendSelectNodesCommand : CommandBase<IEnumerable<HocrNodeViewModel>>
+public class AppendSelectNodesCommand : UndoableCommandBase<IEnumerable<HocrNodeViewModel>>
 {
-    private readonly MainWindowViewModel mainWindowViewModel;
+    private readonly HocrPageViewModel hocrPageViewModel;
 
-    public AppendSelectNodesCommand(MainWindowViewModel mainWindowViewModel)
+    public AppendSelectNodesCommand(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
     {
-        this.mainWindowViewModel = mainWindowViewModel;
+        this.hocrPageViewModel = hocrPageViewModel;
     }
 
     public override bool CanExecute(IEnumerable<HocrNodeViewModel>? nodes) =>
-        mainWindowViewModel.Document.CurrentPage != null &&
-        mainWindowViewModel.Document.CurrentPage.Nodes
-            .Any() && nodes != null &&
-        nodes.Any();
+        hocrPageViewModel.Nodes.Any() && nodes != null && nodes.Any();
 
     public override void Execute(IEnumerable<HocrNodeViewModel>? nodes)
     {
-        if (mainWindowViewModel.Document.CurrentPage == null || nodes == null)
+        if (nodes == null)
         {
             return;
         }
@@ -40,9 +37,9 @@ public class AppendSelectNodesCommand : CommandBase<IEnumerable<HocrNodeViewMode
                 )
             );
 
-            commands.Add(mainWindowViewModel.Document.CurrentPage.SelectedNodes.ToCollectionAddCommand(addedItems));
+            commands.Add(hocrPageViewModel.SelectedNodes.ToCollectionAddCommand(addedItems));
         }
 
-        mainWindowViewModel.UndoRedoManager.ExecuteCommands(commands);
+        UndoRedoManager.ExecuteCommands(commands);
     }
 }
