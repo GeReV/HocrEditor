@@ -22,9 +22,8 @@ public class HocrDocumentViewModel : ViewModelBase
         set => PagesCollectionView.MoveCurrentTo(value);
     }
 
-    public HocrDocumentViewModel() : this(Enumerable.Empty<HocrPageViewModel>())
-    {
-    }
+    public IRelayCommand NextPageCommand { get; }
+    public IRelayCommand PreviousPageCommand { get; }
 
     private HocrDocumentViewModel(IEnumerable<HocrPageViewModel> pages)
     {
@@ -32,11 +31,18 @@ public class HocrDocumentViewModel : ViewModelBase
 
         PagesCollectionView = CollectionViewSource.GetDefaultView(Pages);
         PagesCollectionView.CurrentChanged += PagesCollectionViewOnCurrentChanged;
+
+        NextPageCommand = new RelayCommand(() => PagesCollectionView.MoveCurrentToNext(), () => !PagesCollectionView.IsCurrentLast());
+        PreviousPageCommand = new RelayCommand(() => PagesCollectionView.MoveCurrentToPrevious(), () => !PagesCollectionView.IsCurrentFirst());
     }
 
     public HocrDocumentViewModel(HocrDocument hocrDocument) : this(
         hocrDocument.Pages.Select(p => new HocrPageViewModel(p))
     )
+    {
+    }
+
+    public HocrDocumentViewModel() : this(Enumerable.Empty<HocrPageViewModel>())
     {
     }
 

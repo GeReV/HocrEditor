@@ -11,6 +11,7 @@
         Width="1920"
         d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}">
     <Window.InputBindings>
+        <!-- Editing keybindings -->
         <KeyBinding Key="Delete"
                     Command="{Binding Document.CurrentPage.DeleteCommand}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
@@ -18,6 +19,8 @@
                     Key="M"
                     Command="{Binding Document.CurrentPage.MergeCommand}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
+
+        <!-- Selection keybindings -->
         <KeyBinding Modifiers="Control"
                     Key="A"
                     Command="{Binding Document.CurrentPage.ExclusiveSelectNodesCommand}"
@@ -30,6 +33,16 @@
                     Key="A"
                     Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
+
+        <!-- Navigation keybindings -->
+        <KeyBinding Modifiers="Control"
+                    Key="PageDown"
+                    Command="{Binding Document.NextPageCommand}" />
+        <KeyBinding Modifiers="Control"
+                    Key="PageUp"
+                    Command="{Binding Document.PreviousPageCommand}" />
+
+        <!-- Undo-redo keybindings -->
         <KeyBinding Modifiers="Control"
                     Key="Z"
                     Command="{Binding Document.CurrentPage.UndoCommand}" />
@@ -130,7 +143,7 @@
                                 d:DataContext="{d:DesignInstance viewModels:HocrPageViewModel}">
                             <Image Source="{Binding Image}"
                                    Stretch="Uniform"
-                                   StretchDirection="DownOnly"/>
+                                   StretchDirection="DownOnly" />
                         </Border>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
