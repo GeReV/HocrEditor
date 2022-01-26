@@ -363,17 +363,22 @@ public partial class DocumentCanvas
             return;
         }
 
+        if (mouseMoveState != MouseState.None)
+        {
+            return;
+        }
+
         Mouse.Capture(this);
 
         var position = e.GetPosition(this).ToSKPoint();
-
-        dragStart = position;
 
         switch (e.ChangedButton)
         {
             case MouseButton.Left:
             {
                 e.Handled = true;
+
+                dragStart = position;
 
                 if (!canvasSelection.IsEmpty)
                 {
@@ -416,6 +421,8 @@ public partial class DocumentCanvas
             {
                 e.Handled = true;
 
+                dragStart = position;
+
                 mouseMoveState = MouseState.Panning;
 
                 offsetStart = transformation.MapPoint(SKPoint.Empty);
@@ -427,7 +434,7 @@ public partial class DocumentCanvas
             case MouseButton.XButton2:
             default:
                 // Noop.
-                break;
+                return;
         }
 
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
@@ -617,12 +624,22 @@ public partial class DocumentCanvas
             {
                 e.Handled = true;
 
+                if (mouseMoveState != MouseState.Panning)
+                {
+                    return;
+                }
+
                 mouseMoveState = MouseState.None;
                 break;
             }
             case MouseButton.Left:
             {
                 e.Handled = true;
+
+                if (mouseMoveState == MouseState.Panning)
+                {
+                    return;
+                }
 
                 var position = e.GetPosition(this).ToSKPoint();
 
@@ -664,7 +681,7 @@ public partial class DocumentCanvas
             case MouseButton.XButton1:
             case MouseButton.XButton2:
             default:
-                break;
+                return;
         }
 
         ReleaseMouseCapture();
