@@ -13,6 +13,7 @@ using System.Windows.Threading;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 using HocrEditor.ViewModels;
+using Microsoft.Extensions.ObjectPool;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
 using SkiaSharp.Views.WPF;
@@ -43,6 +44,9 @@ public class Element
 
 public partial class DocumentCanvas
 {
+    private readonly ObjectPool<Element> elementPool =
+        new DefaultObjectPool<Element>(new DefaultPooledObjectPolicy<Element>());
+
     public static readonly DependencyProperty SelectedItemsProperty = DependencyProperty.Register(
         nameof(SelectedItems),
         typeof(ObservableHashSet<HocrNodeViewModel>),
@@ -153,7 +157,13 @@ public partial class DocumentCanvas
             return;
         }
 
+        foreach (var (_, element) in documentCanvas.elements.Values)
+        {
+            documentCanvas.elementPool.Return(element);
+        }
+
         documentCanvas.elements.Clear();
+
 
         if (e.OldValue is ObservableCollection<HocrNodeViewModel> oldNodes)
         {
@@ -274,7 +284,8 @@ public partial class DocumentCanvas
 
                     foreach (var node in list)
                     {
-                        elements.Remove(node.Id);
+                        elements.Remove(node.Id, out var tuple);
+                        elementPool.Return(tuple.Item2);
                     }
                 }
 
@@ -287,7 +298,8 @@ public partial class DocumentCanvas
 
                     foreach (var node in list)
                     {
-                        elements.Remove(node.Id);
+                        elements.Remove(node.Id, out var tuple);
+                        elementPool.Return(tuple.Item2);
                     }
 
                     BuildDocumentElements(list);
@@ -298,6 +310,11 @@ public partial class DocumentCanvas
             case NotifyCollectionChangedAction.Move:
                 break;
             case NotifyCollectionChangedAction.Reset:
+                foreach (var (_, element) in elements.Values)
+                {
+                    elementPool.Return(element);
+                }
+
                 elements.Clear();
 
                 ClearCanvasSelection();
@@ -890,10 +907,8 @@ public partial class DocumentCanvas
     {
         foreach (var node in nodes)
         {
-            var el = new Element
-            {
-                Bounds = node.BBox.ToSKRect()
-            };
+            var el = elementPool.Get();
+            el.Bounds = node.BBox.ToSKRect();
 
             elements.Add(node.Id, (node, el));
 
