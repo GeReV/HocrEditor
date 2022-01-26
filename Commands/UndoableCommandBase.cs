@@ -1,4 +1,5 @@
-﻿using HocrEditor.ViewModels;
+﻿using HocrEditor.Core;
+using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 

@@ -1,4 +1,5 @@
 ﻿// https://github.com/dotnet/efcore/blob/547f75a88e3bc19bedfec9e270141ae51a6742fe/src/EFCore/ChangeTracking/ObservableHashSet.cs
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using System.ComponentModel;
 using System.Linq;
 using PropertyChanged;
 
-namespace HocrEditor;
+namespace HocrEditor.Core;
 
 /// <summary>
 ///     A hash set that implements the interfaces required for Entity Framework to use notification based change tracking

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using HocrEditor.Commands.UndoRedo;
+using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.ViewModels;
 

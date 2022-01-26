@@ -1,7 +1,7 @@
 ﻿using System.Collections.Specialized;
 using System.Configuration;
 
-namespace HocrEditor
+namespace HocrEditor.Core
 {
     public static class Settings
     {

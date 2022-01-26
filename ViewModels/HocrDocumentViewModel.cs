@@ -4,7 +4,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Data;
+using HocrEditor.Helpers;
 using HocrEditor.Models;
+using Microsoft.Toolkit.Mvvm.Input;
 
 namespace HocrEditor.ViewModels;
 

@@ -1,6 +1,7 @@
-﻿using System;
+﻿// Adapted from: https://github.com/CoryCharlton/CCSWE.Core/blob/2cea0791bfba39d832e000d5bdddc3939e85e3ed/src/Core/Ensure.cs
+using System;
 
-namespace HocrEditor;
+namespace HocrEditor.Core;
 
 /// <summary>
     /// A helper class for ensuring parameter conditions.

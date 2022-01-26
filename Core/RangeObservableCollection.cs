@@ -1,4 +1,5 @@
 ﻿// https://gist.github.com/weitzhandler/65ac9113e31d12e697cb58cd92601091
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ using System.Diagnostics;
 using System.Linq;
 using PropertyChanged;
 
-namespace HocrEditor
+namespace HocrEditor.Core
 {
     // Licensed to the .NET Foundation under one or more agreements.
     // The .NET Foundation licenses this file to you under the MIT license.

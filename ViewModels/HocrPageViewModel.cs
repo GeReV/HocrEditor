@@ -2,6 +2,7 @@
 using System.Linq;
 using HocrEditor.Commands;
 using HocrEditor.Controls;
+using HocrEditor.Core;
 using HocrEditor.Models;
 using Microsoft.Toolkit.Mvvm.Input;
 

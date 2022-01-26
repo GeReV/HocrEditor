@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using HocrEditor.Controls;
+using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 using HocrEditor.Services;

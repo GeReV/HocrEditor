@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HocrEditor.Commands.UndoRedo;
 
-namespace HocrEditor;
+namespace HocrEditor.Core;
 
 public sealed class UndoRedoManager
 {

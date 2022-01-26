@@ -4,6 +4,7 @@ using GongSolutions.Wpf.DragDrop;
 using GongSolutions.Wpf.DragDrop.Utilities;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Controls;
+using HocrEditor.Core;
 using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;

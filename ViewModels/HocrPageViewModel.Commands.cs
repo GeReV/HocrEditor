@@ -5,6 +5,7 @@ using System.Linq;
 using HocrEditor.Commands;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Controls;
+using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 using Microsoft.Toolkit.Mvvm.Input;

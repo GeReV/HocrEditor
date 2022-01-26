@@ -1,4 +1,6 @@
-﻿namespace HocrEditor.ViewModels
+﻿using HocrEditor.Core;
+
+namespace HocrEditor.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
