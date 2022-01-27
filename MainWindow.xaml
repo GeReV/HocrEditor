@@ -6,6 +6,7 @@
         xmlns:controls="clr-namespace:HocrEditor.Controls"
         xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
         xmlns:converters="clr-namespace:HocrEditor.Converters"
+        xmlns:dd="urn:gong-wpf-dragdrop"
         mc:Ignorable="d"
         Title="hOCR Editor"
         Height="1080"
@@ -143,7 +144,11 @@
                      ItemsSource="{Binding Document.PagesCollectionView}"
                      IsSynchronizedWithCurrentItem="True"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     ScrollViewer.VerticalScrollBarVisibility="Visible">
+                     ScrollViewer.VerticalScrollBarVisibility="Visible"
+                     dd:DragDrop.IsDragSource="True"
+                     dd:DragDrop.IsDropTarget="True"
+                     dd:DragDrop.DragDropContext="PagesDragDrop"
+                     dd:DragDrop.SelectDroppedItems="True">
                 <ListBox.Resources>
                     <Style TargetType="ListBoxItem"
                            d:DataContext="{d:DesignInstance viewModels:HocrPageViewModel}">
