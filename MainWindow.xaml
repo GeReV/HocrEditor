@@ -12,10 +12,7 @@
         Height="1080"
         Width="1920"
         d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}">
-    <Window.Resources>
-        <converters:BooleanNegateConverter x:Key="NegateConverter" />
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-    </Window.Resources>
+
     <Window.InputBindings>
         <!-- Editing keybindings -->
         <KeyBinding Key="Delete"
@@ -139,48 +136,9 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="300" />
             </Grid.ColumnDefinitions>
-            <ListBox Grid.Column="0"
-                     SelectedIndex="0"
-                     ItemsSource="{Binding Document.PagesCollectionView}"
-                     IsSynchronizedWithCurrentItem="True"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     ScrollViewer.VerticalScrollBarVisibility="Visible"
-                     dd:DragDrop.IsDragSource="True"
-                     dd:DragDrop.IsDropTarget="True"
-                     dd:DragDrop.DragDropContext="PagesDragDrop"
-                     dd:DragDrop.SelectDroppedItems="True">
-                <ListBox.Resources>
-                    <Style TargetType="ListBoxItem"
-                           d:DataContext="{d:DesignInstance viewModels:HocrPageViewModel}">
-                        <Setter Property="IsEnabled"
-                                Value="{Binding IsProcessing, Converter={StaticResource NegateConverter}}" />
-                    </Style>
-                </ListBox.Resources>
-                <ListBox.ItemTemplate>
-                    <DataTemplate DataType="viewModels:HocrPageViewModel">
-                        <Border Margin="5">
-                            <Grid>
-                                <Image Name="PagePreview"
-                                       Source="{Binding Image}"
-                                       Stretch="Uniform"
-                                       StretchDirection="DownOnly"
-                                       RenderOptions.BitmapScalingMode="HighQuality" />
-                                <ProgressBar VerticalAlignment="Bottom"
-                                             IsIndeterminate="True"
-                                             Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                            </Grid>
-                        </Border>
-                        <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding IsProcessing}"
-                                         Value="True">
-                                <Setter TargetName="PagePreview"
-                                        Property="Opacity"
-                                        Value="0.2" />
-                            </DataTrigger>
-                        </DataTemplate.Triggers>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+            <controls:DocumentPageList Grid.Column="0"
+                                       DataContext="{Binding Document}"
+                                       ItemsSource="{Binding PagesCollectionView}" />
             <controls:DocumentCanvas Grid.Column="1"
                                      Margin="-1, 0"
                                      ItemsSource="{Binding  Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
