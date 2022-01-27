@@ -49,34 +49,32 @@ namespace HocrEditor
             {
                 var imagePaths = dialog.FileNames;
 
-                Task.WhenAll(
-                        imagePaths.Select(
-                            path => Task.Run(
-                                async () =>
-                                {
-                                    var service = new TesseractService(tesseractPath);
+                var pages = imagePaths.Select(image => new HocrPageViewModel(image)).ToList();
 
-                                    var body = await service.PerformOcr(path, new[] { "script/Hebrew", "eng" });
+                var service = new TesseractService(tesseractPath);
 
-                                    var doc = new HtmlDocument();
-                                    doc.LoadHtml(body);
+                foreach (var page in pages)
+                {
+                    ViewModel.Document.Pages.Add(page);
 
-                                    return new HocrPageParser().Parse(doc);
-                                }
-                            )
-                        )
-                    )
-                    .ContinueWith(
-                        async pages =>
-                        {
-                            try
+                    Task.Run(
+                            async () =>
                             {
-                                var hocrDocuments = new HocrDocument(await pages);
+                                var body = await service.PerformOcr(page.Image, new[] { "script/Hebrew", "eng" });
 
-                                ViewModel.Document = new HocrDocumentViewModel(hocrDocuments);
+                                var doc = new HtmlDocument();
+                                doc.LoadHtml(body);
 
-                                foreach (var page in ViewModel.Document.Pages)
+                                return new HocrPageParser().Parse(doc);
+                            }
+                        )
+                        .ContinueWith(
+                            async hocrPage =>
+                            {
+                                try
                                 {
+                                    page.HocrPage = await hocrPage;
+
                                     var averageFontSize = page.HocrPage.Items
                                         .Where(node => node.NodeType == HocrNodeType.Word)
                                         .Cast<HocrWord>()
@@ -94,7 +92,7 @@ namespace HocrEditor
                                         )
                                         .ToList();
 
-                                    ViewModel.Document.CurrentPage?.DeleteCommand.Execute(noiseNodes);
+                                    page.DeleteCommand.Execute(noiseNodes);
 
                                     var graphics = page.Nodes.Where(
                                             node => node.NodeType == HocrNodeType.ContentArea &&
@@ -102,18 +100,18 @@ namespace HocrEditor
                                         )
                                         .ToList();
 
-                                    ViewModel.Document.CurrentPage?.ConvertToImageCommand.Execute(graphics);
-                                }
+                                    page.ConvertToImageCommand.Execute(graphics);
 
-                                ViewModel.Document.CurrentPage?.UndoRedoManager.Clear();
-                            }
-                            catch (Exception ex)
-                            {
-                                MessageBox.Show($"{ex.Message}\n{ex.Source}\n\n{ex.StackTrace}");
-                            }
-                        },
-                        TaskScheduler.FromCurrentSynchronizationContext()
-                    );
+                                    page.UndoRedoManager.Clear();
+                                }
+                                catch (Exception ex)
+                                {
+                                    MessageBox.Show($"{ex.Message}\n{ex.Source}\n\n{ex.StackTrace}");
+                                }
+                            },
+                            TaskScheduler.FromCurrentSynchronizationContext()
+                        );
+                }
             }
         }
 
@@ -165,7 +163,9 @@ namespace HocrEditor
 
             if (e.RemovedItems.Count > 0)
             {
-                ViewModel.Document.CurrentPage?.DeselectNodesCommand.TryExecute(e.RemovedItems.Cast<HocrNodeViewModel>().ToList());
+                ViewModel.Document.CurrentPage?.DeselectNodesCommand.TryExecute(
+                    e.RemovedItems.Cast<HocrNodeViewModel>().ToList()
+                );
             }
         }
 

@@ -165,15 +165,14 @@ public partial class DocumentCanvas
 
         documentCanvas.elements.Clear();
 
-
-        if (e.OldValue is ObservableCollection<HocrNodeViewModel> oldNodes)
+        if (e.OldValue is ObservableCollection<HocrNodeViewModel> oldNodes && oldNodes.Any())
         {
             oldNodes.UnsubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
 
             oldNodes.CollectionChanged -= documentCanvas.NodesOnCollectionChanged;
         }
 
-        if (e.NewValue is ObservableCollection<HocrNodeViewModel> newNodes)
+        if (e.NewValue is ObservableCollection<HocrNodeViewModel> newNodes && newNodes.Any())
         {
             var rootNode = newNodes[0];
 
@@ -182,11 +181,11 @@ public partial class DocumentCanvas
             newNodes.SubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
 
             newNodes.CollectionChanged += documentCanvas.NodesOnCollectionChanged;
+
+            documentCanvas.CenterTransformation();
+
+            documentCanvas.Dispatcher.InvokeAsync(documentCanvas.Refresh, DispatcherPriority.Render);
         }
-
-        documentCanvas.CenterTransformation();
-
-        documentCanvas.Dispatcher.InvokeAsync(documentCanvas.Refresh, DispatcherPriority.Render);
     }
 
     private void NodesOnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)

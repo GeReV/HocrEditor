@@ -10,23 +10,36 @@ namespace HocrEditor.ViewModels
 {
     public partial class HocrPageViewModel : ViewModelBase
     {
-        public HocrPage HocrPage { get; }
-        public Dictionary<string, HocrNodeViewModel> NodeCache { get; }
+        private HocrPage? hocrPage;
 
-        public RangeObservableCollection<HocrNodeViewModel> Nodes { get; }
+        public HocrPage? HocrPage
+        {
+            get => hocrPage;
+            set
+            {
+                Ensure.IsNotNull(nameof(value), value);
+
+                hocrPage = value;
+
+                NodeCache = BuildNodeCache(value?.Items.Prepend(value) ?? Enumerable.Empty<IHocrNode>());
+
+                Nodes = new RangeObservableCollection<HocrNodeViewModel>(NodeCache.Values);
+            }
+        }
+
+        public Dictionary<string, HocrNodeViewModel> NodeCache { get; private set; } = new();
+
+        public RangeObservableCollection<HocrNodeViewModel> Nodes { get; private set; } = new();
 
         public ObservableHashSet<HocrNodeViewModel> SelectedNodes { get; set; } = new();
 
-        public string Image => HocrPage.Image;
+        public bool IsProcessing => HocrPage == null;
 
-        public HocrPageViewModel(HocrPage hocrPage)
+        public string Image { get; set; }
+
+        public HocrPageViewModel(string image)
         {
-            HocrPage = hocrPage;
-
-            NodeCache = BuildNodeCache(hocrPage.Items.Prepend(hocrPage));
-
-            Nodes = new RangeObservableCollection<HocrNodeViewModel>(NodeCache.Values);
-
+            Image = image;
 
             DeleteCommand = new DeleteNodes(this);
             MergeCommand = new MergeNodes(this);

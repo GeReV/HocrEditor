@@ -12,7 +12,7 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance viewModels:HocrPageViewModel}">
     <Grid>
-        <TreeView ItemsSource="{Binding  ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
+        <TreeView ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   dd:DragDrop.IsDragSource="True"
                   dd:DragDrop.IsDropTarget="True"
                   dd:DragDrop.DragHandler="{Binding DragHandler, RelativeSource={RelativeSource AncestorType=UserControl}}"

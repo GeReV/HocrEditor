@@ -5,11 +5,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:HocrEditor.Controls"
         xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
+        xmlns:converters="clr-namespace:HocrEditor.Converters"
         mc:Ignorable="d"
         Title="hOCR Editor"
         Height="1080"
         Width="1920"
         d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}">
+    <Window.Resources>
+        <converters:BooleanNegateConverter x:Key="NegateConverter" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Window.Resources>
     <Window.InputBindings>
         <!-- Editing keybindings -->
         <KeyBinding Key="Delete"
@@ -129,26 +134,50 @@
         </ToolBarTray>
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="150" />
+                <ColumnDefinition Width="170" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="300" />
             </Grid.ColumnDefinitions>
             <ListBox Grid.Column="0"
+                     SelectedIndex="0"
                      ItemsSource="{Binding Document.PagesCollectionView}"
                      IsSynchronizedWithCurrentItem="True"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.VerticalScrollBarVisibility="Visible">
+                <ListBox.Resources>
+                    <Style TargetType="ListBoxItem"
+                           d:DataContext="{d:DesignInstance viewModels:HocrPageViewModel}">
+                        <Setter Property="IsEnabled"
+                                Value="{Binding IsProcessing, Converter={StaticResource NegateConverter}}" />
+                    </Style>
+                </ListBox.Resources>
                 <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Border Margin="5"
-                                d:DataContext="{d:DesignInstance viewModels:HocrPageViewModel}">
-                            <Image Source="{Binding Image}"
-                                   Stretch="Uniform"
-                                   StretchDirection="DownOnly" />
+                    <DataTemplate DataType="viewModels:HocrPageViewModel">
+                        <Border Margin="5">
+                            <Grid>
+                                <Image Name="PagePreview"
+                                       Source="{Binding Image}"
+                                       Stretch="Uniform"
+                                       StretchDirection="DownOnly"
+                                       RenderOptions.BitmapScalingMode="HighQuality" />
+                                <ProgressBar VerticalAlignment="Bottom"
+                                             IsIndeterminate="True"
+                                             Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                            </Grid>
                         </Border>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsProcessing}"
+                                         Value="True">
+                                <Setter TargetName="PagePreview"
+                                        Property="Opacity"
+                                        Value="0.2" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
             <controls:DocumentCanvas Grid.Column="1"
+                                     Margin="-1, 0"
                                      ItemsSource="{Binding  Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
                                      SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                                      NodesChanged="Canvas_OnNodesChanged"
