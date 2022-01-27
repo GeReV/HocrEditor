@@ -35,6 +35,8 @@ public sealed class UndoRedoManager
         batchCommands = new List<UndoRedoCommand>();
     }
 
+    public void ExecuteCommand(UndoRedoCommand command) => ExecuteCommands(Enumerable.Repeat(command, 1));
+
     public void ExecuteCommands(IEnumerable<UndoRedoCommand> commandSet)
     {
         var commandList = commandSet.ToList();
