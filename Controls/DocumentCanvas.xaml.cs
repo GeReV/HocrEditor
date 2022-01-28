@@ -45,6 +45,31 @@ public class Element
 
 public partial class DocumentCanvas
 {
+    private static readonly SKSize CenterPadding = new(-10.0f, -10.0f);
+
+    private static readonly SKPaint HandleFillPaint = new()
+    {
+        IsStroke = false,
+        Color = SKColors.White,
+        StrokeWidth = 1,
+    };
+
+    private static readonly SKPaint HandleStrokePaint = new()
+    {
+        IsStroke = true,
+        Color = SKColors.Gray,
+        StrokeWidth = 1,
+    };
+
+    private static readonly SKColor[] NodeColors =
+    {
+        SKColors.Aqua,
+        SKColors.LightGreen,
+        SKColors.LightYellow,
+        SKColors.MistyRose,
+        SKColors.MediumPurple
+    };
+
     private readonly ObjectPool<Element> elementPool =
         new DefaultObjectPool<Element>(new DefaultPooledObjectPolicy<Element>());
 
@@ -71,6 +96,13 @@ public partial class DocumentCanvas
             )
         );
 
+    public static readonly RoutedEvent NodesEditedEvent = EventManager.RegisterRoutedEvent(
+        "NodesEdited",
+        RoutingStrategy.Bubble,
+        typeof(EventHandler<NodesEditedEventArgs>),
+        typeof(DocumentCanvas)
+    );
+
     public ObservableHashSet<HocrNodeViewModel>? SelectedItems
     {
         get => (ObservableHashSet<HocrNodeViewModel>?)GetValue(SelectedItemsProperty);
@@ -93,35 +125,12 @@ public partial class DocumentCanvas
         }
     }
 
-    private static readonly SKSize CenterPadding = new(-10.0f, -10.0f);
-
-    private static readonly SKPaint HandleFillPaint = new()
-    {
-        IsStroke = false,
-        Color = SKColors.White,
-        StrokeWidth = 1,
-    };
-
-    private static readonly SKPaint HandleStrokePaint = new()
-    {
-        IsStroke = true,
-        Color = SKColors.Gray,
-        StrokeWidth = 1,
-    };
-
-    private static readonly SKColor[] NodeColors =
-    {
-        SKColors.Aqua,
-        SKColors.LightGreen,
-        SKColors.LightYellow,
-        SKColors.MistyRose,
-        SKColors.MediumPurple
-    };
-
     private string? rootId;
     private readonly Dictionary<string, (HocrNodeViewModel, Element)> elements = new();
 
     private readonly HashSet<string> selectedElements = new();
+
+    private HocrNodeViewModel? editingNode;
 
     private SKMatrix transformation = SKMatrix.Identity;
     private SKMatrix inverseTransformation = SKMatrix.Identity;
@@ -142,13 +151,45 @@ public partial class DocumentCanvas
 
     public event EventHandler<NodesChangedEventArgs>? NodesChanged;
 
+    public event EventHandler<NodesEditedEventArgs> NodesEdited
+    {
+        add => AddHandler(NodesEditedEvent, value);
+        remove => RemoveHandler(NodesEditedEvent, value);
+    }
+
     public event SelectionChangedEventHandler? SelectionChanged;
+
+    private Window? parentWindow;
+    private Window ParentWindow => parentWindow ??= Window.GetWindow(this) ?? throw new InvalidOperationException();
 
     public DocumentCanvas()
     {
         InitializeComponent();
 
         ClipToBounds = true;
+
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        ParentWindow.KeyDown += WindowOnKeyDown;
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        ParentWindow.KeyDown -= WindowOnKeyDown;
+    }
+
+    private void WindowOnKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Return)
+        {
+            return;
+        }
+
+        BeginEditing();
     }
 
     private static void ItemsSourceChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -762,6 +803,10 @@ public partial class DocumentCanvas
 
                 Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
 
+                if (editingNode != null)
+                {
+                    Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
+                }
                 break;
             }
             case MouseState.Dragging:
@@ -799,6 +844,11 @@ public partial class DocumentCanvas
 
                 Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
 
+                if (editingNode != null)
+                {
+                    Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
+                }
+
                 break;
             }
             case MouseState.Resizing:
@@ -806,6 +856,11 @@ public partial class DocumentCanvas
                 PerformResize(delta);
 
                 Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
+
+                if (editingNode != null)
+                {
+                    Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
+                }
 
                 break;
             }
@@ -836,6 +891,11 @@ public partial class DocumentCanvas
         dragLimit = CalculateDragLimitBounds(selectedItems);
 
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
+
+        if (editingNode != null)
+        {
+            Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
+        }
     }
 
     private void ResetTransformation()
@@ -900,7 +960,7 @@ public partial class DocumentCanvas
 
     private void Refresh()
     {
-        Canvas.InvalidateVisual();
+        Surface.InvalidateVisual();
     }
 
     private void BuildDocumentElements(IEnumerable<HocrNodeViewModel> nodes)
@@ -1162,22 +1222,14 @@ public partial class DocumentCanvas
 
     private void CaptureKeyDownEvents()
     {
-        var window = Window.GetWindow(this);
-
-        Debug.Assert(window != null, $"{nameof(window)} != null");
-
-        window.KeyDown += WindowOnKeyChange;
-        window.KeyUp += WindowOnKeyChange;
+        ParentWindow.KeyDown += WindowOnKeyChange;
+        ParentWindow.KeyUp += WindowOnKeyChange;
     }
 
     private void ReleaseKeyDownEvents()
     {
-        var window = Window.GetWindow(this);
-
-        Debug.Assert(window != null, $"{nameof(window)} != null");
-
-        window.KeyDown -= WindowOnKeyChange;
-        window.KeyUp -= WindowOnKeyChange;
+        ParentWindow.KeyDown -= WindowOnKeyChange;
+        ParentWindow.KeyUp -= WindowOnKeyChange;
     }
 
     private void WindowOnKeyChange(object sender, KeyEventArgs e)
@@ -1202,8 +1254,100 @@ public partial class DocumentCanvas
         NodesChanged?.Invoke(this, e);
     }
 
+    private void OnNodeEdited(string value)
+    {
+        RaiseEvent(new NodesEditedEventArgs(NodesEditedEvent, this, value));
+    }
+
     protected virtual void OnSelectionChanged(SelectionChangedEventArgs e)
     {
         SelectionChanged?.Invoke(this, e);
+    }
+
+    private void TextBox_OnLostFocus(object sender, RoutedEventArgs e)
+    {
+        EndEditing();
+
+        OnNodeEdited(TextBox.Text);
+    }
+
+    private void TextBox_OnKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key is not Key.Return or Key.Escape)
+        {
+            return;
+        }
+
+        EndEditing();
+
+        if (e.Key == Key.Escape)
+        {
+            return;
+        }
+
+        OnNodeEdited(TextBox.Text);
+    }
+
+    private void BeginEditing()
+    {
+        var selectedItem = SelectedItems?.FirstOrDefault(n => n.IsEditable);
+
+        if (selectedItem == null)
+        {
+            return;
+        }
+
+        editingNode = selectedItem;
+
+        editingNode.IsEditing = true;
+
+        var paragraph = (HocrParagraph?)editingNode.FindParent(HocrNodeType.Paragraph)?.HocrNode;
+
+        TextBox.Text = editingNode.InnerText;
+
+        TextBox.Visibility = Visibility.Visible;
+        TextBox.FlowDirection =
+            paragraph?.Direction == Direction.Rtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+
+        Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
+    }
+
+    private void UpdateTextBox()
+    {
+        if (editingNode == null)
+        {
+            throw new InvalidOperationException($"Cannot perform operation when {nameof(editingNode)} is null.");
+        }
+
+        var element = elements[editingNode.Id].Item2;
+        var rect = transformation.MapRect(element.Bounds);
+
+        var word = (HocrWord)editingNode.HocrNode;
+        var page = (HocrPage?)editingNode.FindParent(HocrNodeType.Page)?.HocrNode;
+
+        Canvas.SetLeft(TextBox, rect.Left);
+        Canvas.SetTop(TextBox, rect.Top);
+        TextBox.Width = rect.Width;
+        TextBox.Height = rect.Height;
+
+        var fontDpiRatio = (page?.Dpi.Item2 ?? 300) / 72f;
+        var fontSize = transformation.ScaleX * word.FontSize * fontDpiRatio * 0.6f;
+
+        TextBox.FontSize = fontSize;
+        TextBlock.SetLineHeight(TextBox, fontSize);
+    }
+
+    private void EndEditing()
+    {
+        TextBox.Visibility = Visibility.Collapsed;
+
+        var first = SelectedItems?.FirstOrDefault(n => n.IsEditable);
+
+        if (first != null)
+        {
+            first.IsEditing = false;
+        }
+
+        editingNode = null;
     }
 }

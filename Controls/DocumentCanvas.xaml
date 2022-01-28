@@ -7,9 +7,18 @@
              d:DesignHeight="450"
              xmlns:skia="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
              x:Class="HocrEditor.Controls.DocumentCanvas">
-    <Border BorderThickness="1"
-            BorderBrush="{x:Static SystemColors.ControlDarkBrush}">
-        <skia:SKElement Name="Canvas"
-                        PaintSurface="Canvas_OnPaintSurface" />
-    </Border>
+    <Grid>
+        <Border BorderThickness="1"
+                BorderBrush="{x:Static SystemColors.ControlDarkBrush}">
+            <skia:SKElement Name="Surface"
+                            PaintSurface="Canvas_OnPaintSurface" />
+        </Border>
+        <Canvas Name="TextBoxLayout">
+            <TextBox Name="TextBox"
+                     Visibility="Collapsed"
+                     KeyDown="TextBox_OnKeyDown"
+                     LostFocus="TextBox_OnLostFocus"
+                     TextBlock.LineStackingStrategy="BlockLineHeight"/>
+        </Canvas>
+    </Grid>
 </UserControl>

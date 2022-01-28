@@ -144,6 +144,7 @@
                                      ItemsSource="{Binding  Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
                                      SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                                      NodesChanged="Canvas_OnNodesChanged"
+                                     NodesEdited="DocumentTreeView_OnNodeEdited"
                                      SelectionChanged="Canvas_OnSelectionChanged" />
             <controls:DocumentTreeView Grid.Column="2"
                                        ItemsSource="{Binding Document.CurrentPage.Nodes[0].Children, FallbackValue={x:Null}}"

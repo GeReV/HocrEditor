@@ -29,4 +29,28 @@ public static class NodeHelpers
                 }
             );
     }
+
+    public static HocrNodeViewModel? FindParent<T>(this HocrNodeViewModel node) where T : IHocrNode
+    {
+        var parent = node.Parent;
+
+        while (parent != null && parent.HocrNode.GetType() != typeof(T))
+        {
+            parent = parent.Parent;
+        }
+
+        return parent;
+    }
+
+    public static HocrNodeViewModel? FindParent(this HocrNodeViewModel node, HocrNodeType nodeType)
+    {
+        var parent = node.Parent;
+
+        while (parent != null && parent.NodeType != nodeType)
+        {
+            parent = parent.Parent;
+        }
+
+        return parent;
+    }
 }

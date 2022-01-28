@@ -87,14 +87,14 @@ public partial class DocumentTreeView
 
     private void TreeViewItem_OnKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Return || SelectedItems is not { Count: > 0 } || !SelectedItems.Any(n => n.IsEditable))
+        if (e.Key != Key.Return)
         {
             return;
         }
 
-        var first = SelectedItems.First(n => n.IsEditable);
+        var first = SelectedItems?.FirstOrDefault(n => n.IsEditable);
 
-        if (first.IsEditing)
+        if (first == null || first.IsEditing)
         {
             return;
         }
@@ -119,6 +119,6 @@ public partial class DocumentTreeView
 
     private void OnNodeEdited(string value)
     {
-        RaiseEvent(new NodesEditedEventArgs(value));
+        RaiseEvent(new NodesEditedEventArgs(NodesEditedEvent, this, value));
     }
 }

@@ -6,7 +6,7 @@ public class NodesEditedEventArgs : RoutedEventArgs
 {
     public string Value { get; }
 
-    public NodesEditedEventArgs(string value)
+    public NodesEditedEventArgs(RoutedEvent routedEvent, object source, string value) : base(routedEvent, source)
     {
         Value = value;
     }
