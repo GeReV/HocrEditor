@@ -38,7 +38,7 @@ namespace HocrEditor.Controls;
         /// </summary>
         public static readonly DependencyProperty IsEditingProperty = DependencyProperty.Register(
             "IsEditing", typeof(bool), typeof(EditableTextBlock),
-            new UIPropertyMetadata(false, OnIsEditingChanged));
+            new PropertyMetadata(false, OnIsEditingChanged));
 
         /// <summary>
         /// Gets or sets the flag indicating if the control is in edit mode.

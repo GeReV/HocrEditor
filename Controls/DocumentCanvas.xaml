@@ -6,7 +6,8 @@
              d:DesignWidth="800"
              d:DesignHeight="450"
              xmlns:skia="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
-             x:Class="HocrEditor.Controls.DocumentCanvas">
+             x:Class="HocrEditor.Controls.DocumentCanvas"
+             Focusable="True">
     <Grid>
         <Border BorderThickness="1"
                 BorderBrush="{x:Static SystemColors.ControlDarkBrush}">

@@ -12,7 +12,8 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance viewModels:HocrPageViewModel}">
     <Grid>
-        <TreeView ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
+        <TreeView Name="TreeView"
+                  ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   dd:DragDrop.IsDragSource="True"
                   dd:DragDrop.IsDropTarget="True"
                   dd:DragDrop.DragHandler="{Binding DragHandler, RelativeSource={RelativeSource AncestorType=UserControl}}"
@@ -330,9 +331,10 @@
                                Opacity="0.5"
                                Visibility="{Binding IconPath, Converter={StaticResource NullableToVisibilityConverter}}"
                                Source="{Binding IconPath, Converter={StaticResource NullableBitmapSourceConverter}}" />
-                        <controls:EditableTextBlock IsEnabled="{Binding IsEditable}"
-                                                    IsEditing="{Binding IsEditing, Mode=TwoWay}"
+                        <controls:EditableTextBlock x:Name="EditableTextBlock"
+                                                    IsEnabled="{Binding IsEditable}"
                                                     Text="{Binding DisplayText, UpdateSourceTrigger=Explicit}"
+                                                    LostFocus="EditableTextBlock_OnLostFocus"
                                                     TextChanged="EditableTextBlock_OnTextChanged" />
                     </StackPanel>
                 </HierarchicalDataTemplate>

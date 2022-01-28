@@ -46,7 +46,7 @@ namespace HocrEditor.ViewModels
             CropCommand = new CropNodes(this);
             ConvertToImageCommand = new ConvertToImageCommand(this);
             MoveNodesCommand = new MoveNodesCommand(this);
-            EditNodesCommand = new RelayCommand<string>(EditNodes, CanEditNodes);
+            EditNodesCommand = new RelayCommand<NodesEditedEventArgs>(EditNodes, CanEditNodes);
 
             ExclusiveSelectNodesCommand = new ExclusiveSelectNodesCommand(this);
             AppendSelectNodesCommand = new AppendSelectNodesCommand(this);

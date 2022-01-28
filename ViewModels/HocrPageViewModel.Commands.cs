@@ -56,7 +56,7 @@ namespace HocrEditor.ViewModels
         public IRelayCommand<ICollection<HocrNodeViewModel>> MergeCommand { get; }
         public IRelayCommand<ICollection<HocrNodeViewModel>> CropCommand { get; }
         public ConvertToImageCommand ConvertToImageCommand { get; set; }
-        public IRelayCommand<string> EditNodesCommand { get; }
+        public IRelayCommand<NodesEditedEventArgs> EditNodesCommand { get; }
         public IRelayCommand<NodesMovedEventArgs> MoveNodesCommand { get; }
 
         public IRelayCommand<IList<HocrNodeViewModel>> ExclusiveSelectNodesCommand { get; }
@@ -106,18 +106,34 @@ namespace HocrEditor.ViewModels
             UndoRedoManager.ExecuteCommands(commands);
         }
 
-        private bool CanEditNodes(string? _) =>
-            SelectedNodes is { Count: > 0 } && SelectedNodes.Any(n => n.IsEditable);
-
-        private void EditNodes(string? value)
+        private static bool CanEditNodes(NodesEditedEventArgs? e)
         {
-            if (SelectedNodes is not { Count: > 0 } || !SelectedNodes.Any(n => n.IsEditable))
+            if (e == null)
+            {
+                return false;
+            }
+
+            var list = e.Nodes.ToList();
+
+            return list.Count > 0 && list.All(n => n.IsEditable);
+        }
+
+        private void EditNodes(NodesEditedEventArgs? e)
+        {
+            if (e == null)
             {
                 return;
             }
 
-            var commands = SelectedNodes.Where(node => node.IsEditable)
-                .Select(node => PropertyChangeCommand.FromProperty(node, n => n.InnerText, value));
+            var list = e.Nodes.ToList();
+
+            if (list.Count <= 0 || !list.All(n => n.IsEditable))
+            {
+                return;
+            }
+
+            var commands = list
+                .Select(node => PropertyChangeCommand.FromProperty(node, n => n.InnerText, e.Value));
 
             UndoRedoManager.ExecuteCommands(commands);
         }

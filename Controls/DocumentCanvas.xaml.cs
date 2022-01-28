@@ -132,6 +132,8 @@ public partial class DocumentCanvas
 
     private HocrNodeViewModel? editingNode;
 
+    private bool IsEditing => editingNode != null;
+
     private SKMatrix transformation = SKMatrix.Identity;
     private SKMatrix inverseTransformation = SKMatrix.Identity;
     private SKMatrix scaleTransformation = SKMatrix.Identity;
@@ -184,7 +186,7 @@ public partial class DocumentCanvas
 
     private void WindowOnKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Return)
+        if (e.Key != Key.Return || !IsFocused)
         {
             return;
         }
@@ -407,16 +409,30 @@ public partial class DocumentCanvas
                 throw new ArgumentOutOfRangeException();
         }
 
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
+        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
     }
 
     protected override Size MeasureOverride(Size availableSize) => availableSize;
+
+    protected override void OnLostFocus(RoutedEventArgs e)
+    {
+        base.OnLostFocus(e);
+
+        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
+    }
+
+    protected override void OnGotFocus(RoutedEventArgs e)
+    {
+        base.OnGotFocus(e);
+
+        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
+    }
 
     protected override void OnMouseDown(MouseButtonEventArgs e)
     {
         base.OnMouseDown(e);
 
-        if (ItemsSource == null)
+        if (ItemsSource is not { Count: > 0 })
         {
             return;
         }
@@ -437,6 +453,8 @@ public partial class DocumentCanvas
                 e.Handled = true;
 
                 dragStart = position;
+
+                Keyboard.Focus(this);
 
                 if (!canvasSelection.IsEmpty)
                 {
@@ -471,6 +489,8 @@ public partial class DocumentCanvas
                     break;
                 }
 
+                EndEditing();
+
                 SelectNode(normalizedPosition);
 
                 break;
@@ -495,7 +515,7 @@ public partial class DocumentCanvas
                 return;
         }
 
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
+        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
     }
 
     private void SelectNode(SKPoint normalizedPosition)
@@ -539,10 +559,12 @@ public partial class DocumentCanvas
             return;
         }
 
+
         // Page is unselectable.
         if (node.NodeType == HocrNodeType.Page)
         {
             ClearSelection();
+
             return;
         }
 
@@ -744,7 +766,7 @@ public partial class DocumentCanvas
 
         ReleaseMouseCapture();
 
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
+        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
     }
 
     protected override void OnMouseMove(MouseEventArgs e)
@@ -801,12 +823,13 @@ public partial class DocumentCanvas
 
                 UpdateTransformation(SKMatrix.CreateTranslation(newLocation.X, newLocation.Y));
 
-                Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
+                Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
 
                 if (editingNode != null)
                 {
                     Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
                 }
+
                 break;
             }
             case MouseState.Dragging:
@@ -842,7 +865,7 @@ public partial class DocumentCanvas
                     };
                 }
 
-                Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
+                Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
 
                 if (editingNode != null)
                 {
@@ -855,7 +878,7 @@ public partial class DocumentCanvas
             {
                 PerformResize(delta);
 
-                Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
+                Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
 
                 if (editingNode != null)
                 {
@@ -1062,7 +1085,7 @@ public partial class DocumentCanvas
             new SKPaint
             {
                 IsStroke = true,
-                Color = SKColors.Gray,
+                Color = IsFocused ? SKColors.Gray : SKColors.DarkGray,
                 StrokeWidth = 1
             }
         );
@@ -1246,7 +1269,7 @@ public partial class DocumentCanvas
 
         PerformResize(delta);
 
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Send);
+        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
     }
 
     protected virtual void OnNodesChanged(NodesChangedEventArgs e)
@@ -1256,7 +1279,14 @@ public partial class DocumentCanvas
 
     private void OnNodeEdited(string value)
     {
-        RaiseEvent(new NodesEditedEventArgs(NodesEditedEvent, this, value));
+        RaiseEvent(
+            new NodesEditedEventArgs(
+                NodesEditedEvent,
+                this,
+                SelectedItems?.Where(n => n.IsEditable) ?? Enumerable.Empty<HocrNodeViewModel>(),
+                value
+            )
+        );
     }
 
     protected virtual void OnSelectionChanged(SelectionChangedEventArgs e)
@@ -1266,9 +1296,12 @@ public partial class DocumentCanvas
 
     private void TextBox_OnLostFocus(object sender, RoutedEventArgs e)
     {
-        EndEditing();
+        if (IsEditing)
+        {
+            OnNodeEdited(TextBox.Text);
+        }
 
-        OnNodeEdited(TextBox.Text);
+        EndEditing();
     }
 
     private void TextBox_OnKeyDown(object sender, KeyEventArgs e)
@@ -1335,6 +1368,9 @@ public partial class DocumentCanvas
 
         TextBox.FontSize = fontSize;
         TextBlock.SetLineHeight(TextBox, fontSize);
+
+        TextBox.Focus();
+        TextBox.SelectAll();
     }
 
     private void EndEditing()

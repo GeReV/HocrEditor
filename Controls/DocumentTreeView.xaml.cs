@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using GongSolutions.Wpf.DragDrop;
+using HocrEditor.Helpers;
 using HocrEditor.ViewModels;
 
 namespace HocrEditor.Controls;
@@ -85,21 +87,30 @@ public partial class DocumentTreeView
     public IDragSource DragHandler { get; }
     public IDropTarget DropHandler { get; }
 
+    private HocrNodeViewModel? editingNode;
+
     private void TreeViewItem_OnKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Return)
+        if (e.Key != Key.Return || editingNode != null)
         {
             return;
         }
 
-        var first = SelectedItems?.FirstOrDefault(n => n.IsEditable);
+        editingNode = SelectedItems?.FirstOrDefault(n => n.IsEditable);
 
-        if (first == null || first.IsEditing)
+        if (editingNode is not { IsEditing: false })
         {
             return;
         }
 
-        first.IsEditing = true;
+        editingNode.IsEditing = true;
+
+        var source = (DependencyObject)e.OriginalSource;
+
+        if (source.FindVisualChild<EditableTextBlock>() is { } editableTextBlock)
+        {
+            editableTextBlock.IsEditing = true;
+        }
 
         e.Handled = true;
     }
@@ -113,12 +124,43 @@ public partial class DocumentTreeView
 
         OnNodeEdited(editableTextBlock.Text);
 
+        if (editingNode != null)
+        {
+            editingNode.IsEditing = false;
+            editingNode = null;
+
+            editableTextBlock.IsEditing = false;
+        }
+
         // TODO: Is it possible to avoid this call?
         editableTextBlock.GetBindingExpression(EditableTextBlock.TextProperty)?.UpdateSource();
     }
 
+    private void EditableTextBlock_OnLostFocus(object sender, RoutedEventArgs e)
+    {
+        if (editingNode == null)
+        {
+            return;
+        }
+
+        editingNode.IsEditing = false;
+        editingNode = null;
+
+        if (this.FindVisualChild<EditableTextBlock>() is { } editableTextBlock)
+        {
+            editableTextBlock.IsEditing = false;
+        }
+    }
+
     private void OnNodeEdited(string value)
     {
-        RaiseEvent(new NodesEditedEventArgs(NodesEditedEvent, this, value));
+        RaiseEvent(
+            new NodesEditedEventArgs(
+                NodesEditedEvent,
+                this,
+                SelectedItems?.Where(n => n.IsEditable) ?? Enumerable.Empty<HocrNodeViewModel>(),
+                value
+            )
+        );
     }
 }
