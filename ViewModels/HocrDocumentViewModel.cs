@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Data;
-using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
@@ -28,6 +27,22 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
 
     public bool ShowText { get; set; }
 
+    public ReadOnlyObservableCollection<NodeVisibility> NodeVisibility { get; } = new(
+        new ObservableCollection<NodeVisibility>(
+            new[]
+                {
+                    HocrNodeType.ContentArea,
+                    HocrNodeType.Paragraph,
+                    HocrNodeType.Line,
+                    HocrNodeType.Caption,
+                    HocrNodeType.TextFloat,
+                    HocrNodeType.Word,
+                    HocrNodeType.Image
+                }
+                .Select(k => new NodeVisibility(k))
+        )
+    );
+
     public IRelayCommand<HocrPageViewModel> DeletePageCommand { get; }
 
     public IRelayCommand NextPageCommand { get; }
@@ -42,8 +57,14 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
 
         DeletePageCommand = new RelayCommand<HocrPageViewModel>(DeletePage, CanDeletePage);
 
-        NextPageCommand = new RelayCommand(() => PagesCollectionView.MoveCurrentToNext(), () => !PagesCollectionView.IsCurrentLast());
-        PreviousPageCommand = new RelayCommand(() => PagesCollectionView.MoveCurrentToPrevious(), () => !PagesCollectionView.IsCurrentFirst());
+        NextPageCommand = new RelayCommand(
+            () => PagesCollectionView.MoveCurrentToNext(),
+            () => !PagesCollectionView.IsCurrentLast()
+        );
+        PreviousPageCommand = new RelayCommand(
+            () => PagesCollectionView.MoveCurrentToPrevious(),
+            () => !PagesCollectionView.IsCurrentFirst()
+        );
     }
 
     public bool CanDeletePage(HocrPageViewModel? page) => page != null && Pages.Contains(page);

@@ -62,4 +62,29 @@ public static class BindingHelpers
             item.PropertyChanged -= handler;
         }
     }
+
+
+    public static void SubscribeItemPropertyChanged<T>(
+        this ReadOnlyObservableCollection<T> collection,
+        PropertyChangedEventHandler handler
+    )
+        where T : INotifyPropertyChanged
+    {
+        foreach (var item in collection)
+        {
+            item.PropertyChanged += handler;
+        }
+    }
+
+    public static void UnsubscribeItemPropertyChanged<T>(
+        this ReadOnlyObservableCollection<T> collection,
+        PropertyChangedEventHandler handler
+    )
+        where T : INotifyPropertyChanged
+    {
+        foreach (var item in collection)
+        {
+            item.PropertyChanged -= handler;
+        }
+    }
 }

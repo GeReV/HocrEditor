@@ -31,6 +31,10 @@
       <Resource Include="Icons\object-group.png" />
       <None Remove="Icons\file-lines.png" />
       <Resource Include="Icons\file-lines.png" />
+      <None Remove="Icons\font.png" />
+      <Resource Include="Icons\font.png" />
+      <None Remove="Icons\code.png" />
+      <Resource Include="Icons\code.png" />
     </ItemGroup>
 
 </Project>

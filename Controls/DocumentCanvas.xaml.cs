@@ -58,12 +58,14 @@ public partial class DocumentCanvas
 
     private static SKColor GetNodeColor(HocrNodeViewModel node) => node.NodeType switch
     {
+        // Node colors based on the D3 color category "Paired": https://observablehq.com/@d3/color-schemes
+        // ["#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#cab2d6","#6a3d9a","#ffff99","#b15928"]
         HocrNodeType.Page => SKColor.Empty,
-        HocrNodeType.ContentArea => SKColors.Aqua,
-        HocrNodeType.Paragraph => SKColors.LightGreen,
-        HocrNodeType.Line or HocrNodeType.TextFloat or HocrNodeType.Caption => SKColors.Yellow,
-        HocrNodeType.Word => SKColors.MistyRose,
-        HocrNodeType.Image => SKColors.MediumPurple,
+        HocrNodeType.ContentArea => new SKColor(0xffa6cee3),
+        HocrNodeType.Paragraph => new SKColor(0xffb2df8a),
+        HocrNodeType.Line or HocrNodeType.TextFloat or HocrNodeType.Caption => new SKColor(0xfffdbf6f),
+        HocrNodeType.Word => new SKColor(0xfffb9a99),
+        HocrNodeType.Image => new SKColor(0xffcab2d6),
         _ => throw new ArgumentOutOfRangeException()
     };
 
@@ -88,6 +90,17 @@ public partial class DocumentCanvas
             new PropertyMetadata(
                 null,
                 ItemsSourceChangedCallback
+            )
+        );
+
+    public static readonly DependencyProperty NodeVisibilityProperty
+        = DependencyProperty.Register(
+            nameof(NodeVisibility),
+            typeof(ReadOnlyObservableCollection<NodeVisibility>),
+            typeof(DocumentCanvas),
+            new PropertyMetadata(
+                null,
+                NodeVisibilityChanged
             )
         );
 
@@ -130,6 +143,12 @@ public partial class DocumentCanvas
         }
     }
 
+    public ReadOnlyObservableCollection<NodeVisibility> NodeVisibility
+    {
+        get => (ReadOnlyObservableCollection<NodeVisibility>)GetValue(NodeVisibilityProperty);
+        set => SetValue(NodeVisibilityProperty, value);
+    }
+
     public bool IsShowText
     {
         get => (bool)GetValue(IsShowTextProperty);
@@ -138,6 +157,8 @@ public partial class DocumentCanvas
 
     private string? rootId;
     private readonly Dictionary<string, (HocrNodeViewModel, Element)> elements = new();
+
+    private Dictionary<HocrNodeType, bool> nodeVisibilityDictionary = new();
 
     private readonly HashSet<string> selectedElements = new();
 
@@ -283,6 +304,42 @@ public partial class DocumentCanvas
         documentCanvas.SelectedItems.CollectionChanged += documentCanvas.SelectedNodesOnCollectionChanged;
 
         documentCanvas.Dispatcher.InvokeAsync(documentCanvas.Refresh, DispatcherPriority.Render);
+    }
+
+    private static void NodeVisibilityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not DocumentCanvas documentCanvas)
+        {
+            return;
+        }
+
+        if (e.OldValue is ReadOnlyObservableCollection<NodeVisibility> oldNodes && oldNodes.Any())
+        {
+            oldNodes.UnsubscribeItemPropertyChanged(documentCanvas.UpdateNodeVisibility);
+        }
+
+        if (e.NewValue is ReadOnlyObservableCollection<NodeVisibility> newNodes && newNodes.Any())
+        {
+            documentCanvas.nodeVisibilityDictionary = new Dictionary<HocrNodeType, bool>(
+                newNodes.Select(nv => new KeyValuePair<HocrNodeType, bool>(nv.NodeType, nv.Visible))
+            );
+
+            newNodes.SubscribeItemPropertyChanged(documentCanvas.UpdateNodeVisibility);
+
+            documentCanvas.Dispatcher.InvokeAsync(documentCanvas.Refresh, DispatcherPriority.Render);
+        }
+    }
+
+    private void UpdateNodeVisibility(object? sender, PropertyChangedEventArgs propertyChangedEventArgs)
+    {
+        if (sender is not NodeVisibility nodeVisibility)
+        {
+            throw new ArgumentException($"Expected {nameof(sender)} to be of type {nameof(NodeVisibility)}.");
+        }
+
+        nodeVisibilityDictionary[nodeVisibility.NodeType] = nodeVisibility.Visible;
+
+        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
     }
 
     private static void IsShowTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -1055,6 +1112,7 @@ public partial class DocumentCanvas
 
             var bounds = transformation.MapRect(element.Bounds);
 
+
             if (element.Background != null)
             {
                 canvas.DrawBitmap(element.Background, bounds);
@@ -1067,43 +1125,48 @@ public partial class DocumentCanvas
             }
             else
             {
-                var color = GetNodeColor(node);
+                var shouldRenderNode = nodeVisibilityDictionary[node.NodeType];
 
-                if (node.NodeType == HocrNodeType.Word && IsShowText)
+                if (shouldRenderNode)
                 {
-                    paint.IsStroke = false;
-                    paint.Color = SKColors.White.WithAlpha(128);
+                    var color = GetNodeColor(node);
+
+                    if (node.NodeType == HocrNodeType.Word && IsShowText)
+                    {
+                        paint.IsStroke = false;
+                        paint.Color = SKColors.White.WithAlpha(128);
+
+                        canvas.DrawRect(bounds, paint);
+
+                        var fontSize = ((HocrWord)node.HocrNode).FontSize;
+
+                        paint.TextSize = fontSize * fontInchRatio * page.Dpi.Item2 * transformation.ScaleY * 0.75f;
+
+                        paint.Color = SKColors.Black;
+                        paint.IsStroke = false;
+
+                        var text = ShouldReverse(node) ? node.InnerText.Reverse() : node.InnerText;
+
+                        var textBounds = SKRect.Empty;
+
+                        paint.MeasureText(text, ref textBounds);
+
+                        canvas.DrawText(text, bounds.MidX - textBounds.MidX, bounds.MidY - textBounds.MidY, paint);
+                    }
+                    else
+                    {
+                        paint.IsStroke = false;
+                        paint.Color = node.IsSelected ? SKColors.Red.WithAlpha(16) : color.WithAlpha(16);
+
+                        canvas.DrawRect(bounds, paint);
+                    }
+
+                    paint.Color = node.IsSelected ? SKColors.Red : color;
+                    paint.IsStroke = true;
+                    paint.StrokeWidth = 1;
 
                     canvas.DrawRect(bounds, paint);
-
-                    var fontSize = ((HocrWord)node.HocrNode).FontSize;
-
-                    paint.TextSize = fontSize * fontInchRatio * page.Dpi.Item2 * transformation.ScaleY * 0.75f;
-
-                    paint.Color = SKColors.Black;
-                    paint.IsStroke = false;
-
-                    var text = ShouldReverse(node) ? node.InnerText.Reverse() : node.InnerText;
-
-                    var textBounds = SKRect.Empty;
-
-                    paint.MeasureText(text, ref textBounds);
-
-                    canvas.DrawText(text, bounds.MidX - textBounds.MidX, bounds.MidY - textBounds.MidY, paint);
                 }
-                else
-                {
-                    paint.IsStroke = false;
-                    paint.Color = node.IsSelected ? SKColors.Red.WithAlpha(16) : color.WithAlpha(16);
-
-                    canvas.DrawRect(bounds, paint);
-                }
-
-                paint.Color = node.IsSelected ? SKColors.Red : color;
-                paint.IsStroke = true;
-                paint.StrokeWidth = 1;
-
-                canvas.DrawRect(bounds, paint);
             }
 
             foreach (var childKey in node.Children.Select(c => c.Id))

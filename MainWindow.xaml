@@ -66,14 +66,18 @@
             </MenuItem>
             <MenuItem Header="_Edit">
                 <MenuItem Header="_Undo"
+                          InputGestureText="Ctrl+Z"
                           Command="{Binding Document.CurrentPage.UndoCommand}" />
                 <MenuItem Header="_Redo"
+                          InputGestureText="Ctrl+Y, Ctrl+Shift+Z"
                           Command="{Binding Document.CurrentPage.RedoCommand}" />
                 <Separator />
                 <MenuItem Header="_Delete"
+                          InputGestureText="Del"
                           Command="{Binding Document.CurrentPage.DeleteCommand}"
                           CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
                 <MenuItem Header="_Merge"
+                          InputGestureText="Ctrl+M"
                           Command="{Binding Document.CurrentPage.MergeCommand}"
                           CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
                 <MenuItem Header="_Crop"
@@ -87,13 +91,17 @@
             </MenuItem>
             <MenuItem Header="_Select">
                 <MenuItem Header="_All"
+                          InputGestureText="Ctrl+A"
                           Command="{Binding Document.CurrentPage.ExclusiveSelectNodesCommand}"
                           CommandParameter="{Binding Document.CurrentPage.Nodes, FallbackValue={x:Null}}" />
                 <MenuItem Header="Deselect A_ll"
+                          InputGestureText="Ctrl+D"
                           Command="{Binding Document.CurrentPage.DeselectNodesCommand}"
                           CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
-                <MenuItem Header="Inve_rse" />
+                <MenuItem Header="Inve_rse"
+                          InputGestureText="Ctrl+I" />
                 <MenuItem Header="_Identical Nodes"
+                          InputGestureText="Ctrl+Shift+A"
                           Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand}"
                           CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
             </MenuItem>
@@ -128,10 +136,31 @@
                 <Button Content="Convert Nodes to Image"
                         Command="{Binding Document.CurrentPage.ConvertToImageCommand}"
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
+                <Separator />
+                <ToggleButton ToolTip="Show Text"
+                              IsChecked="{Binding Document.ShowText}">
+                    <Image Source="/Icons/code.png"
+                           RenderOptions.BitmapScalingMode="HighQuality"
+                           Width="16"
+                           Height="16" />
+                </ToggleButton>
             </ToolBar>
-            <ToolBar>
-                <ToggleButton Content="Show Text"
-                              IsChecked="{Binding Document.ShowText}" />
+            <ToolBar ItemsSource="{Binding Document.NodeVisibility}">
+                <ToolBar.Resources>
+                    <Style TargetType="ToggleButton"
+                           BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}" />
+                </ToolBar.Resources>
+                <ToolBar.ItemTemplate>
+                    <DataTemplate>
+                        <ToggleButton ToolTip="{Binding ToolTip}"
+                                      IsChecked="{Binding Visible}">
+                            <Image Source="{Binding IconPath}"
+                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                   Width="16"
+                                   Height="16" />
+                        </ToggleButton>
+                    </DataTemplate>
+                </ToolBar.ItemTemplate>
             </ToolBar>
         </ToolBarTray>
         <Grid>
@@ -148,6 +177,7 @@
                                      ItemsSource="{Binding  Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
                                      SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                                      IsShowText="{Binding Document.ShowText}"
+                                     NodeVisibility="{Binding Document.NodeVisibility}"
                                      NodesChanged="Canvas_OnNodesChanged"
                                      NodesEdited="DocumentTreeView_OnNodeEdited"
                                      SelectionChanged="Canvas_OnSelectionChanged" />

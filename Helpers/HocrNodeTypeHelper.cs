@@ -17,4 +17,15 @@ public static class HocrNodeTypeHelper
         HocrNodeType.Image => HocrNodeType.Page,
         _ => throw new ArgumentOutOfRangeException(nameof(nodeType), nodeType, null)
     };
+
+    public static string? GetIcon(HocrNodeType nodeType) => nodeType switch
+    {
+        HocrNodeType.Page => "/Icons/file-lines.png",
+        HocrNodeType.ContentArea => "/Icons/object-group.png",
+        HocrNodeType.Paragraph => "/Icons/paragraph.png",
+        HocrNodeType.Line or HocrNodeType.TextFloat or HocrNodeType.Caption => "/Icons/i-cursor.png",
+        HocrNodeType.Image => "/Icons/image.png",
+        HocrNodeType.Word => "/Icons/font.png",
+        _ => throw new ArgumentOutOfRangeException()
+    };
 }
