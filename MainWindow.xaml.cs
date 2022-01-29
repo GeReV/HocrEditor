@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using HocrEditor.Controls;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
@@ -177,6 +178,11 @@ namespace HocrEditor
         private void DocumentTreeView_OnNodesMoved(object? sender, NodesMovedEventArgs e)
         {
             ViewModel.Document.CurrentPage?.MoveNodesCommand.Execute(e);
+        }
+
+        private void CloseCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            Close();
         }
     }
 }

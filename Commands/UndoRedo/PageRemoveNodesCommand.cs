@@ -44,11 +44,6 @@ public class PageRemoveNodesCommand : UndoRedoCommand
             // node.Parent = node.ParentId == null ? null : document.NodeCache[node.ParentId];
             node.Parent?.Children.Insert(insertAt, node);
         }
-
-        // foreach (var node in nodes)
-        // {
-        //     document.SelectedNodes.Add(node);
-        // }
     }
 
     public override void Redo()
