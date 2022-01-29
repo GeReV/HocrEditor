@@ -26,6 +26,8 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
         set => PagesCollectionView.MoveCurrentTo(value);
     }
 
+    public bool ShowText { get; set; }
+
     public IRelayCommand<HocrPageViewModel> DeletePageCommand { get; }
 
     public IRelayCommand NextPageCommand { get; }

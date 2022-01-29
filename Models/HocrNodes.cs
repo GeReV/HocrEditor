@@ -14,11 +14,19 @@ namespace HocrEditor.Models
 
     public record HocrPage : HocrNode
     {
-        public HocrPage(string id, string title, IEnumerable<IHocrNode> children) : base(
+        public HocrPage(
+            string id,
+            string title,
+            string language,
+            Direction direction,
+            IEnumerable<IHocrNode> children
+        ) : base(
             HocrNodeType.Page,
             id,
             string.Empty,
             title,
+            language,
+            direction,
             children
         )
         {
@@ -44,11 +52,20 @@ namespace HocrEditor.Models
 
     public record HocrContentArea : HocrNode
     {
-        public HocrContentArea(string id, string? parentId, string title, IEnumerable<IHocrNode> children) : base(
+        public HocrContentArea(
+            string id,
+            string? parentId,
+            string title,
+            string language,
+            Direction direction,
+            IEnumerable<IHocrNode> children
+        ) : base(
             HocrNodeType.ContentArea,
             id,
             parentId,
             title,
+            language,
+            direction,
             children
         )
         {
@@ -57,29 +74,42 @@ namespace HocrEditor.Models
 
     public record HocrParagraph : HocrNode
     {
-
-        public HocrParagraph(string id, string? parentId, string title, IEnumerable<IHocrNode> children) : base(
+        public HocrParagraph(
+            string id,
+            string? parentId,
+            string title,
+            string language,
+            Direction direction,
+            IEnumerable<IHocrNode> children
+        ) : base(
             HocrNodeType.Paragraph,
             id,
             parentId,
             title,
+            language,
+            direction,
             children
         )
         {
         }
-
-        public string? Language { get; init; }
-
-        public Direction? Direction { get; init; }
     }
 
     public record HocrLine : HocrNode
     {
-        public HocrLine(string id, string? parentId, string title, IEnumerable<IHocrNode> children) : base(
+        public HocrLine(
+            string id,
+            string? parentId,
+            string title,
+            string language,
+            Direction direction,
+            IEnumerable<IHocrNode> children
+        ) : base(
             HocrNodeType.Line,
             id,
             parentId,
             title,
+            language,
+            direction,
             children
         )
         {
@@ -113,10 +143,19 @@ namespace HocrEditor.Models
 
     public record HocrTextFloat : HocrLine
     {
-        public HocrTextFloat(string id, string? parentId, string title, IEnumerable<IHocrNode> children) : base(
+        public HocrTextFloat(
+            string id,
+            string parentId,
+            string title,
+            string language,
+            Direction direction,
+            IEnumerable<IHocrNode> children
+        ) : base(
             id,
             parentId,
             title,
+            language,
+            direction,
             children
         )
         {
@@ -126,10 +165,19 @@ namespace HocrEditor.Models
 
     public record HocrCaption : HocrLine
     {
-        public HocrCaption(string id, string? parentId, string title, IEnumerable<IHocrNode> children) : base(
+        public HocrCaption(
+            string id,
+            string parentId,
+            string title,
+            string language,
+            Direction direction,
+            IEnumerable<IHocrNode> children
+        ) : base(
             id,
             parentId,
             title,
+            language,
+            direction,
             children
         )
         {
@@ -139,16 +187,27 @@ namespace HocrEditor.Models
 
     public sealed record HocrWord : HocrNode
     {
-        public HocrWord(string id, string? parentId, string title, string innerText) : base(
+        public HocrWord(
+            string id,
+            string? parentId,
+            string title,
+            string language,
+            Direction direction,
+            string innerText
+        ) : base(
             HocrNodeType.Word,
             id,
             parentId,
             title,
+            language,
+            direction,
             Enumerable.Empty<IHocrNode>()
         )
         {
             InnerText = HtmlEntity.DeEntitize(innerText.Trim());
             Confidence = int.Parse(GetAttributeFromTitle("x_wconf"));
+
+            Language = language;
 
             var fsize = GetAttributeFromTitle("x_fsize");
             if (!string.IsNullOrEmpty(fsize))
@@ -158,23 +217,19 @@ namespace HocrEditor.Models
         }
 
         public string InnerText { get; set; }
-
-        public string? Language { get; init; }
-
-        public Direction? Direction { get; init; }
-
         public float Confidence { get; }
-
         public int FontSize { get; }
     }
 
     public record HocrImage : HocrNode
     {
-        public HocrImage(string id, string? parentId, string title) : base(
+        public HocrImage(string id, string parentId, string title, string language, Direction direction) : base(
             HocrNodeType.Image,
             id,
             parentId,
             title,
+            language,
+            direction,
             Enumerable.Empty<IHocrNode>()
         )
         {

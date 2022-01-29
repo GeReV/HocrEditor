@@ -129,6 +129,10 @@
                         Command="{Binding Document.CurrentPage.ConvertToImageCommand}"
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
             </ToolBar>
+            <ToolBar>
+                <ToggleButton Content="Show Text"
+                              IsChecked="{Binding Document.ShowText}" />
+            </ToolBar>
         </ToolBarTray>
         <Grid>
             <Grid.ColumnDefinitions>
@@ -143,6 +147,7 @@
                                      Margin="-1, 0"
                                      ItemsSource="{Binding  Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
                                      SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                                     IsShowText="{Binding Document.ShowText}"
                                      NodesChanged="Canvas_OnNodesChanged"
                                      NodesEdited="DocumentTreeView_OnNodeEdited"
                                      SelectionChanged="Canvas_OnSelectionChanged" />

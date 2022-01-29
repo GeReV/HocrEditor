@@ -7,44 +7,49 @@ namespace HocrEditor.Models
 {
     public abstract record HocrNode : IHocrNode
     {
-
-        public static HocrNode FromHtmlNode(HtmlNode htmlNode, string? parentId, IEnumerable<IHocrNode> children)
+        public static HocrNode FromHtmlNode(
+            HtmlNode htmlNode,
+            string? parentId,
+            string language,
+            Direction direction,
+            IEnumerable<IHocrNode> children
+        )
         {
             var className = htmlNode.GetClasses().First();
-
-            var language = htmlNode.GetAttributeValue("lang", string.Empty);
-            Direction? direction = htmlNode.GetAttributeValue("dir", string.Empty) switch
-            {
-                "ltr" => Direction.Ltr,
-                "rtl" => Direction.Rtl,
-                _ => null
-            };
 
             var id = htmlNode.GetAttributeValue("id", string.Empty);
             var title = htmlNode.GetAttributeValue("title", string.Empty);
 
-            HocrNode node = className switch
+            if (parentId == null)
             {
-                "ocr_page" => new HocrPage(id, title, children),
-                "ocr_image" or "ocr_photo" or "ocr_graphic" => new HocrImage(id, parentId, title),
-                "ocr_carea" => new HocrContentArea(id, parentId, title, children),
-                "ocr_par" => new HocrParagraph(id, parentId, title, children)
+                return new HocrPage(id, title, language, direction, children);
+            }
+
+            return className switch
+            {
+                "ocr_image" or "ocr_photo" or "ocr_graphic" => new HocrImage(id, parentId, title, language, direction),
+                "ocr_carea" => new HocrContentArea(id, parentId, title, language, direction, children),
+                "ocr_par" => new HocrParagraph(
+                    id,
+                    parentId,
+                    title,
+                    language,
+                    direction,
+                    children
+                )
                 {
-                    Language = language,
-                    Direction = direction
+                    Direction = htmlNode.GetAttributeValue("dir", string.Empty) switch
+                    {
+                        "rtl" => Direction.Rtl,
+                        _ => Direction.Ltr,
+                    }
                 },
-                "ocr_line" => new HocrLine(id, parentId, title, children),
-                "ocrx_word" => new HocrWord(id, parentId, title, htmlNode.InnerText)
-                {
-                    Language = language,
-                    Direction = direction
-                },
-                "ocr_textfloat" => new HocrTextFloat(id, parentId, title, children),
-                "ocr_caption" => new HocrCaption(id, parentId, title, children),
+                "ocr_line" => new HocrLine(id, parentId, title, language, direction, children),
+                "ocrx_word" => new HocrWord(id, parentId, title, language, direction, htmlNode.InnerText),
+                "ocr_textfloat" => new HocrTextFloat(id, parentId, title, language, direction, children),
+                "ocr_caption" => new HocrCaption(id, parentId, title, language, direction, children),
                 _ => throw new ArgumentOutOfRangeException($"Unknown class name {className}")
             };
-
-            return node;
         }
 
         protected HocrNode(
@@ -52,6 +57,8 @@ namespace HocrEditor.Models
             string id,
             string? parentId,
             string title,
+            string language,
+            Direction direction,
             IEnumerable<IHocrNode> children
         )
         {
@@ -59,6 +66,8 @@ namespace HocrEditor.Models
             Id = id;
             ParentId = parentId;
             Title = title;
+            Language = language;
+            Direction = direction;
             ChildNodes = children.ToList();
             BBox = Rect.FromBboxAttribute(GetAttributeFromTitle("bbox"));
         }
@@ -68,6 +77,10 @@ namespace HocrEditor.Models
         public string Title { get; set; } = string.Empty;
         public string Id { get; set; } = string.Empty;
         public string? ParentId { get; set; }
+
+        public Direction Direction { get; init; }
+
+        public string Language { get; init; }
 
         public Rect BBox { get; set; }
         public List<IHocrNode> ChildNodes { get; }
