@@ -64,7 +64,11 @@
                 <MenuItem Header="_Open..." />
                 <MenuItem Header="_Save..." />
                 <Separator />
-                <MenuItem Header="E_xit" Command="Close" />
+                <MenuItem Header="_Import..."
+                          Command="{Binding ImportCommand}" />
+                <Separator />
+                <MenuItem Header="E_xit"
+                          Command="Close" />
             </MenuItem>
             <MenuItem Header="_Edit">
                 <MenuItem Header="_Undo"
@@ -111,7 +115,7 @@
         <ToolBarTray DockPanel.Dock="Top">
             <ToolBar>
                 <Button Content="Import"
-                        Click="Button_OnClick" />
+                        Command="{Binding ImportCommand}" />
                 <Button Content="Open" />
             </ToolBar>
             <ToolBar>
