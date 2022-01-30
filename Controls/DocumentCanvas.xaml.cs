@@ -5,7 +5,6 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -1154,7 +1153,13 @@ public partial class DocumentCanvas
 
                         paint.MeasureText(node.InnerText, ref textBounds);
 
-                        canvas.DrawShapedText(shaper, node.InnerText, bounds.MidX - textBounds.MidX, bounds.MidY - textBounds.MidY, paint);
+                        canvas.DrawShapedText(
+                            shaper,
+                            node.InnerText,
+                            bounds.MidX - textBounds.MidX,
+                            bounds.MidY - textBounds.MidY,
+                            paint
+                        );
                     }
                     else
                     {
@@ -1395,7 +1400,7 @@ public partial class DocumentCanvas
             new NodesEditedEventArgs(
                 NodesEditedEvent,
                 this,
-                SelectedItems?.Where(n => n.IsEditable) ?? Enumerable.Empty<HocrNodeViewModel>(),
+                SelectionHelper.SelectAllEditable(SelectedItems ?? Enumerable.Empty<HocrNodeViewModel>()),
                 value
             )
         );
@@ -1435,7 +1440,7 @@ public partial class DocumentCanvas
 
     private void BeginEditing()
     {
-        var selectedItem = SelectedItems?.FirstOrDefault(n => n.IsEditable);
+        var selectedItem = SelectionHelper.SelectEditable(SelectedItems ?? Enumerable.Empty<HocrNodeViewModel>());
 
         if (selectedItem == null)
         {
@@ -1459,12 +1464,9 @@ public partial class DocumentCanvas
 
     private void UpdateTextBox()
     {
-        if (editingNode == null)
-        {
-            throw new InvalidOperationException($"Cannot perform operation when {nameof(editingNode)} is null.");
-        }
+        Ensure.IsNotNull(nameof(editingNode), editingNode);
 
-        var element = elements[editingNode.Id].Item2;
+        var element = elements[editingNode!.Id].Item2;
         var rect = transformation.MapRect(element.Bounds);
 
         var word = (HocrWord)editingNode.HocrNode;
@@ -1489,13 +1491,10 @@ public partial class DocumentCanvas
     {
         TextBox.Visibility = Visibility.Collapsed;
 
-        var first = SelectedItems?.FirstOrDefault(n => n.IsEditable);
-
-        if (first != null)
+        if (editingNode != null)
         {
-            first.IsEditing = false;
+            editingNode.IsEditing = false;
+            editingNode = null;
         }
-
-        editingNode = null;
     }
 }

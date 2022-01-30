@@ -170,7 +170,7 @@ namespace HocrEditor
             }
         }
 
-        private void DocumentTreeView_OnNodeEdited(object? sender, NodesEditedEventArgs e)
+        private void OnNodeEdited(object? sender, NodesEditedEventArgs e)
         {
             ViewModel.Document.CurrentPage?.EditNodesCommand.Execute(e);
         }

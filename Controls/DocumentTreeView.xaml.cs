@@ -5,7 +5,9 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using GongSolutions.Wpf.DragDrop;
+using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.ViewModels;
 
@@ -91,26 +93,56 @@ public partial class DocumentTreeView
 
     private void TreeViewItem_OnKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Return || editingNode != null)
+        if (e.Key != Key.Return || editingNode != null || SelectedItems == null)
         {
             return;
         }
 
-        editingNode = SelectedItems?.FirstOrDefault(n => n.IsEditable);
+        editingNode = SelectionHelper.SelectEditable(SelectedItems);
 
         if (editingNode is not { IsEditing: false })
         {
             return;
         }
 
-        editingNode.IsEditing = true;
+        var stack = new Stack<HocrNodeViewModel>();
 
-        var source = (DependencyObject)e.OriginalSource;
+        var parent = editingNode;
 
-        if (source.FindVisualChild<EditableTextBlock>() is { } editableTextBlock)
+        while (parent != null && !SelectedItems.Contains(parent))
         {
-            editableTextBlock.IsEditing = true;
+            stack.Push(parent);
+
+            parent = parent.Parent;
         }
+
+        if (parent == null)
+        {
+            return;
+        }
+
+        var treeViewItem = TreeView.FindChildFromItem(parent);
+
+        while (treeViewItem != null && stack.TryPop(out var item))
+        {
+            treeViewItem.ExpandSubtree();
+            treeViewItem = (TreeViewItem)treeViewItem.ItemContainerGenerator.ContainerFromItem(item);
+        }
+
+
+        Dispatcher.InvokeAsync(
+            () =>
+            {
+                if (treeViewItem?.FindVisualChild<EditableTextBlock>() is not { } editableTextBlock)
+                {
+                    return;
+                }
+
+                editingNode.IsEditing = true;
+                editableTextBlock.IsEditing = true;
+            },
+            DispatcherPriority.Input
+        );
 
         e.Handled = true;
     }
@@ -122,15 +154,14 @@ public partial class DocumentTreeView
             return;
         }
 
+        Ensure.IsNotNull(nameof(editingNode), editingNode);
+
         OnNodeEdited(editableTextBlock.Text);
 
-        if (editingNode != null)
-        {
-            editingNode.IsEditing = false;
-            editingNode = null;
+        editingNode!.IsEditing = false;
+        editingNode = null;
 
-            editableTextBlock.IsEditing = false;
-        }
+        editableTextBlock.IsEditing = false;
 
         // TODO: Is it possible to avoid this call?
         editableTextBlock.GetBindingExpression(EditableTextBlock.TextProperty)?.UpdateSource();
@@ -158,7 +189,7 @@ public partial class DocumentTreeView
             new NodesEditedEventArgs(
                 NodesEditedEvent,
                 this,
-                SelectedItems?.Where(n => n.IsEditable) ?? Enumerable.Empty<HocrNodeViewModel>(),
+                SelectionHelper.SelectAllEditable(SelectedItems ?? Enumerable.Empty<HocrNodeViewModel>()),
                 value
             )
         );

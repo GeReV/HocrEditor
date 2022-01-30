@@ -181,12 +181,12 @@
                                      IsShowText="{Binding Document.ShowText}"
                                      NodeVisibility="{Binding Document.NodeVisibility}"
                                      NodesChanged="Canvas_OnNodesChanged"
-                                     NodesEdited="DocumentTreeView_OnNodeEdited"
+                                     NodesEdited="OnNodeEdited"
                                      SelectionChanged="Canvas_OnSelectionChanged" />
             <controls:DocumentTreeView Grid.Column="2"
                                        ItemsSource="{Binding Document.CurrentPage.Nodes[0].Children, FallbackValue={x:Null}}"
                                        SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                                       NodesEdited="DocumentTreeView_OnNodeEdited"
+                                       NodesEdited="OnNodeEdited"
                                        NodesMoved="DocumentTreeView_OnNodesMoved" />
         </Grid>
     </DockPanel>
