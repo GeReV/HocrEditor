@@ -17,6 +17,7 @@ using HocrEditor.Models;
 using HocrEditor.ViewModels;
 using Microsoft.Extensions.ObjectPool;
 using SkiaSharp;
+using SkiaSharp.HarfBuzz;
 using SkiaSharp.Views.Desktop;
 using SkiaSharp.Views.WPF;
 using Rect = HocrEditor.Models.Rect;
@@ -214,6 +215,9 @@ public partial class DocumentCanvas
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         ParentWindow.KeyDown -= WindowOnKeyDown;
+
+        HandleFillPaint.Dispose();
+        HandleStrokePaint.Dispose();
     }
 
     private void WindowOnKeyDown(object sender, KeyEventArgs e)
@@ -1098,7 +1102,8 @@ public partial class DocumentCanvas
             return;
         }
 
-        var paint = new SKPaint();
+        using var shaper = new SKShaper(SKTypeface.Default);
+        using var paint = new SKPaint(new SKFont(SKTypeface.Default));
 
         var (rootNode, _) = elements[rootId];
 
@@ -1145,13 +1150,11 @@ public partial class DocumentCanvas
                         paint.Color = SKColors.Black;
                         paint.IsStroke = false;
 
-                        var text = ShouldReverse(node) ? node.InnerText.Reverse() : node.InnerText;
-
                         var textBounds = SKRect.Empty;
 
-                        paint.MeasureText(text, ref textBounds);
+                        paint.MeasureText(node.InnerText, ref textBounds);
 
-                        canvas.DrawText(text, bounds.MidX - textBounds.MidX, bounds.MidY - textBounds.MidY, paint);
+                        canvas.DrawShapedText(shaper, node.InnerText, bounds.MidX - textBounds.MidX, bounds.MidY - textBounds.MidY, paint);
                     }
                     else
                     {
@@ -1179,12 +1182,6 @@ public partial class DocumentCanvas
 
         RenderCanvasSelection(canvas);
     }
-
-    private static readonly Regex AnyLetter = new("\\p{L}", RegexOptions.Compiled);
-
-    // Reverse if text is right-to-left and is not an exception like a number of a phone number, etc.
-    private static bool ShouldReverse(HocrNodeViewModel node) =>
-        node.HocrNode.Direction == Direction.Rtl && AnyLetter.IsMatch(node.InnerText);
 
     private void RenderCanvasSelection(SKCanvas canvas)
     {
