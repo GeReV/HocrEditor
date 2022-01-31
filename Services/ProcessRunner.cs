@@ -8,17 +8,17 @@ namespace HocrEditor.Services
     {
         public static Task<string> Run(string filename, string? arguments) => Task.Run(async () =>
         {
-            using Process p = new Process
+            using var p = new Process
             {
                 StartInfo =
                 {
                     FileName = filename,
-                    Arguments = arguments ?? "",
+                    Arguments = arguments ?? string.Empty,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     CreateNoWindow = true,
                     StandardOutputEncoding = Encoding.UTF8
-                }
+                },
             };
 
             var sb = new StringBuilder();
