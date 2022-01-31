@@ -204,7 +204,7 @@ namespace HocrEditor.Models
             Enumerable.Empty<IHocrNode>()
         )
         {
-            InnerText = HtmlEntity.DeEntitize(innerText.Trim());
+            InnerText = HtmlEntity.DeEntitize(innerText.Trim().TrimEnd('\u200f'));
             Confidence = int.Parse(GetAttributeFromTitle("x_wconf"));
 
             Language = language;
