@@ -9,17 +9,21 @@ using HocrEditor.Services;
 using HtmlAgilityPack;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Win32;
+using Rect = HocrEditor.Models.Rect;
 
 namespace HocrEditor.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
         private readonly Window window;
+        private Rect selectionBounds;
 
         public MainWindowViewModel(Window window)
         {
             this.window = window;
+
             ImportCommand = new RelayCommand(Import);
+            OcrRegionCommand = new RelayCommand(OcrRegion, CanOcrRegion);
         }
 
         public bool AutoClean
@@ -31,6 +35,20 @@ namespace HocrEditor.ViewModels
         public HocrDocumentViewModel Document { get; set; } = new();
 
         public IRelayCommand ImportCommand { get; }
+        public IRelayCommand OcrRegionCommand { get; }
+
+        public bool IsSelecting { get; set; }
+
+        public Rect SelectionBounds
+        {
+            get => selectionBounds;
+            set
+            {
+                selectionBounds = value;
+
+                OcrRegionCommand.NotifyCanExecuteChanged();
+            }
+        }
 
         private string? GetTesseractPath()
         {
@@ -107,7 +125,13 @@ namespace HocrEditor.ViewModels
                         {
                             try
                             {
-                                page.HocrPage = await hocrPage;
+                                page.Build(await hocrPage);
+
+                                if (page.HocrPage == null)
+                                {
+                                    // Unreachable.
+                                    throw new InvalidOperationException("page.HocrPage cannot be null.");
+                                }
 
                                 var averageFontSize = page.HocrPage.Items
                                     .Where(node => node.NodeType == HocrNodeType.Word)
@@ -146,6 +170,93 @@ namespace HocrEditor.ViewModels
                         TaskScheduler.FromCurrentSynchronizationContext()
                     );
             }
+        }
+
+        private bool CanOcrRegion() => !SelectionBounds.IsEmpty && Document.CurrentPage != null;
+
+        private void OcrRegion()
+        {
+            var tesseractPath = GetTesseractPath();
+
+            if (tesseractPath == null)
+            {
+                return;
+            }
+
+            var region = new Rectangle(
+                SelectionBounds.Left,
+                SelectionBounds.Top,
+                SelectionBounds.Width,
+                SelectionBounds.Height
+            );
+
+            var page = Document.CurrentPage ?? throw new InvalidOperationException(
+                $"Expected {nameof(Document)}.{nameof(Document.CurrentPage)} to not be null."
+            );
+
+
+            Task.Run(
+                    async () =>
+                    {
+                        var service = new TesseractService(tesseractPath);
+
+
+
+                        var body = await service.PerformOcrRegion(page.Image, region, new[] { "script/Hebrew", "eng" });
+
+                        var doc = new HtmlDocument();
+                        doc.LoadHtml(body);
+
+                        return new HocrPageParser().Parse(doc);
+                    }
+                )
+                .ContinueWith(
+                    async hocrPage =>
+                    {
+                        try
+                        {
+                            var p = new HocrPageViewModel(page.Image);
+
+                            p.Build(await hocrPage);
+
+                            var pRootNode = p.Nodes.First(n => n.IsRoot);
+
+                            var descendants = pRootNode.Descendents.ToList();
+
+                            foreach (var node in descendants)
+                            {
+                                var bbox = node.BBox;
+
+                                bbox.Offset(SelectionBounds.Location);
+
+                                node.Id += "_foo";
+                                if (node.ParentId != null && !node.ParentId.StartsWith("page_"))
+                                {
+                                    node.ParentId += "_foo";
+                                }
+                                node.BBox = bbox;
+                            }
+
+                            var pageRootNode = page.Nodes.First(n => n.IsRoot);
+
+                            foreach (var node in pRootNode.Children)
+                            {
+                                node.Parent = pageRootNode;
+
+                                pageRootNode.Children.Add(node);
+                            }
+
+
+
+                            page.Nodes.AddRange(descendants);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"{ex.Message}\n{ex.Source}\n\n{ex.StackTrace}");
+                        }
+                    },
+                    TaskScheduler.FromCurrentSynchronizationContext()
+                );
         }
     }
 }

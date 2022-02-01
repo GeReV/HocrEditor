@@ -27,7 +27,7 @@ namespace HocrEditor.Models
 
         /// <summary>Represents a new instance of the <see cref="T:HocrEditor.Models.BoundingBox" /> class with member data left uninitialized.</summary>
         /// <remarks />
-        public static readonly Rect Empty;
+        public static readonly Rect Empty = new();
 
         private int left;
         private int top;
@@ -37,22 +37,22 @@ namespace HocrEditor.Models
         /// <summary>Gets the x-coordinate of the middle of this rectangle.</summary>
         /// <value />
         /// <remarks />
-        public readonly float MidX => left + Width / 2f;
+        public readonly int MidX => (int)(left + Width / 2f);
 
         /// <summary>Gets the y-coordinate of the middle of this rectangle.</summary>
         /// <value />
         /// <remarks />
-        public readonly float MidY => top + Height / 2f;
+        public readonly int MidY => (int)(top + Height / 2f);
 
         /// <summary>Gets the width of the rectangle.</summary>
         /// <value />
         /// <remarks />
-        public readonly float Width => right - left;
+        public readonly int Width => right - left;
 
         /// <summary>Gets the height of the <see cref="T:HocrEditor.Models.BoundingBox" />.</summary>
         /// <value />
         /// <remarks />
-        public readonly float Height => bottom - top;
+        public readonly int Height => bottom - top;
 
         /// <summary>Gets a value indicating whether this rectangle has a zero size and location.</summary>
         /// <value />

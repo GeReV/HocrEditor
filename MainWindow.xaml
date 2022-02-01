@@ -96,6 +96,9 @@
                           CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
             </MenuItem>
             <MenuItem Header="_Select">
+                <MenuItem Header="_Region"
+                          IsCheckable="True"
+                          IsChecked="{Binding IsSelecting}" />
                 <MenuItem Header="_All"
                           InputGestureText="Ctrl+A"
                           Command="{Binding Document.CurrentPage.ExclusiveSelectNodesCommand, FallbackValue={x:Null}}"
@@ -124,6 +127,8 @@
                 <Button Content="Redo"
                         Command="{Binding Document.CurrentPage.RedoCommand, FallbackValue={x:Null}}" />
                 <Separator />
+                <Button Content="OCR Selection"
+                        Command="{Binding OcrRegionCommand}" />
                 <Button Content="Delete"
                         Command="{Binding Document.CurrentPage.DeleteCommand, FallbackValue={x:Null}}"
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
@@ -136,6 +141,8 @@
                 <ToggleButton Content="Auto Clean"
                               IsChecked="{Binding AutoClean}" />
                 <Separator />
+                <ToggleButton Content="Select Region"
+                              IsChecked="{Binding IsSelecting}" />
                 <Button Content="Select Identical Nodes"
                         Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand, FallbackValue={x:Null}}"
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
@@ -183,7 +190,9 @@
                                      ItemsSource="{Binding  Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
                                      SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                                      IsShowText="{Binding Document.ShowText}"
+                                     IsSelecting="{Binding IsSelecting}"
                                      NodeVisibility="{Binding Document.NodeVisibility}"
+                                     SelectionBounds="{Binding SelectionBounds, Mode=OneWayToSource}"
                                      NodesChanged="Canvas_OnNodesChanged"
                                      NodesEdited="OnNodeEdited"
                                      SelectionChanged="Canvas_OnSelectionChanged" />

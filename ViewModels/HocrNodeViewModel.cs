@@ -45,7 +45,7 @@ namespace HocrEditor.ViewModels
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- Setter used by PropertyChangedCommand.
         public IHocrNode HocrNode { get; }
 
-        public string Id { get; }
+        public string Id { get; set; }
 
         public string? ParentId { get; set; }
 

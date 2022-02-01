@@ -30,6 +30,8 @@ internal enum MouseState
     Panning,
     Dragging,
     Resizing,
+    Selecting,
+    DraggingSelection,
 }
 
 public class Element
@@ -89,7 +91,7 @@ public partial class DocumentCanvas
             typeof(DocumentCanvas),
             new PropertyMetadata(
                 null,
-                ItemsSourceChangedCallback
+                ItemsSourceChanged
             )
         );
 
@@ -112,6 +114,20 @@ public partial class DocumentCanvas
             false,
             IsShowTextChanged
         )
+    );
+
+    public static readonly DependencyProperty IsSelectingProperty = DependencyProperty.Register(
+        nameof(IsSelecting),
+        typeof(bool),
+        typeof(DocumentCanvas),
+        new PropertyMetadata(default(bool), IsSelectingChanged)
+    );
+
+    public static readonly DependencyProperty SelectionBoundsProperty = DependencyProperty.Register(
+        nameof(SelectionBounds),
+        typeof(Rect),
+        typeof(DocumentCanvas),
+        new PropertyMetadata(default(Rect))
     );
 
     public static readonly RoutedEvent NodesEditedEvent = EventManager.RegisterRoutedEvent(
@@ -155,8 +171,26 @@ public partial class DocumentCanvas
         set => SetValue(IsShowTextProperty, value);
     }
 
+    public bool IsSelecting
+    {
+        get => (bool)GetValue(IsSelectingProperty);
+        set => SetValue(IsSelectingProperty, value);
+    }
+
+    public Rect SelectionBounds
+    {
+        get => (Rect)GetValue(SelectionBoundsProperty);
+        set => SetValue(SelectionBoundsProperty, value);
+    }
+
     private string? rootId;
     private readonly Dictionary<string, (HocrNodeViewModel, Element)> elements = new();
+
+    private HocrNodeViewModel RootNode =>
+        elements[rootId ?? throw new InvalidOperationException($"Expected {nameof(rootId)} to not be null.")].Item1;
+
+    private Element RootElement =>
+        elements[rootId ?? throw new InvalidOperationException($"Expected {nameof(rootId)} to not be null.")].Item2;
 
     private Dictionary<HocrNodeType, bool> nodeVisibilityDictionary = new();
 
@@ -172,6 +206,7 @@ public partial class DocumentCanvas
     private SKMatrix inverseScaleTransformation = SKMatrix.Identity;
 
     private MouseState mouseMoveState;
+
     private SKPoint dragStart;
     private SKPoint offsetStart;
 
@@ -180,6 +215,7 @@ public partial class DocumentCanvas
     private SKRect resizeLimitInside = SKRect.Empty;
     private SKRect resizeLimitOutside = SKRect.Empty;
 
+    private Cursor? currentCursor;
     private readonly CanvasSelection canvasSelection = new();
     private ResizeHandle? selectedResizeHandle;
 
@@ -229,12 +265,9 @@ public partial class DocumentCanvas
         BeginEditing();
     }
 
-    private static void ItemsSourceChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void ItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not DocumentCanvas documentCanvas)
-        {
-            return;
-        }
+        var documentCanvas = (DocumentCanvas)d;
 
         foreach (var (_, element) in documentCanvas.elements.Values)
         {
@@ -299,7 +332,9 @@ public partial class DocumentCanvas
 
     private static void SelectedItemsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not DocumentCanvas documentCanvas || documentCanvas.SelectedItems == null)
+        var documentCanvas = (DocumentCanvas)d;
+
+        if (documentCanvas.SelectedItems == null)
         {
             return;
         }
@@ -311,10 +346,7 @@ public partial class DocumentCanvas
 
     private static void NodeVisibilityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not DocumentCanvas documentCanvas)
-        {
-            return;
-        }
+        var documentCanvas = (DocumentCanvas)d;
 
         if (e.OldValue is ReadOnlyObservableCollection<NodeVisibility> oldNodes && oldNodes.Any())
         {
@@ -347,12 +379,27 @@ public partial class DocumentCanvas
 
     private static void IsShowTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not DocumentCanvas documentCanvas)
-        {
-            return;
-        }
+        var documentCanvas = (DocumentCanvas)d;
 
         documentCanvas.Dispatcher.InvokeAsync(documentCanvas.Refresh, DispatcherPriority.Render);
+    }
+
+    private static void IsSelectingChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var documentCanvas = (DocumentCanvas)d;
+
+        var newValue = (bool)e.NewValue;
+
+        if (newValue)
+        {
+            documentCanvas.Cursor = documentCanvas.currentCursor = Cursors.Cross;
+        }
+        else
+        {
+            documentCanvas.Cursor = documentCanvas.currentCursor = null;
+
+            documentCanvas.ClearCanvasSelection();
+        }
     }
 
     private void AddSelectedElements(IEnumerable<HocrNodeViewModel> nodes)
@@ -560,6 +607,41 @@ public partial class DocumentCanvas
 
                 var normalizedPosition = inverseTransformation.MapPoint(position);
 
+                if (IsSelecting)
+                {
+                    if (!canvasSelection.IsEmpty && canvasSelection.Bounds.Contains(normalizedPosition))
+                    {
+                        mouseMoveState = MouseState.DraggingSelection;
+
+                        var parentBounds = RootElement.Bounds;
+
+                        dragLimit = SKRect.Create(
+                            parentBounds.Width - canvasSelection.Bounds.Width,
+                            parentBounds.Height - canvasSelection.Bounds.Height
+                        );
+
+                        offsetStart = transformation.MapPoint(canvasSelection.Bounds.Location);
+                    }
+                    else
+                    {
+                        mouseMoveState = MouseState.Selecting;
+
+                        EndEditing();
+
+                        ClearSelection();
+
+                        dragLimit = RootElement.Bounds;
+
+                        var bounds = SKRect.Create(normalizedPosition, SKSize.Empty);
+
+                        bounds.Clamp(dragLimit);
+
+                        canvasSelection.Bounds = bounds;
+                    }
+
+                    break;
+                }
+
                 mouseMoveState = MouseState.Dragging;
 
                 if (canvasSelection.Bounds.Contains(normalizedPosition))
@@ -597,6 +679,310 @@ public partial class DocumentCanvas
         }
 
         Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
+    }
+
+    protected override void OnMouseUp(MouseButtonEventArgs e)
+    {
+        base.OnMouseUp(e);
+
+        var selectedItems = SelectedItems;
+        if (selectedItems == null)
+        {
+            return;
+        }
+
+        switch (e.ChangedButton)
+        {
+            case MouseButton.Middle:
+            {
+                e.Handled = true;
+
+                if (mouseMoveState != MouseState.Panning)
+                {
+                    return;
+                }
+
+                mouseMoveState = MouseState.None;
+                break;
+            }
+            case MouseButton.Left:
+            {
+                e.Handled = true;
+
+                var position = e.GetPosition(this).ToSKPoint();
+
+                switch (mouseMoveState)
+                {
+                    case MouseState.None:
+                    case MouseState.Dragging:
+                    case MouseState.Panning:
+                    {
+                        break;
+                    }
+                    case MouseState.Resizing:
+                    {
+                        canvasSelection.EndResize();
+
+                        ReleaseKeyDownEvents();
+                        break;
+                    }
+                    case MouseState.Selecting:
+                    {
+                        canvasSelection.Bounds = canvasSelection.Bounds.Standardized;
+
+                        SelectionBounds = new Rect(
+                            (int)canvasSelection.Left,
+                            (int)canvasSelection.Top,
+                            (int)canvasSelection.Right,
+                            (int)canvasSelection.Bottom
+                        );
+
+                        break;
+                    }
+                    case MouseState.DraggingSelection:
+                    {
+                        SelectionBounds = new Rect(
+                            (int)canvasSelection.Left,
+                            (int)canvasSelection.Top,
+                            (int)canvasSelection.Right,
+                            (int)canvasSelection.Bottom
+                        );
+
+                        break;
+                    }
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+
+                mouseMoveState = MouseState.None;
+
+                var mouseMoved = position != dragStart;
+
+                if (selectedElements.Any() && mouseMoved)
+                {
+                    var changes = new List<NodesChangedEventArgs.NodeChange>();
+
+                    foreach (var id in selectedElements)
+                    {
+                        var (node, element) = elements[id];
+
+                        changes.Add(new NodesChangedEventArgs.NodeChange(node, (Rect)element.Bounds, node.BBox));
+                    }
+
+                    OnNodesChanged(new NodesChangedEventArgs(changes));
+
+                    dragLimit = CalculateDragLimitBounds(selectedItems);
+                }
+
+                if (!mouseMoved)
+                {
+                    SelectNode(inverseTransformation.MapPoint(position));
+                }
+
+                break;
+            }
+            case MouseButton.Right:
+            case MouseButton.XButton1:
+            case MouseButton.XButton2:
+            default:
+                return;
+        }
+
+        ReleaseMouseCapture();
+
+        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+
+        var selectedItems = SelectedItems;
+        if (selectedItems == null)
+        {
+            return;
+        }
+
+        var position = e.GetPosition(this).ToSKPoint();
+
+        var delta = inverseScaleTransformation.MapPoint(position - dragStart);
+
+        switch (mouseMoveState)
+        {
+            case MouseState.None:
+            {
+                if (!canvasSelection.IsEmpty)
+                {
+                    var resizeHandles = canvasSelection.ResizeHandles;
+
+                    var hoveringOnSelection = false;
+
+                    foreach (var handle in resizeHandles)
+                    {
+                        var handleRect = handle.GetRect(transformation);
+
+                        if (!handleRect.Contains(position))
+                        {
+                            continue;
+                        }
+
+                        Cursor = handle.Direction switch
+                        {
+                            CardinalDirections.NorthWest or CardinalDirections.SouthEast => Cursors.SizeNWSE,
+                            CardinalDirections.North or CardinalDirections.South => Cursors.SizeNS,
+                            CardinalDirections.NorthEast or CardinalDirections.SouthWest => Cursors.SizeNESW,
+                            CardinalDirections.West or CardinalDirections.East => Cursors.SizeWE,
+                            _ => throw new ArgumentOutOfRangeException(nameof(handle.Direction))
+                        };
+
+                        hoveringOnSelection = true;
+
+                        break;
+                    }
+
+                    if (!hoveringOnSelection && transformation.MapRect(canvasSelection.Bounds).Contains(position))
+                    {
+                        hoveringOnSelection = true;
+
+                        Cursor = Cursors.SizeAll;
+                    }
+
+                    if (!hoveringOnSelection)
+                    {
+                        Cursor = currentCursor;
+                    }
+                }
+
+                // Skip refreshing.
+                return;
+            }
+            case MouseState.Panning:
+            {
+                e.Handled = true;
+
+                var newLocation = inverseTransformation.MapPoint(offsetStart) + delta;
+
+                UpdateTransformation(SKMatrix.CreateTranslation(newLocation.X, newLocation.Y));
+
+                if (editingNode != null)
+                {
+                    Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
+                }
+
+                break;
+            }
+            case MouseState.Dragging:
+            {
+                e.Handled = true;
+
+                if (!dragLimit.IsEmpty)
+                {
+                    delta.Clamp(dragLimit);
+                }
+
+                var newLocation = inverseTransformation.MapPoint(offsetStart) + delta;
+
+                if (selectedItems.Any())
+                {
+                    // Apply to all selected elements.
+                    foreach (var id in selectedElements)
+                    {
+                        var (_, element) = elements[id];
+
+                        var deltaFromDraggedElement = element.Bounds.Location - canvasSelection.Bounds.Location;
+
+                        element.Bounds = element.Bounds with
+                        {
+                            Location = newLocation + deltaFromDraggedElement
+                        };
+                    }
+
+                    // Apply to selection rect.
+                    canvasSelection.Bounds = canvasSelection.Bounds with
+                    {
+                        Location = newLocation
+                    };
+                }
+
+                if (editingNode != null)
+                {
+                    Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
+                }
+
+                break;
+            }
+            case MouseState.Resizing:
+            {
+                PerformResize(delta);
+
+                if (editingNode != null)
+                {
+                    Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
+                }
+
+                break;
+            }
+            case MouseState.Selecting:
+            {
+                var newLocation = inverseTransformation.MapPoint(dragStart) + delta;
+
+                newLocation.Clamp(dragLimit);
+
+                canvasSelection.Right = newLocation.X;
+                canvasSelection.Bottom = newLocation.Y;
+
+                break;
+            }
+            case MouseState.DraggingSelection:
+            {
+                var newLocation = inverseTransformation.MapPoint(offsetStart) + delta;
+
+                newLocation.Clamp(dragLimit);
+
+                var newBounds = canvasSelection.Bounds with
+                {
+                    Location = newLocation
+                };
+
+                canvasSelection.Bounds = newBounds;
+
+                break;
+            }
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
+    }
+
+    protected override void OnMouseWheel(MouseWheelEventArgs e)
+    {
+        base.OnMouseWheel(e);
+
+        var selectedItems = SelectedItems;
+        if (selectedItems == null)
+        {
+            return;
+        }
+
+        var delta = Math.Sign(e.Delta) * 3;
+
+        var pointerP = e.GetPosition(this).ToSKPoint();
+        var p = inverseTransformation.MapPoint(pointerP);
+
+        var newScale = (float)Math.Pow(2, delta * 0.05);
+
+        UpdateTransformation(SKMatrix.CreateScale(newScale, newScale, p.X, p.Y));
+
+        dragLimit = CalculateDragLimitBounds(selectedItems);
+
+        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
+
+        if (editingNode != null)
+        {
+            Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
+        }
     }
 
     private void SelectNode(SKPoint normalizedPosition)
@@ -737,6 +1123,8 @@ public partial class DocumentCanvas
         dragLimit = SKRect.Empty;
         canvasSelection.Bounds = SKRect.Empty;
 
+        SelectionBounds = Rect.Empty;
+
         ClearCanvasResizeLimit();
 
         selectedElements.Clear();
@@ -745,7 +1133,7 @@ public partial class DocumentCanvas
     private void ClearCanvasResizeLimit()
     {
         resizeLimitInside = SKRect.Empty;
-        resizeLimitOutside = elements[rootId ?? throw new ArgumentNullException(nameof(rootId))].Item2.Bounds;
+        resizeLimitOutside = RootElement.Bounds;
     }
 
     private void ClearSelection()
@@ -766,240 +1154,6 @@ public partial class DocumentCanvas
         );
 
         ClearCanvasSelection();
-    }
-
-
-    protected override void OnMouseUp(MouseButtonEventArgs e)
-    {
-        base.OnMouseUp(e);
-
-        var selectedItems = SelectedItems;
-        if (selectedItems == null)
-        {
-            return;
-        }
-
-        switch (e.ChangedButton)
-        {
-            case MouseButton.Middle:
-            {
-                e.Handled = true;
-
-                if (mouseMoveState != MouseState.Panning)
-                {
-                    return;
-                }
-
-                mouseMoveState = MouseState.None;
-                break;
-            }
-            case MouseButton.Left:
-            {
-                e.Handled = true;
-
-                if (mouseMoveState == MouseState.Panning)
-                {
-                    return;
-                }
-
-                var position = e.GetPosition(this).ToSKPoint();
-
-                if (mouseMoveState == MouseState.Resizing)
-                {
-                    canvasSelection.EndResize();
-
-                    ReleaseKeyDownEvents();
-                }
-
-                mouseMoveState = MouseState.None;
-
-                var mouseMoved = position != dragStart;
-
-                if (selectedElements.Any() && mouseMoved)
-                {
-                    var changes = new List<NodesChangedEventArgs.NodeChange>();
-
-                    foreach (var id in selectedElements)
-                    {
-                        var (node, element) = elements[id];
-
-                        changes.Add(new NodesChangedEventArgs.NodeChange(node, (Rect)element.Bounds, node.BBox));
-                    }
-
-                    OnNodesChanged(new NodesChangedEventArgs(changes));
-
-                    dragLimit = CalculateDragLimitBounds(selectedItems);
-                }
-
-                if (!mouseMoved)
-                {
-                    SelectNode(inverseTransformation.MapPoint(position));
-                }
-
-                break;
-            }
-            case MouseButton.Right:
-            case MouseButton.XButton1:
-            case MouseButton.XButton2:
-            default:
-                return;
-        }
-
-        ReleaseMouseCapture();
-
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
-    }
-
-    protected override void OnMouseMove(MouseEventArgs e)
-    {
-        base.OnMouseMove(e);
-
-        var selectedItems = SelectedItems;
-        if (selectedItems == null)
-        {
-            return;
-        }
-
-        var position = e.GetPosition(this).ToSKPoint();
-
-        var delta = inverseScaleTransformation.MapPoint(position - dragStart);
-
-        switch (mouseMoveState)
-        {
-            case MouseState.None:
-                if (!canvasSelection.IsEmpty)
-                {
-                    var resizeHandles = canvasSelection.ResizeHandles;
-
-                    Cursor = null;
-
-                    foreach (var handle in resizeHandles)
-                    {
-                        var handleRect = handle.GetRect(transformation);
-
-                        if (!handleRect.Contains(position))
-                        {
-                            continue;
-                        }
-
-                        Cursor = handle.Direction switch
-                        {
-                            CardinalDirections.NorthWest or CardinalDirections.SouthEast => Cursors.SizeNWSE,
-                            CardinalDirections.North or CardinalDirections.South => Cursors.SizeNS,
-                            CardinalDirections.NorthEast or CardinalDirections.SouthWest => Cursors.SizeNESW,
-                            CardinalDirections.West or CardinalDirections.East => Cursors.SizeWE,
-                            _ => throw new ArgumentOutOfRangeException(nameof(handle.Direction))
-                        };
-
-                        break;
-                    }
-                }
-
-                break;
-            case MouseState.Panning:
-            {
-                e.Handled = true;
-
-                var newLocation = inverseTransformation.MapPoint(offsetStart) + delta;
-
-                UpdateTransformation(SKMatrix.CreateTranslation(newLocation.X, newLocation.Y));
-
-                Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
-
-                if (editingNode != null)
-                {
-                    Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
-                }
-
-                break;
-            }
-            case MouseState.Dragging:
-            {
-                e.Handled = true;
-
-                if (!dragLimit.IsEmpty)
-                {
-                    delta.Clamp(dragLimit);
-                }
-
-                var newLocation = inverseTransformation.MapPoint(offsetStart) + delta;
-
-                if (selectedItems.Any())
-                {
-                    // Apply to all selected elements.
-                    foreach (var id in selectedElements)
-                    {
-                        var (_, element) = elements[id];
-
-                        var deltaFromDraggedElement = element.Bounds.Location - canvasSelection.Bounds.Location;
-
-                        element.Bounds = element.Bounds with
-                        {
-                            Location = newLocation + deltaFromDraggedElement
-                        };
-                    }
-
-                    // Apply to selection rect.
-                    canvasSelection.Bounds = canvasSelection.Bounds with
-                    {
-                        Location = newLocation
-                    };
-                }
-
-                Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
-
-                if (editingNode != null)
-                {
-                    Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
-                }
-
-                break;
-            }
-            case MouseState.Resizing:
-            {
-                PerformResize(delta);
-
-                Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
-
-                if (editingNode != null)
-                {
-                    Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
-                }
-
-                break;
-            }
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-    }
-
-    protected override void OnMouseWheel(MouseWheelEventArgs e)
-    {
-        base.OnMouseWheel(e);
-
-        var selectedItems = SelectedItems;
-        if (selectedItems == null)
-        {
-            return;
-        }
-
-        var delta = Math.Sign(e.Delta) * 3;
-
-        var pointerP = e.GetPosition(this).ToSKPoint();
-        var p = inverseTransformation.MapPoint(pointerP);
-
-        var newScale = (float)Math.Pow(2, delta * 0.05);
-
-        UpdateTransformation(SKMatrix.CreateScale(newScale, newScale, p.X, p.Y));
-
-        dragLimit = CalculateDragLimitBounds(selectedItems);
-
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
-
-        if (editingNode != null)
-        {
-            Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
-        }
     }
 
     private void ResetTransformation()
@@ -1104,7 +1258,7 @@ public partial class DocumentCanvas
         using var shaper = new SKShaper(SKTypeface.Default);
         using var paint = new SKPaint(new SKFont(SKTypeface.Default));
 
-        var (rootNode, _) = elements[rootId];
+        var rootNode = RootNode;
 
         var page = (HocrPage)rootNode.HocrNode;
 
@@ -1203,7 +1357,7 @@ public partial class DocumentCanvas
             {
                 IsStroke = true,
                 Color = IsFocused ? SKColors.Gray : SKColors.DarkGray,
-                StrokeWidth = 1
+                StrokeWidth = 1,
             }
         );
 

@@ -25,12 +25,6 @@ public class PageRemoveNodesCommand : UndoRedoCommand
 
         var document = (HocrPageViewModel)Sender;
 
-        // Probably better to update NodeCache before the event-raising Nodes.
-        foreach (var child in children)
-        {
-            document.NodeCache.Add(child.Id, child);
-        }
-
         // NOTE: Ordering is important here. Updating the node array must occur before inserting the children, as
         //  the latter affects selected items, which should update after the nodes.
         document.Nodes.AddRange(nodes.Concat(children));
@@ -75,11 +69,6 @@ public class PageRemoveNodesCommand : UndoRedoCommand
             node.Parent?.Children.Remove(node);
             // TODO: Should this also be cleaned?
             // node.Parent = null;
-        }
-
-        foreach (var child in nodes.Concat(children))
-        {
-            document.NodeCache.Remove(child.Id);
         }
 
         document.Nodes.RemoveRange(nodes.Concat(children));

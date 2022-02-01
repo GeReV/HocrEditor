@@ -10,24 +10,7 @@ namespace HocrEditor.ViewModels
 {
     public partial class HocrPageViewModel : ViewModelBase
     {
-        private HocrPage? hocrPage;
-
-        public HocrPage? HocrPage
-        {
-            get => hocrPage;
-            set
-            {
-                Ensure.IsNotNull(nameof(value), value);
-
-                hocrPage = value;
-
-                NodeCache = BuildNodeCache(value?.Items.Prepend(value) ?? Enumerable.Empty<IHocrNode>());
-
-                Nodes = new RangeObservableCollection<HocrNodeViewModel>(NodeCache.Values);
-            }
-        }
-
-        public Dictionary<string, HocrNodeViewModel> NodeCache { get; private set; } = new();
+        public HocrPage? HocrPage { get; private set; }
 
         public RangeObservableCollection<HocrNodeViewModel> Nodes { get; private set; } = new();
 
@@ -63,6 +46,15 @@ namespace HocrEditor.ViewModels
             SelectedNodes.CollectionChanged += HandleSelectedNodesChanged;
 
             UndoRedoManager.UndoStackChanged += UpdateUndoRedoCommands;
+        }
+
+        public void Build(HocrPage hocrPage)
+        {
+            HocrPage = hocrPage;
+
+            var nodeCache = BuildNodeCache(HocrPage.Items.Prepend(HocrPage));
+
+            Nodes = new RangeObservableCollection<HocrNodeViewModel>(nodeCache.Values);
         }
 
         private static Dictionary<string, HocrNodeViewModel> BuildNodeCache(IEnumerable<IHocrNode> nodes)
