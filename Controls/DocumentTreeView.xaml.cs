@@ -105,10 +105,13 @@ public partial class DocumentTreeView
             return;
         }
 
+        // This stack will be used to keep track of the "path" of nodes from the currently-edited node to its closest
+        // selected parent.
         var stack = new Stack<HocrNodeViewModel>();
 
         var parent = editingNode;
 
+        // Stack the parents. It is assumed that one of the parent nodes is selected.
         while (parent != null && !SelectedItems.Contains(parent))
         {
             stack.Push(parent);
@@ -118,26 +121,36 @@ public partial class DocumentTreeView
 
         if (parent == null)
         {
-            return;
+            // This should never be reached.
+            throw new InvalidOperationException($"{nameof(parent)} is expected to not be null.");
         }
 
+        // Find the item from the parent node. This is done recursively by this function.
+        // To receive a result from this function, the item for the passed object  must be visible
+        // (or possibly to have been visible at one time, as TreeView appears to load items lazily).
+        //
+        // It is assumed that the parent has a matching item that is selected, and therefore visible.
         var treeViewItem = TreeView.FindChildFromItem(parent);
 
+        // The stack now contains a "path" from the parent node down to the target node.
+        // As we expand the subtree of the current treeViewItem, we can get the next relevant child item.
+        // By repeating this for each item in the stack, we traverse down the tree view until
+        // the target item is visible.
         while (treeViewItem != null && stack.TryPop(out var item))
         {
             treeViewItem.ExpandSubtree();
             treeViewItem = (TreeViewItem)treeViewItem.ItemContainerGenerator.ContainerFromItem(item);
         }
 
-
         Dispatcher.InvokeAsync(
             () =>
             {
                 if (treeViewItem?.FindVisualChild<EditableTextBlock>() is not { } editableTextBlock)
                 {
-                    return;
+                    throw new InvalidOperationException($"{nameof(treeViewItem)} is expected to have a {nameof(EditableTextBlock)} child.");
                 }
 
+                // At this point, the target tree view item should be visible and we can start editing it.
                 editingNode.IsEditing = true;
                 editableTextBlock.IsEditing = true;
             },
