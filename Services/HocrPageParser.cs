@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using HocrEditor.Models;
 using HtmlAgilityPack;
@@ -13,9 +14,20 @@ namespace HocrEditor.Services
         {
             var pageNode = document.DocumentNode.SelectSingleNode("//body/div[@class='ocr_page']");
 
-            var page = Parse(pageNode, -1, string.Empty, Direction.Ltr);
+            var page = (HocrPage)Parse(pageNode, -1, string.Empty, Direction.Ltr);
 
-            return (HocrPage)page;
+            var ocrSystem = document.DocumentNode.SelectSingleNode("//head/meta[@name='ocr-system']")
+                .GetAttributeValue("content", string.Empty);
+
+            page.OcrSystem = ocrSystem;
+
+            var capabilities = document.DocumentNode.SelectSingleNode("//head/meta[@name='ocr-capabilities']")
+                .GetAttributeValue("content", string.Empty)
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            page.Capabilities.AddRange(capabilities);
+
+            return page;
         }
 
         private IHocrNode Parse(HtmlNode node, int parentId, string language, Direction direction)

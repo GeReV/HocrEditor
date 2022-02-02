@@ -67,7 +67,7 @@ namespace HocrEditor.ViewModels
         {
             HocrPage = hocrPage;
 
-            var nodeCache = BuildNodeCache(HocrPage.Items.Prepend(HocrPage));
+            var nodeCache = BuildNodeCache(HocrPage.Descendants.Prepend(HocrPage));
 
             Nodes = new RangeObservableCollection<HocrNodeViewModel>(nodeCache.Values);
         }

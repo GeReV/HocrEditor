@@ -34,20 +34,23 @@ namespace HocrEditor.Models
 
             var dpi = GetAttributeFromTitle("scan_res")
                 .Split(" ", StringSplitOptions.RemoveEmptyEntries)
-                .Select(int.Parse)
                 .ToArray();
 
             if (dpi.Length == 2)
             {
-                Dpi = (dpi[0], dpi[1]);
+                Dpi = (float.Parse(dpi[0]), int.Parse(dpi[1]));
             }
         }
 
-        public (int, int) Dpi { get; }
+        public (float, int) Dpi { get; }
 
         public string Image { get; }
 
-        public IEnumerable<IHocrNode> Items => ChildNodes.RecursiveSelect(n => n.ChildNodes);
+        public string OcrSystem { get; set; }
+
+        public List<string> Capabilities { get; } = new();
+
+        public IEnumerable<IHocrNode> Descendants => ChildNodes.RecursiveSelect(n => n.ChildNodes);
     }
 
     public record HocrContentArea : HocrNode

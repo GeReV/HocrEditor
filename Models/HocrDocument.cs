@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using HocrEditor.Helpers;
 
 namespace HocrEditor.Models
 {
@@ -8,9 +6,9 @@ namespace HocrEditor.Models
     {
         public HocrDocument(IEnumerable<HocrPage> pages)
         {
-            Pages = new ObservableCollection<HocrPage>(pages);
+            Pages = new List<HocrPage>(pages);
         }
 
-        public ObservableCollection<HocrPage> Pages { get; }
+        public List<HocrPage> Pages { get; }
     }
 }

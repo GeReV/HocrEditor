@@ -20,6 +20,8 @@ namespace HocrEditor.ViewModels
             this.window = window;
 
             ImportCommand = new RelayCommand(Import);
+
+            SaveCommand = new RelayCommand(Save);
         }
 
         public bool AutoClean
@@ -30,7 +32,9 @@ namespace HocrEditor.ViewModels
 
         public HocrDocumentViewModel Document { get; set; } = new();
 
+        public IRelayCommand SaveCommand { get; }
         public IRelayCommand ImportCommand { get; }
+
 
         public bool IsSelecting { get; set; }
 
@@ -59,6 +63,31 @@ namespace HocrEditor.ViewModels
             Settings.TesseractPath = tesseractPath;
 
             return tesseractPath;
+        }
+
+        private void Save()
+        {
+            if (Document.Filename == null)
+            {
+                var dialog = new SaveFileDialog
+                {
+                    Title = "Save hOCR",
+                    Filter = "hOCR file (*.hocr)|*.hocr",
+                };
+
+                if (dialog.ShowDialog(window) != true)
+                {
+                    return;
+                }
+
+                Document.Filename = dialog.FileName;
+            }
+
+            var hocrDocument = new HocrDocument(Document.Pages.Select(p => p.HocrPage!));
+
+            var htmlDocument = new HocrWriter(Document.Filename).Build(hocrDocument);
+
+            htmlDocument.Save(Document.Filename);
         }
 
         private void Import()
@@ -117,7 +146,7 @@ namespace HocrEditor.ViewModels
                                     throw new InvalidOperationException("page.HocrPage cannot be null.");
                                 }
 
-                                var averageFontSize = page.HocrPage.Items
+                                var averageFontSize = page.HocrPage.Descendants
                                     .Where(node => node.NodeType == HocrNodeType.Word)
                                     .Cast<HocrWord>()
                                     .Average(node => node.FontSize);

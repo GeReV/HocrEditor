@@ -13,8 +13,9 @@
         d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}">
     <Window.CommandBindings>
         <CommandBinding Command="Close"
-                        Executed="CloseCommandBinding_OnExecuted">
-        </CommandBinding>
+                        Executed="CloseCommandBinding_OnExecuted" />
+        <CommandBinding Command="Save"
+                        Executed="SaveCommandBinding_OnExecuted" />
     </Window.CommandBindings>
     <Window.InputBindings>
         <!-- Editing keybindings -->
@@ -63,7 +64,8 @@
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
                 <MenuItem Header="_Open..." />
-                <MenuItem Header="_Save..." />
+                <MenuItem Header="_Save..."
+                          Command="Save" />
                 <Separator />
                 <MenuItem Header="_Import..."
                           Command="{Binding ImportCommand}" />
