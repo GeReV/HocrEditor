@@ -17,6 +17,7 @@
         <Canvas Name="TextBoxLayout">
             <TextBox Name="TextBox"
                      Visibility="Collapsed"
+                     TextAlignment="Center"
                      KeyDown="TextBox_OnKeyDown"
                      LostFocus="TextBox_OnLostFocus"
                      TextBlock.LineStackingStrategy="BlockLineHeight"/>
