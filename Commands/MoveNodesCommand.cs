@@ -84,7 +84,6 @@ public class MoveNodesCommand : UndoableCommandBase<NodesMovedEventArgs>
             }
             else
             {
-
                 commands.Add(new CollectionInsertCommand(destinationList, o, insertIndex++));
 
                 if (o is not HocrNodeViewModel { Parent: { } } node)
@@ -98,8 +97,14 @@ public class MoveNodesCommand : UndoableCommandBase<NodesMovedEventArgs>
 
                 if (Settings.AutoClean)
                 {
+                    // Crop old parent, to narrow it to its remaining descendants.
                     commands.AddRange(NodeCommands.CropParents(oldParent));
+
+                    // Remove any empty leftover nodes.
                     commands.Add(NodeCommands.RemoveEmptyParents(hocrPageViewModel, oldParent));
+
+                    // Update the bounds for the new owner and its ancestors.
+                    commands.AddRange(NodeCommands.CropParents((HocrNodeViewModel)e.TargetOwner));
                 }
             }
         }
