@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -9,21 +8,18 @@ using HocrEditor.Services;
 using HtmlAgilityPack;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Win32;
-using Rect = HocrEditor.Models.Rect;
 
 namespace HocrEditor.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
         private readonly Window window;
-        private Rect selectionBounds;
 
         public MainWindowViewModel(Window window)
         {
             this.window = window;
 
             ImportCommand = new RelayCommand(Import);
-            OcrRegionCommand = new RelayCommand(OcrRegion, CanOcrRegion);
         }
 
         public bool AutoClean
@@ -35,20 +31,8 @@ namespace HocrEditor.ViewModels
         public HocrDocumentViewModel Document { get; set; } = new();
 
         public IRelayCommand ImportCommand { get; }
-        public IRelayCommand OcrRegionCommand { get; }
 
         public bool IsSelecting { get; set; }
-
-        public Rect SelectionBounds
-        {
-            get => selectionBounds;
-            set
-            {
-                selectionBounds = value;
-
-                OcrRegionCommand.NotifyCanExecuteChanged();
-            }
-        }
 
         private string? GetTesseractPath()
         {
@@ -170,75 +154,6 @@ namespace HocrEditor.ViewModels
                         TaskScheduler.FromCurrentSynchronizationContext()
                     );
             }
-        }
-
-        private bool CanOcrRegion() => !SelectionBounds.IsEmpty && Document.CurrentPage != null;
-
-        private void OcrRegion()
-        {
-            var tesseractPath = GetTesseractPath();
-
-            if (tesseractPath == null)
-            {
-                return;
-            }
-
-            var region = new Rectangle(
-                SelectionBounds.Left,
-                SelectionBounds.Top,
-                SelectionBounds.Width,
-                SelectionBounds.Height
-            );
-
-            var page = Document.CurrentPage ?? throw new InvalidOperationException(
-                $"Expected {nameof(Document)}.{nameof(Document.CurrentPage)} to not be null."
-            );
-
-
-            Task.Run(
-                    async () =>
-                    {
-                        var service = new TesseractService(tesseractPath);
-
-                        var body = await service.PerformOcrRegion(page.Image, region, new[] { "script/Hebrew", "eng" });
-
-                        var doc = new HtmlDocument();
-                        doc.LoadHtml(body);
-
-                        return new HocrPageParser().Parse(doc);
-                    }
-                )
-                .ContinueWith(
-                    async hocrPage =>
-                    {
-                        try
-                        {
-                            var p = new HocrPageViewModel(page.Image);
-
-                            p.Build(await hocrPage);
-
-                            var pRootNode = p.Nodes.First(n => n.IsRoot);
-
-                            var descendants = pRootNode.Descendents.ToList();
-
-                            foreach (var node in descendants)
-                            {
-                                var bbox = node.BBox;
-
-                                bbox.Offset(SelectionBounds.Location);
-
-                                node.BBox = bbox;
-                            }
-
-                            page.AddNodes(pRootNode.Children);
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show($"{ex.Message}\n{ex.Source}\n\n{ex.StackTrace}");
-                        }
-                    },
-                    TaskScheduler.FromCurrentSynchronizationContext()
-                );
         }
     }
 }

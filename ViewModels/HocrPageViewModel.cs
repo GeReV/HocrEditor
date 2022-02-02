@@ -10,7 +10,7 @@ namespace HocrEditor.ViewModels
 {
     public partial class HocrPageViewModel : ViewModelBase
     {
-        private int maxId;
+        public int LastId { get; set; }
         public HocrPage? HocrPage { get; private set; }
 
         public RangeObservableCollection<HocrNodeViewModel> Nodes { get; private set; } = new();
@@ -21,10 +21,24 @@ namespace HocrEditor.ViewModels
 
         public string Image { get; set; }
 
+        private Rect selectionBounds;
+
+        public Rect SelectionBounds
+        {
+            get => selectionBounds;
+            set
+            {
+                selectionBounds = value;
+
+                OcrRegionCommand.NotifyCanExecuteChanged();
+            }
+        }
+
         public HocrPageViewModel(string image)
         {
             Image = image;
 
+            OcrRegionCommand = new OcrRegionCommand(this);
             DeleteCommand = new DeleteNodes(this);
             MergeCommand = new MergeNodes(this);
             CropCommand = new CropNodes(this);
@@ -58,33 +72,6 @@ namespace HocrEditor.ViewModels
             Nodes = new RangeObservableCollection<HocrNodeViewModel>(nodeCache.Values);
         }
 
-        public void AddNodes(IEnumerable<HocrNodeViewModel> nodes)
-        {
-            var list = nodes.ToList();
-
-            var pageRootNode = Nodes.First(n => n.IsRoot);
-
-            var descendants = new List<HocrNodeViewModel>();
-
-            foreach (var node in list)
-            {
-                node.Id = ++maxId;
-
-                node.Parent = pageRootNode;
-
-                pageRootNode.Children.Add(node);
-
-                foreach (var descendant in node.Descendents)
-                {
-                    descendant.Id = ++maxId;
-                }
-
-                descendants.AddRange(node.Descendents);
-            }
-
-            Nodes.AddRange(list.Concat(descendants));
-        }
-
         private Dictionary<int, HocrNodeViewModel> BuildNodeCache(IEnumerable<IHocrNode> nodes)
         {
             var dictionary = new Dictionary<int, HocrNodeViewModel>();
@@ -95,9 +82,9 @@ namespace HocrEditor.ViewModels
 
                 dictionary.Add(hocrNodeViewModel.Id, hocrNodeViewModel);
 
-                if (node.Id > maxId)
+                if (node.Id > LastId)
                 {
-                    maxId = node.Id;
+                    LastId = node.Id;
                 }
 
                 if (node.ParentId < 0)

@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:HocrEditor.Controls"
         xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
+        xmlns:models="clr-namespace:HocrEditor.Models"
         mc:Ignorable="d"
         Title="hOCR Editor"
         Height="1080"
@@ -128,7 +129,8 @@
                         Command="{Binding Document.CurrentPage.RedoCommand, FallbackValue={x:Null}}" />
                 <Separator />
                 <Button Content="OCR Selection"
-                        Command="{Binding OcrRegionCommand}" />
+                        Command="{Binding Document.CurrentPage.OcrRegionCommand, FallbackValue={x:Null}}"
+                        CommandParameter="{Binding Document.CurrentPage.SelectionBounds, FallbackValue={x:Static models:Rect.Empty}}" />
                 <Button Content="Delete"
                         Command="{Binding Document.CurrentPage.DeleteCommand, FallbackValue={x:Null}}"
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
@@ -140,14 +142,14 @@
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
                 <ToggleButton Content="Auto Clean"
                               IsChecked="{Binding AutoClean}" />
+                <Button Content="Convert Nodes to Image"
+                        Command="{Binding Document.CurrentPage.ConvertToImageCommand, FallbackValue={x:Null}}"
+                        CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
                 <Separator />
                 <ToggleButton Content="Select Region"
                               IsChecked="{Binding IsSelecting}" />
                 <Button Content="Select Identical Nodes"
                         Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand, FallbackValue={x:Null}}"
-                        CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
-                <Button Content="Convert Nodes to Image"
-                        Command="{Binding Document.CurrentPage.ConvertToImageCommand, FallbackValue={x:Null}}"
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
                 <Separator />
                 <ToggleButton ToolTip="Show Text"
@@ -192,7 +194,7 @@
                                      IsShowText="{Binding Document.ShowText}"
                                      IsSelecting="{Binding IsSelecting}"
                                      NodeVisibility="{Binding Document.NodeVisibility}"
-                                     SelectionBounds="{Binding SelectionBounds, Mode=OneWayToSource}"
+                                     SelectionBounds="{Binding  Document.SelectionBounds, Mode=OneWayToSource}"
                                      NodesChanged="Canvas_OnNodesChanged"
                                      NodesEdited="OnNodeEdited"
                                      SelectionChanged="Canvas_OnSelectionChanged" />

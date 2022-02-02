@@ -27,6 +27,18 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
 
     public bool ShowText { get; set; }
 
+    public Rect SelectionBounds
+    {
+        get => CurrentPage?.SelectionBounds ?? Rect.Empty;
+        set
+        {
+            if (CurrentPage != null)
+            {
+                CurrentPage.SelectionBounds = value;
+            }
+        }
+    }
+
     public ReadOnlyObservableCollection<NodeVisibility> NodeVisibility { get; } = new(
         new ObservableCollection<NodeVisibility>(
             new[]

@@ -120,7 +120,11 @@ public partial class DocumentCanvas
         nameof(IsSelecting),
         typeof(bool),
         typeof(DocumentCanvas),
-        new FrameworkPropertyMetadata(default(bool), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, IsSelectingChanged)
+        new FrameworkPropertyMetadata(
+            default(bool),
+            FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+            IsSelectingChanged
+        )
     );
 
     public static readonly DependencyProperty SelectionBoundsProperty = DependencyProperty.Register(
@@ -255,12 +259,19 @@ public partial class DocumentCanvas
 
     private void WindowOnKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Return || !IsFocused)
+        switch (e.Key)
         {
-            return;
+            case Key.Return when IsFocused:
+            {
+                BeginEditing();
+                break;
+            }
+            case Key.Escape when IsSelecting:
+            {
+                IsSelecting = false;
+                break;
+            }
         }
-
-        BeginEditing();
     }
 
     private static void ItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -293,7 +304,7 @@ public partial class DocumentCanvas
 
             documentCanvas.CenterTransformation();
 
-            documentCanvas.Dispatcher.InvokeAsync(documentCanvas.Refresh, DispatcherPriority.Render);
+            documentCanvas.Refresh();
         }
     }
 
@@ -325,7 +336,7 @@ public partial class DocumentCanvas
 
         UpdateCanvasSelection();
 
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
+        Refresh();
     }
 
     private static void SelectedItemsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -339,7 +350,7 @@ public partial class DocumentCanvas
 
         documentCanvas.SelectedItems.CollectionChanged += documentCanvas.SelectedNodesOnCollectionChanged;
 
-        documentCanvas.Dispatcher.InvokeAsync(documentCanvas.Refresh, DispatcherPriority.Render);
+        documentCanvas.Refresh();
     }
 
     private static void NodeVisibilityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -359,7 +370,7 @@ public partial class DocumentCanvas
 
             newNodes.SubscribeItemPropertyChanged(documentCanvas.UpdateNodeVisibility);
 
-            documentCanvas.Dispatcher.InvokeAsync(documentCanvas.Refresh, DispatcherPriority.Render);
+            documentCanvas.Refresh();
         }
     }
 
@@ -372,14 +383,14 @@ public partial class DocumentCanvas
 
         nodeVisibilityDictionary[nodeVisibility.NodeType] = nodeVisibility.Visible;
 
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
+        Refresh();
     }
 
     private static void IsShowTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var documentCanvas = (DocumentCanvas)d;
 
-        documentCanvas.Dispatcher.InvokeAsync(documentCanvas.Refresh, DispatcherPriority.Render);
+        documentCanvas.Refresh();
     }
 
     private static void IsSelectingChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -397,6 +408,8 @@ public partial class DocumentCanvas
             documentCanvas.Cursor = documentCanvas.currentCursor = null;
 
             documentCanvas.ClearCanvasSelection();
+
+            documentCanvas.Refresh();
         }
     }
 
@@ -535,7 +548,7 @@ public partial class DocumentCanvas
                 throw new ArgumentOutOfRangeException();
         }
 
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
+        Refresh();
     }
 
     protected override Size MeasureOverride(Size availableSize) => availableSize;
@@ -544,14 +557,14 @@ public partial class DocumentCanvas
     {
         base.OnLostFocus(e);
 
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
+        Refresh();
     }
 
     protected override void OnGotFocus(RoutedEventArgs e)
     {
         base.OnGotFocus(e);
 
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
+        Refresh();
     }
 
     protected override void OnMouseDown(MouseButtonEventArgs e)
@@ -676,7 +689,7 @@ public partial class DocumentCanvas
                 return;
         }
 
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
+        Refresh();
     }
 
     protected override void OnMouseUp(MouseButtonEventArgs e)
@@ -789,7 +802,7 @@ public partial class DocumentCanvas
 
         ReleaseMouseCapture();
 
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
+        Refresh();
     }
 
     protected override void OnMouseMove(MouseEventArgs e)
@@ -951,7 +964,7 @@ public partial class DocumentCanvas
                 throw new ArgumentOutOfRangeException();
         }
 
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
+        Refresh();
     }
 
     protected override void OnMouseWheel(MouseWheelEventArgs e)
@@ -975,7 +988,7 @@ public partial class DocumentCanvas
 
         dragLimit = CalculateDragLimitBounds(selectedItems);
 
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
+        Refresh();
 
         if (editingNode != null)
         {
@@ -1216,7 +1229,7 @@ public partial class DocumentCanvas
 
     private void Refresh()
     {
-        Surface.InvalidateVisual();
+        Dispatcher.InvokeAsync(Surface.InvalidateVisual, DispatcherPriority.Render);
     }
 
     private void BuildDocumentElements(IEnumerable<HocrNodeViewModel> nodes)
@@ -1292,7 +1305,6 @@ public partial class DocumentCanvas
             }
             else
             {
-
                 if (shouldRenderNode)
                 {
                     var color = GetNodeColor(node);
@@ -1548,7 +1560,7 @@ public partial class DocumentCanvas
 
         PerformResize(delta);
 
-        Dispatcher.InvokeAsync(Refresh, DispatcherPriority.Render);
+        Refresh();
     }
 
     protected virtual void OnNodesChanged(NodesChangedEventArgs e)

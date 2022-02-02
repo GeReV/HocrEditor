@@ -16,7 +16,7 @@ namespace HocrEditor.ViewModels
     {
         public UndoRedoManager UndoRedoManager { get; } = new();
 
-        private bool CanSelectIdenticalNodes(ICollection<HocrNodeViewModel>? list) =>
+        private static bool CanSelectIdenticalNodes(ICollection<HocrNodeViewModel>? list) =>
             list is { Count: 1 };
 
         private void SelectIdenticalNodes(ICollection<HocrNodeViewModel>? list)
@@ -52,6 +52,7 @@ namespace HocrEditor.ViewModels
         }
 
 
+        public IRelayCommand<Rect> OcrRegionCommand { get; }
         public IRelayCommand<ICollection<HocrNodeViewModel>> DeleteCommand { get; }
         public IRelayCommand<ICollection<HocrNodeViewModel>> MergeCommand { get; }
         public IRelayCommand<ICollection<HocrNodeViewModel>> CropCommand { get; }
