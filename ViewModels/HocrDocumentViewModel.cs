@@ -31,6 +31,7 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
         new ObservableCollection<NodeVisibility>(
             new[]
                 {
+                    HocrNodeType.Page,
                     HocrNodeType.ContentArea,
                     HocrNodeType.Paragraph,
                     HocrNodeType.Line,

@@ -1268,10 +1268,21 @@ public partial class DocumentCanvas
 
             var bounds = transformation.MapRect(element.Bounds);
 
+            var shouldRenderNode = nodeVisibilityDictionary[node.NodeType];
 
             if (element.Background != null)
             {
-                canvas.DrawBitmap(element.Background, bounds);
+                if (shouldRenderNode)
+                {
+                    canvas.DrawBitmap(element.Background, bounds);
+                }
+                else
+                {
+                    paint.IsStroke = false;
+                    paint.Color = SKColors.White;
+
+                    canvas.DrawRect(bounds, paint);
+                }
 
                 paint.Color = SKColors.Gray;
                 paint.IsStroke = true;
@@ -1281,7 +1292,6 @@ public partial class DocumentCanvas
             }
             else
             {
-                var shouldRenderNode = nodeVisibilityDictionary[node.NodeType];
 
                 if (shouldRenderNode)
                 {
