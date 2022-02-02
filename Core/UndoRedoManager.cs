@@ -85,8 +85,12 @@ public sealed class UndoRedoManager
             return;
         }
 
-        foreach (var command in commands[CurrentIndex])
+        var commandSet = commands[CurrentIndex];
+
+        for (var index = commandSet.Count - 1; index >= 0; index--)
         {
+            var command = commandSet[index];
+
             command.Undo();
         }
 
