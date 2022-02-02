@@ -200,8 +200,6 @@ namespace HocrEditor.ViewModels
                     {
                         var service = new TesseractService(tesseractPath);
 
-
-
                         var body = await service.PerformOcrRegion(page.Image, region, new[] { "script/Hebrew", "eng" });
 
                         var doc = new HtmlDocument();
@@ -229,26 +227,10 @@ namespace HocrEditor.ViewModels
 
                                 bbox.Offset(SelectionBounds.Location);
 
-                                node.Id += "_foo";
-                                if (node.ParentId != null && !node.ParentId.StartsWith("page_"))
-                                {
-                                    node.ParentId += "_foo";
-                                }
                                 node.BBox = bbox;
                             }
 
-                            var pageRootNode = page.Nodes.First(n => n.IsRoot);
-
-                            foreach (var node in pRootNode.Children)
-                            {
-                                node.Parent = pageRootNode;
-
-                                pageRootNode.Children.Add(node);
-                            }
-
-
-
-                            page.Nodes.AddRange(descendants);
+                            page.AddNodes(pRootNode.Children);
                         }
                         catch (Exception ex)
                         {

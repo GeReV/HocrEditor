@@ -32,11 +32,10 @@ namespace HocrEditor.ViewModels
 
         public HocrNodeViewModel(IHocrNode node)
         {
-            HocrNode = node;
-
             Id = node.Id;
+            ParentId = node.ParentId;
+            HocrNode = node;
             NodeType = node.NodeType;
-
             BBox = node.BBox;
 
             Children.CollectionChanged += ChildrenOnCollectionChanged;
@@ -45,11 +44,11 @@ namespace HocrEditor.ViewModels
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- Setter used by PropertyChangedCommand.
         public IHocrNode HocrNode { get; }
 
-        public string Id { get; set; }
+        public int Id { get; set; }
 
-        public string? ParentId { get; set; }
+        public int ParentId { get; set; }
 
-        public bool IsRoot { get; set; }
+        public bool IsRoot => ParentId < 0;
         public HocrNodeType NodeType { get; set; }
 
         public string InnerText
@@ -102,7 +101,7 @@ namespace HocrEditor.ViewModels
             {
                 parent = value;
 
-                ParentId = parent?.Id;
+                ParentId = parent?.Id ?? -1;
             }
         }
 

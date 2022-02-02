@@ -10,6 +10,7 @@ namespace HocrEditor.ViewModels
 {
     public partial class HocrPageViewModel : ViewModelBase
     {
+        private int maxId;
         public HocrPage? HocrPage { get; private set; }
 
         public RangeObservableCollection<HocrNodeViewModel> Nodes { get; private set; } = new();
@@ -57,9 +58,36 @@ namespace HocrEditor.ViewModels
             Nodes = new RangeObservableCollection<HocrNodeViewModel>(nodeCache.Values);
         }
 
-        private static Dictionary<string, HocrNodeViewModel> BuildNodeCache(IEnumerable<IHocrNode> nodes)
+        public void AddNodes(IEnumerable<HocrNodeViewModel> nodes)
         {
-            var dictionary = new Dictionary<string, HocrNodeViewModel>();
+            var list = nodes.ToList();
+
+            var pageRootNode = Nodes.First(n => n.IsRoot);
+
+            var descendants = new List<HocrNodeViewModel>();
+
+            foreach (var node in list)
+            {
+                node.Id = ++maxId;
+
+                node.Parent = pageRootNode;
+
+                pageRootNode.Children.Add(node);
+
+                foreach (var descendant in node.Descendents)
+                {
+                    descendant.Id = ++maxId;
+                }
+
+                descendants.AddRange(node.Descendents);
+            }
+
+            Nodes.AddRange(list.Concat(descendants));
+        }
+
+        private Dictionary<int, HocrNodeViewModel> BuildNodeCache(IEnumerable<IHocrNode> nodes)
+        {
+            var dictionary = new Dictionary<int, HocrNodeViewModel>();
 
             foreach (var node in nodes)
             {
@@ -67,18 +95,21 @@ namespace HocrEditor.ViewModels
 
                 dictionary.Add(hocrNodeViewModel.Id, hocrNodeViewModel);
 
-                if (string.IsNullOrEmpty(node.ParentId))
+                if (node.Id > maxId)
                 {
-                    hocrNodeViewModel.IsRoot = true;
+                    maxId = node.Id;
                 }
-                else
+
+                if (node.ParentId < 0)
                 {
-                    var parent = dictionary[node.ParentId];
-
-                    hocrNodeViewModel.Parent = parent;
-
-                    parent.Children.Add(hocrNodeViewModel);
+                    continue;
                 }
+
+                var parent = dictionary[node.ParentId];
+
+                hocrNodeViewModel.Parent = parent;
+
+                parent.Children.Add(hocrNodeViewModel);
             }
 
             return dictionary;

@@ -183,18 +183,16 @@ public partial class DocumentCanvas
         set => SetValue(SelectionBoundsProperty, value);
     }
 
-    private string? rootId;
-    private readonly Dictionary<string, (HocrNodeViewModel, Element)> elements = new();
+    private int rootId = -1;
+    private readonly Dictionary<int, (HocrNodeViewModel, Element)> elements = new();
 
-    private HocrNodeViewModel RootNode =>
-        elements[rootId ?? throw new InvalidOperationException($"Expected {nameof(rootId)} to not be null.")].Item1;
+    private HocrNodeViewModel RootNode => elements[rootId].Item1;
 
-    private Element RootElement =>
-        elements[rootId ?? throw new InvalidOperationException($"Expected {nameof(rootId)} to not be null.")].Item2;
+    private Element RootElement => elements[rootId].Item2;
 
     private Dictionary<HocrNodeType, bool> nodeVisibilityDictionary = new();
 
-    private readonly HashSet<string> selectedElements = new();
+    private readonly HashSet<int> selectedElements = new();
 
     private HocrNodeViewModel? editingNode;
 
@@ -989,7 +987,7 @@ public partial class DocumentCanvas
     {
         var key = GetElementKeyAtPoint(normalizedPosition);
 
-        if (key == null)
+        if (key < 0)
         {
             ClearSelection();
 
@@ -1100,7 +1098,7 @@ public partial class DocumentCanvas
             //     "Expected inner resize limit to be contained in the canvas selection bounds."
             // );
 
-            if (node.ParentId != null)
+            if (node.ParentId >= 0)
             {
                 resizeLimitOutside = elements[node.ParentId].Item2.Bounds;
 
@@ -1250,7 +1248,7 @@ public partial class DocumentCanvas
 
     private void RenderNodes(SKCanvas canvas)
     {
-        if (rootId == null)
+        if (rootId < 0)
         {
             return;
         }
@@ -1264,7 +1262,7 @@ public partial class DocumentCanvas
 
         const float fontInchRatio = 1.0f / 72.0f;
 
-        void Recurse(string key)
+        void Recurse(int key)
         {
             var (node, element) = elements[key];
 
@@ -1451,20 +1449,20 @@ public partial class DocumentCanvas
         }
     }
 
-    private string? GetElementKeyAtPoint(SKPoint p)
+    private int GetElementKeyAtPoint(SKPoint p)
     {
-        var selectedKeys = SelectedItems?.Select(n => n.Id).ToHashSet() ?? new HashSet<string>();
+        var selectedKeys = SelectedItems?.Select(n => n.Id).ToHashSet() ?? new HashSet<int>();
 
         var key = elements.Keys
             .Where(k => !selectedKeys.Contains(k))
-            .FirstOrDefault(k => elements[k].Item2.Bounds.Contains(p));
+            .FirstOrDefault(k => elements[k].Item2.Bounds.Contains(p), -1);
 
-        return key == null
-            ? null
+        return key < 0
+            ? -1
             : GetHierarchy(elements[key].Item1).LastOrDefault(k => elements[k].Item2.Bounds.Contains(p));
     }
 
-    private static IEnumerable<string> GetHierarchy(
+    private static IEnumerable<int> GetHierarchy(
         HocrNodeViewModel node
     ) =>
         node.Descendents

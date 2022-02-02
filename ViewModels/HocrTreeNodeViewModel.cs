@@ -60,7 +60,7 @@ namespace HocrEditor.ViewModels
 
         public HocrNodeViewModel HocrNode { get; }
 
-        public string Id { get; }
+        public int Id { get; }
         public HocrTreeNodeViewModel? Parent { get; }
 
         public ObservableCollection<HocrTreeNodeViewModel> Children => children;

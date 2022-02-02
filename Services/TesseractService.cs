@@ -50,10 +50,7 @@ namespace HocrEditor.Services
 
             cropped.Save(tempFile.FullName, ImageFormat.Bmp);
 
-            var result = await ProcessRunner.Run(
-                TesseractPath,
-                $"{tempFile.FullName} stdout --dpi {(int)image.HorizontalResolution} -l {string.Join('+', languages)} --psm 3 hocr"
-            );
+            var result = await PerformOcr(tempFile.FullName, languages);
 
             tempFile.Delete();
 

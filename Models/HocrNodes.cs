@@ -15,7 +15,7 @@ namespace HocrEditor.Models
     public record HocrPage : HocrNode
     {
         public HocrPage(
-            string id,
+            int id,
             string title,
             string language,
             Direction direction,
@@ -23,7 +23,7 @@ namespace HocrEditor.Models
         ) : base(
             HocrNodeType.Page,
             id,
-            string.Empty,
+            -1,
             title,
             language,
             direction,
@@ -53,8 +53,8 @@ namespace HocrEditor.Models
     public record HocrContentArea : HocrNode
     {
         public HocrContentArea(
-            string id,
-            string? parentId,
+            int id,
+            int parentId,
             string title,
             string language,
             Direction direction,
@@ -75,8 +75,8 @@ namespace HocrEditor.Models
     public record HocrParagraph : HocrNode
     {
         public HocrParagraph(
-            string id,
-            string? parentId,
+            int id,
+            int parentId,
             string title,
             string language,
             Direction direction,
@@ -97,8 +97,8 @@ namespace HocrEditor.Models
     public record HocrLine : HocrNode
     {
         public HocrLine(
-            string id,
-            string? parentId,
+            int id,
+            int parentId,
             string title,
             string language,
             Direction direction,
@@ -144,8 +144,8 @@ namespace HocrEditor.Models
     public record HocrTextFloat : HocrLine
     {
         public HocrTextFloat(
-            string id,
-            string parentId,
+            int id,
+            int parentId,
             string title,
             string language,
             Direction direction,
@@ -166,8 +166,8 @@ namespace HocrEditor.Models
     public record HocrCaption : HocrLine
     {
         public HocrCaption(
-            string id,
-            string parentId,
+            int id,
+            int parentId,
             string title,
             string language,
             Direction direction,
@@ -188,8 +188,8 @@ namespace HocrEditor.Models
     public sealed record HocrWord : HocrNode
     {
         public HocrWord(
-            string id,
-            string? parentId,
+            int id,
+            int parentId,
             string title,
             string language,
             Direction direction,
@@ -223,7 +223,7 @@ namespace HocrEditor.Models
 
     public record HocrImage : HocrNode
     {
-        public HocrImage(string id, string parentId, string title, string language, Direction direction) : base(
+        public HocrImage(int id, int parentId, string title, string language, Direction direction) : base(
             HocrNodeType.Image,
             id,
             parentId,

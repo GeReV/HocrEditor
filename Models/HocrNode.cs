@@ -9,7 +9,8 @@ namespace HocrEditor.Models
     {
         public static HocrNode FromHtmlNode(
             HtmlNode htmlNode,
-            string? parentId,
+            int id,
+            int parentId,
             string language,
             Direction direction,
             IEnumerable<IHocrNode> children
@@ -17,10 +18,9 @@ namespace HocrEditor.Models
         {
             var className = htmlNode.GetClasses().First();
 
-            var id = htmlNode.GetAttributeValue("id", string.Empty);
             var title = htmlNode.GetAttributeValue("title", string.Empty);
 
-            if (parentId == null)
+            if (parentId < 0)
             {
                 return new HocrPage(id, title, language, direction, children);
             }
@@ -54,8 +54,8 @@ namespace HocrEditor.Models
 
         protected HocrNode(
             HocrNodeType nodeType,
-            string id,
-            string? parentId,
+            int id,
+            int parentId,
             string title,
             string language,
             Direction direction,
@@ -75,8 +75,8 @@ namespace HocrEditor.Models
         public HocrNodeType NodeType { get; init; }
         public virtual HocrNodeType[] MatchingNodeTypes { get; } = Array.Empty<HocrNodeType>();
         public string Title { get; set; } = string.Empty;
-        public string Id { get; set; } = string.Empty;
-        public string? ParentId { get; set; }
+        public int Id { get; set; }
+        public int ParentId { get; set; }
 
         public Direction Direction { get; init; }
 

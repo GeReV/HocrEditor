@@ -7,18 +7,20 @@ namespace HocrEditor.Services
 {
     public class HocrPageParser
     {
+        private int idCounter;
+
         public HocrPage Parse(HtmlDocument document)
         {
             var pageNode = document.DocumentNode.SelectSingleNode("//body/div[@class='ocr_page']");
 
-            var page = Parse(pageNode, null, string.Empty, Direction.Ltr);
+            var page = Parse(pageNode, -1, string.Empty, Direction.Ltr);
 
             return (HocrPage)page;
         }
 
-        private static IHocrNode Parse(HtmlNode node, string? parentId, string language, Direction direction)
+        private IHocrNode Parse(HtmlNode node, int parentId, string language, Direction direction)
         {
-            var nodeId = node.GetAttributeValue("id", string.Empty);
+            var nodeId = idCounter++;
 
             language = node.GetAttributeValue("lang", language);
 
@@ -34,7 +36,7 @@ namespace HocrEditor.Services
                 .Select(childNode => Parse(childNode, nodeId, language, direction))
                 .ToList();
 
-            return HocrNode.FromHtmlNode(node, parentId, language, direction, children);
+            return HocrNode.FromHtmlNode(node, nodeId, parentId, language, direction, children);
         }
     }
 }

@@ -7,8 +7,8 @@ namespace HocrEditor.Models
     {
         public HocrNodeType NodeType { get; init; }
         public string Title { get; set; }
-        public string Id { get; set; }
-        public string? ParentId { get; set; }
+        public int Id { get; set; }
+        public int ParentId { get; set; }
         Direction Direction { get; init; }
         string Language { get; init; }
         public Rect BBox { get; set; }
