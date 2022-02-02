@@ -120,7 +120,7 @@ public partial class DocumentCanvas
         nameof(IsSelecting),
         typeof(bool),
         typeof(DocumentCanvas),
-        new PropertyMetadata(default(bool), IsSelectingChanged)
+        new FrameworkPropertyMetadata(default(bool), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, IsSelectingChanged)
     );
 
     public static readonly DependencyProperty SelectionBoundsProperty = DependencyProperty.Register(
