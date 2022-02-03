@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,7 +23,8 @@ namespace HocrEditor.ViewModels
 
             ImportCommand = new RelayCommand(Import);
 
-            SaveCommand = new RelayCommand(Save);
+            SaveCommand = new RelayCommand<bool>(Save);
+            OpenCommand = new RelayCommand(Open);
         }
 
         public bool AutoClean
@@ -32,7 +35,8 @@ namespace HocrEditor.ViewModels
 
         public HocrDocumentViewModel Document { get; set; } = new();
 
-        public IRelayCommand SaveCommand { get; }
+        public IRelayCommand<bool> SaveCommand { get; }
+        public IRelayCommand OpenCommand { get; }
         public IRelayCommand ImportCommand { get; }
 
 
@@ -65,13 +69,13 @@ namespace HocrEditor.ViewModels
             return tesseractPath;
         }
 
-        private void Save()
+        private void Save(bool forceSaveAs)
         {
-            if (Document.Filename == null)
+            if (Document.Filename == null || forceSaveAs)
             {
                 var dialog = new SaveFileDialog
                 {
-                    Title = "Save hOCR",
+                    Title = "Save hOCR File",
                     Filter = "hOCR file (*.hocr)|*.hocr",
                 };
 
@@ -88,6 +92,60 @@ namespace HocrEditor.ViewModels
             var htmlDocument = new HocrWriter(Document.Filename).Build(hocrDocument);
 
             htmlDocument.Save(Document.Filename);
+        }
+
+        private void Open()
+        {
+            if (Document.IsDirty)
+            {
+                // TODO: Handle existing document.
+            }
+
+            var tesseractPath = GetTesseractPath();
+
+            if (tesseractPath == null)
+            {
+                return;
+            }
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "Open hOCR File",
+                Filter = "hOCR file (*.hocr)|*.hocr",
+            };
+
+            if (dialog.ShowDialog(window) != true)
+            {
+                return;
+            }
+
+            Document = new HocrDocumentViewModel
+            {
+                Filename = dialog.FileName
+            };
+
+            Task.Run(
+                    () => new HocrParser().Parse(Document.Filename)
+                )
+                .ContinueWith(
+                    async hocrDocumentTask =>
+                    {
+                        try
+                        {
+                            var hocrDocument = await hocrDocumentTask;
+
+                            foreach (var page in hocrDocument.Pages.Select(hocrPage => new HocrPageViewModel(hocrPage)))
+                            {
+                                Document.Pages.Add(page);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"{ex.Message}\n{ex.Source}\n\n{ex.StackTrace}");
+                        }
+                    },
+                    TaskScheduler.FromCurrentSynchronizationContext()
+                );
         }
 
         private void Import()
@@ -130,15 +188,19 @@ namespace HocrEditor.ViewModels
                             var doc = new HtmlDocument();
                             doc.LoadHtml(body);
 
-                            return new HocrPageParser().Parse(doc);
+                            return new HocrParser().Parse(doc);
                         }
                     )
                     .ContinueWith(
-                        async hocrPage =>
+                        async hocrDocumentTask =>
                         {
                             try
                             {
-                                page.Build(await hocrPage);
+                                var hocrDocument = await hocrDocumentTask;
+
+                                Debug.Assert(hocrDocument.Pages.Count == 1);
+
+                                page.Build(hocrDocument.Pages.First());
 
                                 if (page.HocrPage == null)
                                 {

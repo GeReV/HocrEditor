@@ -15,6 +15,8 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
 {
     public UndoRedoManager UndoRedoManager { get; } = new();
 
+    public bool IsDirty { get; set; }
+
     public string? Filename { get; set; }
 
     public ObservableCollection<HocrPageViewModel> Pages { get; }

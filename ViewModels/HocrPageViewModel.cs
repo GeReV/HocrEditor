@@ -34,6 +34,11 @@ namespace HocrEditor.ViewModels
             }
         }
 
+        public HocrPageViewModel(HocrPage page) : this(page.Image)
+        {
+            Build(page);
+        }
+
         public HocrPageViewModel(string image)
         {
             Image = image;

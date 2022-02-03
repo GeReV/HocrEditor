@@ -16,6 +16,10 @@
                         Executed="CloseCommandBinding_OnExecuted" />
         <CommandBinding Command="Save"
                         Executed="SaveCommandBinding_OnExecuted" />
+        <CommandBinding Command="SaveAs"
+                        Executed="SaveCommandBinding_OnExecuted" />
+        <CommandBinding Command="Open"
+                        Executed="OpenCommandBinding_OnExecuted" />
     </Window.CommandBindings>
     <Window.InputBindings>
         <!-- Editing keybindings -->
@@ -63,9 +67,12 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
-                <MenuItem Header="_Open..." />
+                <MenuItem Header="_Open..."
+                          Command="Open" />
                 <MenuItem Header="_Save..."
                           Command="Save" />
+                <MenuItem Header="Save _as..."
+                          Command="SaveAs" />
                 <Separator />
                 <MenuItem Header="_Import..."
                           Command="{Binding ImportCommand}" />
@@ -122,7 +129,10 @@
             <ToolBar>
                 <Button Content="Import"
                         Command="{Binding ImportCommand}" />
-                <Button Content="Open" />
+                <Button Content="Open"
+                        Command="Open" />
+                <Button Content="Save"
+                        Command="Save" />
             </ToolBar>
             <ToolBar>
                 <Button Content="Undo"

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
@@ -54,19 +55,23 @@ public class OcrRegionCommand : UndoableCommandBase<Models.Rect>
                     var doc = new HtmlDocument();
                     doc.LoadHtml(body);
 
-                    return new HocrPageParser().Parse(doc);
+                    return new HocrParser().Parse(doc);
                 }
             )
             .ContinueWith(
-                async hocrPage =>
+                async hocrDocumentTask =>
                 {
                     try
                     {
-                        var p = new HocrPageViewModel(hocrPageViewModel.Image);
+                        var hocrDocument = await hocrDocumentTask;
 
-                        p.Build(await hocrPage);
+                        Debug.Assert(hocrDocument.Pages.Count == 1);
 
-                        var pRootNode = p.Nodes.First(n => n.IsRoot);
+                        var page = new HocrPageViewModel(hocrPageViewModel.Image);
+
+                        page.Build(hocrDocument.Pages.First());
+
+                        var pRootNode = page.Nodes.First(n => n.IsRoot);
 
                         var descendants = pRootNode.Descendents.ToList();
 

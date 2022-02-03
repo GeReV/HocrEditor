@@ -34,21 +34,18 @@ namespace HocrEditor.Models
 
             var dpi = GetAttributeFromTitle("scan_res")
                 .Split(" ", StringSplitOptions.RemoveEmptyEntries)
+                .Select(int.Parse)
                 .ToArray();
 
             if (dpi.Length == 2)
             {
-                Dpi = (float.Parse(dpi[0]), int.Parse(dpi[1]));
+                Dpi = (dpi[0], dpi[1]);
             }
         }
 
-        public (float, int) Dpi { get; }
+        public (int, int) Dpi { get; }
 
-        public string Image { get; }
-
-        public string OcrSystem { get; set; }
-
-        public List<string> Capabilities { get; } = new();
+        public string Image { get; set; }
 
         public IEnumerable<IHocrNode> Descendants => ChildNodes.RecursiveSelect(n => n.ChildNodes);
     }
@@ -116,18 +113,15 @@ namespace HocrEditor.Models
             children
         )
         {
-            Size = float.Parse(GetAttributeFromTitle("x_size"));
-            Descenders = float.Parse(GetAttributeFromTitle("x_descenders"));
-            Ascenders = float.Parse(GetAttributeFromTitle("x_ascenders"));
+            Size = float.Parse(GetAttributeFromTitle("x_fsize"));
 
             var baseline = GetAttributeFromTitle("baseline")
                 .Split(" ", StringSplitOptions.RemoveEmptyEntries)
-                .Select(float.Parse)
                 .ToArray();
 
             if (baseline.Length == 2)
             {
-                Baseline = (baseline[0], baseline[1]);
+                Baseline = (float.Parse(baseline[0]), int.Parse(baseline[1]));
             }
         }
 
@@ -138,10 +132,8 @@ namespace HocrEditor.Models
             HocrNodeType.TextFloat,
         };
 
-        public (float, float) Baseline { get; }
+        public (float, int) Baseline { get; }
         public float Size { get; }
-        public float Descenders { get; }
-        public float Ascenders { get; }
     }
 
     public record HocrTextFloat : HocrLine

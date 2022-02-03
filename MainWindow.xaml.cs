@@ -71,7 +71,12 @@ namespace HocrEditor
 
         private void SaveCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            ViewModel.SaveCommand.TryExecute();
+            ViewModel.SaveCommand.TryExecute(e.Command == ApplicationCommands.SaveAs);
+        }
+
+        private void OpenCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            ViewModel.OpenCommand.TryExecute();
         }
     }
 }

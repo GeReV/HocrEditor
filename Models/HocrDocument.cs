@@ -10,5 +10,9 @@ namespace HocrEditor.Models
         }
 
         public List<HocrPage> Pages { get; }
+
+        public string OcrSystem { get; set; } = string.Empty;
+
+        public List<string> Capabilities { get; } = new();
     }
 }

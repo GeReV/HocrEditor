@@ -45,10 +45,11 @@ public class HocrWriter
 
         head.AppendChild(document.CreateMeta("ocr-system", appName.ToString()));
 
-        var pageWithCapabilities = hocrDocument.Pages.FirstOrDefault(p => p.Capabilities.Any());
-        if (pageWithCapabilities != null)
+        if (hocrDocument.Capabilities.Any())
         {
-            head.AppendChild(document.CreateMeta("ocr-capabilities",  string.Join(' ', pageWithCapabilities.Capabilities)));
+            head.AppendChild(
+                document.CreateMeta("ocr-capabilities", string.Join(' ', hocrDocument.Capabilities))
+            );
         }
 
         // TODO
@@ -72,10 +73,9 @@ public class HocrWriter
             appName.Append($" {assemblyName.Version.ToString(3)}");
         }
 
-        var pageWithOcrSystem = hocrDocument.Pages.FirstOrDefault(p => !string.IsNullOrEmpty(p.OcrSystem));
-        if (pageWithOcrSystem != null)
+        if (!string.IsNullOrEmpty(hocrDocument.OcrSystem))
         {
-            appName.Append($" ({pageWithOcrSystem.OcrSystem})");
+            appName.Append($" ({hocrDocument.OcrSystem})");
         }
 
         return appName;
@@ -194,13 +194,16 @@ public class HocrWriter
         switch (hocrNode)
         {
             case HocrPage hocrPage:
-                var relativeImagePath = Path.GetRelativePath(filename, hocrPage.Image);
+                var relativeImagePath = Path.GetRelativePath(
+                    Path.GetDirectoryName(filename) ?? string.Empty,
+                    hocrPage.Image
+                );
 
                 sb.Append($"; image \"{relativeImagePath}\"");
                 sb.Append($"; ppageno {pageNumber}");
                 sb.Append($"; scan_res {hocrPage.Dpi.Item1} {hocrPage.Dpi.Item2}");
                 break;
-            case HocrLine hocrLine:
+            case HocrLine hocrLine: // Also Caption and TextFloat.
                 sb.Append($"; baseline {hocrLine.Baseline.Item1} {hocrLine.Baseline.Item2}");
                 sb.Append($"; x_fsize {hocrLine.Size}");
                 break;
