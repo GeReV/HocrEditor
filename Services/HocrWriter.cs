@@ -40,10 +40,7 @@ public class HocrWriter
     {
         var head = document.CreateElement("head");
 
-
-        var appName = BuildAppName(hocrDocument);
-
-        head.AppendChild(document.CreateMeta("ocr-system", appName.ToString()));
+        head.AppendChild(document.CreateMeta("ocr-system", hocrDocument.OcrSystem));
 
         if (hocrDocument.Capabilities.Any())
         {
@@ -60,25 +57,6 @@ public class HocrWriter
         head.AppendChild(document.CreateElement("title"));
 
         return head;
-    }
-
-    private static StringBuilder BuildAppName(HocrDocument hocrDocument)
-    {
-        var assemblyName = Assembly.GetExecutingAssembly().GetName();
-
-        var appName = new StringBuilder(assemblyName.Name);
-
-        if (assemblyName.Version != null)
-        {
-            appName.Append($" {assemblyName.Version.ToString(3)}");
-        }
-
-        if (!string.IsNullOrEmpty(hocrDocument.OcrSystem))
-        {
-            appName.Append($" ({hocrDocument.OcrSystem})");
-        }
-
-        return appName;
     }
 
     private HtmlNode CreateBody(HocrDocument hocrDocument)

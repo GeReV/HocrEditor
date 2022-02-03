@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Models;
@@ -42,20 +43,35 @@ public class ConvertToImageCommand : UndoableCommandBase<IEnumerable<HocrNodeVie
             return;
         }
 
+        if (hocrPageViewModel.HocrPage == null)
+        {
+            throw new InvalidOperationException("Expected Page's HocrPage to not be null.");
+        }
+
         var commands = new List<UndoRedoCommand>();
 
         commands.Add(new PageRemoveNodesCommand(hocrPageViewModel, selectedNodes.SelectMany(node => node.Children)));
 
-        commands.AddRange(
-            selectedNodes.Select(
-                node =>
-                    PropertyChangeCommand.FromProperty(
-                        node,
-                        n => n.NodeType,
-                        HocrNodeType.Image
-                    )
-            )
-        );
+        foreach (var node in selectedNodes)
+        {
+            var hocrImage = new HocrImage(
+                node.HocrNode.Id,
+                node.HocrNode.ParentId,
+                node.HocrNode.Title,
+                node.HocrNode.Language,
+                node.HocrNode.Direction
+            );
+
+            commands.Add(new CollectionReplaceCommand(hocrPageViewModel.HocrPage.ChildNodes, node.HocrNode, hocrImage));
+
+            commands.Add(
+                PropertyChangeCommand.FromProperty(
+                    node,
+                    n => n.HocrNode,
+                    hocrImage
+                )
+            );
+        }
 
         UndoRedoManager.ExecuteCommands(commands);
     }

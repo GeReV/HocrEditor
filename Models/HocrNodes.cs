@@ -113,15 +113,22 @@ namespace HocrEditor.Models
             children
         )
         {
-            Size = float.Parse(GetAttributeFromTitle("x_fsize"));
+            var size = GetAttributeFromTitle("x_size");
+            if (string.IsNullOrEmpty(size))
+            {
+                size = GetAttributeFromTitle("x_fsize");
+            }
+
+            Size = float.Parse(size);
 
             var baseline = GetAttributeFromTitle("baseline")
                 .Split(" ", StringSplitOptions.RemoveEmptyEntries)
+                .Select(float.Parse)
                 .ToArray();
 
             if (baseline.Length == 2)
             {
-                Baseline = (float.Parse(baseline[0]), int.Parse(baseline[1]));
+                Baseline = (baseline[0], (int)baseline[1]);
             }
         }
 
@@ -132,7 +139,7 @@ namespace HocrEditor.Models
             HocrNodeType.TextFloat,
         };
 
-        public (float, int) Baseline { get; }
+        public (float,int) Baseline { get; }
         public float Size { get; }
     }
 

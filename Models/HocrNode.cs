@@ -18,7 +18,7 @@ namespace HocrEditor.Models
         {
             var className = htmlNode.GetClasses().First();
 
-            var title = htmlNode.GetAttributeValue("title", string.Empty);
+            var title = HtmlEntity.DeEntitize(htmlNode.GetAttributeValue("title", string.Empty));
 
             if (parentId < 0)
             {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -33,41 +32,13 @@ namespace HocrEditor.ViewModels
             set => Settings.AutoClean = value;
         }
 
+        public bool IsSelecting { get; set; }
+
         public HocrDocumentViewModel Document { get; set; } = new();
 
         public IRelayCommand<bool> SaveCommand { get; }
         public IRelayCommand OpenCommand { get; }
         public IRelayCommand ImportCommand { get; }
-
-
-        public bool IsSelecting { get; set; }
-
-        private string? GetTesseractPath()
-        {
-            var tesseractPath = Settings.TesseractPath;
-
-            if (tesseractPath != null)
-            {
-                return tesseractPath;
-            }
-
-            var dialog = new OpenFileDialog
-            {
-                Title = "Locate tesseract.exe...",
-                Filter = "Executables (*.exe)|*.exe"
-            };
-
-            if (!(dialog.ShowDialog(Window.GetWindow(window)) ?? false))
-            {
-                return null;
-            }
-
-            tesseractPath = dialog.FileName;
-
-            Settings.TesseractPath = tesseractPath;
-
-            return tesseractPath;
-        }
 
         private void Save(bool forceSaveAs)
         {
@@ -87,9 +58,7 @@ namespace HocrEditor.ViewModels
                 Document.Filename = dialog.FileName;
             }
 
-            var hocrDocument = new HocrDocument(Document.Pages.Select(p => p.HocrPage!));
-
-            var htmlDocument = new HocrWriter(Document.Filename).Build(hocrDocument);
+            var htmlDocument = new HocrWriter(Document.Filename).Build(Document.BuildDocumentModel());
 
             htmlDocument.Save(Document.Filename);
         }
@@ -119,13 +88,10 @@ namespace HocrEditor.ViewModels
                 return;
             }
 
-            Document = new HocrDocumentViewModel
-            {
-                Filename = dialog.FileName
-            };
+            var filename = dialog.FileName;
 
             Task.Run(
-                    () => new HocrParser().Parse(Document.Filename)
+                    () => new HocrParser().Parse(filename)
                 )
                 .ContinueWith(
                     async hocrDocumentTask =>
@@ -134,10 +100,13 @@ namespace HocrEditor.ViewModels
                         {
                             var hocrDocument = await hocrDocumentTask;
 
-                            foreach (var page in hocrDocument.Pages.Select(hocrPage => new HocrPageViewModel(hocrPage)))
+                            Document = new HocrDocumentViewModel(
+                                hocrDocument,
+                                hocrDocument.Pages.Select(hocrPage => new HocrPageViewModel(hocrPage))
+                            )
                             {
-                                Document.Pages.Add(page);
-                            }
+                                Filename = filename
+                            };
                         }
                         catch (Exception ex)
                         {
@@ -198,6 +167,12 @@ namespace HocrEditor.ViewModels
                             {
                                 var hocrDocument = await hocrDocumentTask;
 
+                                Document.OcrSystem = hocrDocument.OcrSystem;
+
+                                Document.Capabilities.AddRange(
+                                    hocrDocument.Capabilities.ToHashSet().Except(Document.Capabilities)
+                                );
+
                                 Debug.Assert(hocrDocument.Pages.Count == 1);
 
                                 page.Build(hocrDocument.Pages.First());
@@ -245,6 +220,33 @@ namespace HocrEditor.ViewModels
                         TaskScheduler.FromCurrentSynchronizationContext()
                     );
             }
+        }
+
+        private string? GetTesseractPath()
+        {
+            var tesseractPath = Settings.TesseractPath;
+
+            if (tesseractPath != null)
+            {
+                return tesseractPath;
+            }
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "Locate tesseract.exe...",
+                Filter = "Executables (*.exe)|*.exe"
+            };
+
+            if (!(dialog.ShowDialog(Window.GetWindow(window)) ?? false))
+            {
+                return null;
+            }
+
+            tesseractPath = dialog.FileName;
+
+            Settings.TesseractPath = tesseractPath;
+
+            return tesseractPath;
         }
     }
 }

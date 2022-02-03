@@ -19,9 +19,19 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
 
     public string? Filename { get; set; }
 
+    private HocrDocument HocrDocument { get; set; }
+
     public ObservableCollection<HocrPageViewModel> Pages { get; }
 
     public ICollectionView PagesCollectionView { get; }
+
+    public string OcrSystem
+    {
+        get => HocrDocument.OcrSystem;
+        set => HocrDocument.OcrSystem = value;
+    }
+
+    public List<string> Capabilities => HocrDocument.Capabilities;
 
     public HocrPageViewModel? CurrentPage
     {
@@ -65,8 +75,10 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
     public IRelayCommand NextPageCommand { get; }
     public IRelayCommand PreviousPageCommand { get; }
 
-    public HocrDocumentViewModel(IEnumerable<HocrPageViewModel> pages)
+    public HocrDocumentViewModel(HocrDocument hocrDocument, IEnumerable<HocrPageViewModel> pages)
     {
+        HocrDocument = hocrDocument;
+
         Pages = new ObservableCollection<HocrPageViewModel>(pages);
 
         PagesCollectionView = CollectionViewSource.GetDefaultView(Pages);
@@ -96,8 +108,25 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
         UndoRedoManager.ExecuteCommand(Pages.ToCollectionRemoveCommand(page));
     }
 
-    public HocrDocumentViewModel() : this(Enumerable.Empty<HocrPageViewModel>())
+    public HocrDocumentViewModel() : this(
+        new HocrDocument(Enumerable.Empty<HocrPage>()),
+        Enumerable.Empty<HocrPageViewModel>()
+    )
     {
+    }
+
+    public HocrDocument BuildDocumentModel()
+    {
+        HocrDocument.Pages.Clear();
+
+        if (Pages.Any(page => page.HocrPage == null))
+        {
+            throw new InvalidOperationException("Expected all HocrPages to not be null");
+        }
+
+        HocrDocument.Pages.AddRange(Pages.Select(page => page.HocrPage!));
+
+        return HocrDocument;
     }
 
     private void PagesCollectionViewOnCurrentChanged(object? sender, EventArgs e)
