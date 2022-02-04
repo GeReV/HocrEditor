@@ -28,9 +28,9 @@ public class DeleteNodes : UndoableCommandBase<ICollection<HocrNodeViewModel>>
 
         var commands = new List<UndoRedoCommand>
         {
+            hocrPageViewModel.SelectedNodes.ToCollectionClearCommand(),
             new PageRemoveNodesCommand(hocrPageViewModel, nodes)
         };
-
 
         if (Settings.AutoClean)
         {
@@ -51,8 +51,6 @@ public class DeleteNodes : UndoableCommandBase<ICollection<HocrNodeViewModel>>
                 selectedNode => PropertyChangeCommand.FromProperty(selectedNode, n => n.IsSelected, false)
             )
         );
-
-        commands.Add(hocrPageViewModel.SelectedNodes.ToCollectionClearCommand());
 
         UndoRedoManager.ExecuteCommands(commands);
     }
