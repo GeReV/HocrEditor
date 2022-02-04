@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using HocrEditor.Commands;
 using HocrEditor.Controls;
@@ -63,9 +65,39 @@ namespace HocrEditor.ViewModels
             UndoCommand = new RelayCommand(UndoRedoManager.Undo, CanUndo);
             RedoCommand = new RelayCommand(UndoRedoManager.Redo, CanRedo);
 
+            Nodes.CollectionChanged += HandleNodesChanged;
             SelectedNodes.CollectionChanged += HandleSelectedNodesChanged;
 
             UndoRedoManager.UndoStackChanged += UpdateUndoRedoCommands;
+        }
+
+        private void HandleNodesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            // Make sure any deleted nodes are removed from selection.
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Remove:
+                case NotifyCollectionChangedAction.Replace:
+                    var oldItems = e.OldItems ?? throw new ArgumentException("e.OldItems");
+
+                    foreach (var item in oldItems.Cast<HocrNodeViewModel>())
+                    {
+                        foreach (var node in item.Descendants.Prepend(item))
+                        {
+                            SelectedNodes.Remove(node);
+                        }
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Reset:
+                    SelectedNodes.Clear();
+                    break;
+                case NotifyCollectionChangedAction.Move:
+                case NotifyCollectionChangedAction.Add:
+                    // Ignore.
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         public void Build(HocrPage hocrPage)
