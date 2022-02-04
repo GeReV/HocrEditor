@@ -106,6 +106,8 @@ public class OcrRegionCommand : UndoableCommandBase<Models.Rect>
 
                         commands.Add(hocrPageViewModel.Nodes.ToCollectionAddCommand(descendants));
 
+                        commands.Add(hocrPageViewModel.SelectedNodes.ToCollectionAddCommand(sourceRootNode.Children));
+
                         UndoRedoManager.ExecuteCommands(commands);
                     }
                     catch (Exception ex)
