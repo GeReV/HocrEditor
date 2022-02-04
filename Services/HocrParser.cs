@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using HocrEditor.Models;
@@ -31,7 +32,16 @@ namespace HocrEditor.Services
         {
             var pageNodes = document.DocumentNode.SelectNodes("//body/div[@class='ocr_page']");
 
-            var pages = pageNodes.Select(node => (HocrPage)Parse(node, -1, string.Empty, Direction.Ltr));
+            var pages = new List<HocrPage>();
+
+            foreach (var pageNode in pageNodes)
+            {
+                idCounter = 0;
+
+                var page = (HocrPage)Parse(pageNode, -1, string.Empty, Direction.Ltr);
+
+                pages.Add(page);
+            }
 
             var hocrDocument = new HocrDocument(pages);
 

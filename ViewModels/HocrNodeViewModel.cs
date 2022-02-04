@@ -42,7 +42,15 @@ namespace HocrEditor.ViewModels
 
         public int Id {
             get => HocrNode.Id;
-            set => HocrNode.Id = value;
+            set
+            {
+                HocrNode.Id = value;
+
+                foreach (var child in Children)
+                {
+                    child.ParentId = value;
+                }
+            }
         }
 
         public int ParentId
