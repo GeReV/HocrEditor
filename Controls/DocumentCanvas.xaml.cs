@@ -296,7 +296,7 @@ public partial class DocumentCanvas
         {
             var rootNode = newNodes[0];
 
-            documentCanvas.BuildDocumentElements(rootNode.Descendents.Prepend(rootNode));
+            documentCanvas.BuildDocumentElements(rootNode.Descendants.Prepend(rootNode));
 
             newNodes.SubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
 
@@ -1487,7 +1487,7 @@ public partial class DocumentCanvas
     private static IEnumerable<int> GetHierarchy(
         HocrNodeViewModel node
     ) =>
-        node.Descendents
+        node.Descendants
             .Prepend(node)
             .Select(n => n.Id);
 

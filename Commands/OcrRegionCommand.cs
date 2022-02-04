@@ -67,13 +67,13 @@ public class OcrRegionCommand : UndoableCommandBase<Models.Rect>
 
                         Debug.Assert(hocrDocument.Pages.Count == 1);
 
-                        var page = new HocrPageViewModel(hocrPageViewModel.Image);
+                        var tempPage = new HocrPageViewModel(hocrPageViewModel.Image);
 
-                        page.Build(hocrDocument.Pages.First());
+                        tempPage.Build(hocrDocument.Pages.First());
 
-                        var pRootNode = page.Nodes.First(n => n.IsRoot);
+                        var sourceRootNode = tempPage.Nodes.First(n => n.IsRoot);
 
-                        var descendants = pRootNode.Descendents.ToList();
+                        var descendants = sourceRootNode.Descendants.ToList();
 
                         var commands = new List<UndoRedoCommand>();
 
@@ -88,8 +88,7 @@ public class OcrRegionCommand : UndoableCommandBase<Models.Rect>
 
                         var pageRootNode = hocrPageViewModel.Nodes.First(n => n.IsRoot);
 
-
-                        foreach (var node in pRootNode.Children)
+                        foreach (var node in sourceRootNode.Children)
                         {
                             commands.Add(
                                 PropertyChangeCommand.FromProperty(node, n => n.Id, ++hocrPageViewModel.LastId)
@@ -99,7 +98,7 @@ public class OcrRegionCommand : UndoableCommandBase<Models.Rect>
 
                             commands.Add(pageRootNode.Children.ToCollectionAddCommand(node));
 
-                            foreach (var descendant in node.Descendents)
+                            foreach (var descendant in node.Descendants)
                             {
                                 descendant.Id = ++hocrPageViewModel.LastId;
                             }

@@ -79,7 +79,7 @@ public class MergeNodes : UndoableCommandBase<ICollection<HocrNodeViewModel>>
                     f => f.BBox,
                     () =>
                     {
-                        var newNodes = p.Descendents.Prepend(p).ToList();
+                        var newNodes = p.Descendants.Prepend(p).ToList();
 
                         return NodeHelpers.CalculateUnionRect(newNodes);
                     }

@@ -51,7 +51,7 @@ public class PageRemoveNodesCommand : UndoRedoCommand
 
         children.AddRange(
             nodes
-                .SelectMany(node => node.Descendents)
+                .SelectMany(node => node.Descendants)
                 .Except(nodes)
                 .Distinct()
         );

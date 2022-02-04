@@ -119,7 +119,7 @@ namespace HocrEditor.ViewModels
 
         public bool IsSelected { get; set; }
 
-        public IEnumerable<HocrNodeViewModel> Descendents => Children.RecursiveSelect(n => n.Children);
+        public IEnumerable<HocrNodeViewModel> Descendants => Children.RecursiveSelect(n => n.Children);
 
         public IEnumerable<HocrNodeViewModel> Ascendants
         {
