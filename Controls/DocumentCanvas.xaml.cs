@@ -131,7 +131,7 @@ public partial class DocumentCanvas
         nameof(SelectionBounds),
         typeof(Rect),
         typeof(DocumentCanvas),
-        new PropertyMetadata(default(Rect))
+        new FrameworkPropertyMetadata(default(Rect), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault)
     );
 
     public static readonly RoutedEvent NodesEditedEvent = EventManager.RegisterRoutedEvent(
@@ -280,6 +280,8 @@ public partial class DocumentCanvas
 
         foreach (var (_, element) in documentCanvas.elements.Values)
         {
+            element.Background = null;
+
             documentCanvas.elementPool.Return(element);
         }
 

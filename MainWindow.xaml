@@ -201,12 +201,12 @@
                                        ItemsSource="{Binding PagesCollectionView}" />
             <controls:DocumentCanvas Grid.Column="1"
                                      Margin="-1, 0"
-                                     ItemsSource="{Binding  Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
+                                     ItemsSource="{Binding Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
                                      SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                                      IsShowText="{Binding Document.ShowText}"
                                      IsSelecting="{Binding IsSelecting}"
                                      NodeVisibility="{Binding Document.NodeVisibility}"
-                                     SelectionBounds="{Binding  Document.SelectionBounds, Mode=OneWayToSource}"
+                                     SelectionBounds="{Binding Document.SelectionBounds}"
                                      NodesChanged="Canvas_OnNodesChanged"
                                      NodesEdited="OnNodeEdited"
                                      SelectionChanged="Canvas_OnSelectionChanged" />
