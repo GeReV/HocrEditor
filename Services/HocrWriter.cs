@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
@@ -12,23 +11,25 @@ namespace HocrEditor.Services;
 
 public class HocrWriter
 {
+    private readonly HocrDocument hocrDocument;
     private readonly string filename;
 
     private readonly HtmlDocument document = new();
 
     private readonly Dictionary<string, uint> nodeCounters = new();
 
-    public HocrWriter(string filename)
+    public HocrWriter(HocrDocument hocrDocument, string filename)
     {
+        this.hocrDocument = hocrDocument;
         this.filename = filename;
     }
 
-    public HtmlDocument Build(HocrDocument hocrDocument)
+    public HtmlDocument Build()
     {
         var html = document.CreateElement("html");
 
-        html.AppendChild(CreateHead(hocrDocument));
-        html.AppendChild(CreateBody(hocrDocument));
+        html.AppendChild(CreateHead());
+        html.AppendChild(CreateBody());
 
         document.DocumentNode.AppendChild(document.CreateComment("<!DOCTYPE html>"));
         document.DocumentNode.AppendChild(html);
@@ -36,7 +37,7 @@ public class HocrWriter
         return document;
     }
 
-    private HtmlNode CreateHead(HocrDocument hocrDocument)
+    private HtmlNode CreateHead()
     {
         var head = document.CreateElement("head");
 
@@ -59,21 +60,21 @@ public class HocrWriter
         return head;
     }
 
-    private HtmlNode CreateBody(HocrDocument hocrDocument)
+    private HtmlNode CreateBody()
     {
         var body = document.CreateElement("body");
 
-        var pageNumber = 1;
-
-        foreach (var page in hocrDocument.Pages)
+        for (var index = 0; index < hocrDocument.Pages.Count; index++)
         {
-            body.AppendChild(CreateNode(pageNumber++, page, page.Direction, page.Language));
+            var page = hocrDocument.Pages[index];
+
+            body.AppendChild(CreateNode(index, page, page.Direction, page.Language));
         }
 
         return body;
     }
 
-    private HtmlNode CreateNode(int pageNumber, IHocrNode hocrNode, Direction currentDirection, string currentLanguage)
+    private HtmlNode CreateNode(int pageIndex, IHocrNode hocrNode, Direction currentDirection, string currentLanguage)
     {
         var node = document.CreateElement(
             hocrNode.NodeType switch
@@ -113,7 +114,7 @@ public class HocrWriter
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        var id = $"{nodeId}_{pageNumber}";
+        var id = $"{nodeId}_{pageIndex + 1}";
 
         if (hocrNode.NodeType != HocrNodeType.Page)
         {
@@ -132,7 +133,7 @@ public class HocrWriter
         }
 
         node.SetAttributeValue("id", id);
-        node.SetAttributeValue("title", BuildTitle(hocrNode, pageNumber));
+        node.SetAttributeValue("title", BuildTitle(hocrNode, pageIndex));
 
         if (hocrNode.Direction != currentDirection)
         {
@@ -156,14 +157,14 @@ public class HocrWriter
         {
             foreach (var childNode in hocrNode.ChildNodes)
             {
-                node.AppendChild(CreateNode(pageNumber, childNode, currentDirection, currentLanguage));
+                node.AppendChild(CreateNode(pageIndex, childNode, currentDirection, currentLanguage));
             }
         }
 
         return node;
     }
 
-    private string BuildTitle(IHocrNode hocrNode, int pageNumber)
+    private string BuildTitle(IHocrNode hocrNode, int pageIndex)
     {
         var sb = new StringBuilder();
 
@@ -178,12 +179,14 @@ public class HocrWriter
                 );
 
                 sb.Append($"; image \"{relativeImagePath}\"");
-                sb.Append($"; ppageno {pageNumber}");
+                sb.Append($"; ppageno {pageIndex}");
                 sb.Append($"; scan_res {hocrPage.Dpi.Item1} {hocrPage.Dpi.Item2}");
                 break;
             case HocrLine hocrLine: // Also Caption and TextFloat.
+                var fontSizeFactor = 72.0f / hocrDocument.Pages[pageIndex].Dpi.Item2;
+
                 sb.Append($"; baseline {hocrLine.Baseline.Item1} {hocrLine.Baseline.Item2}");
-                sb.Append($"; x_fsize {hocrLine.Size}");
+                sb.Append($"; x_fsize {hocrLine.FontSize * fontSizeFactor}");
                 break;
             case HocrWord hocrWord:
                 sb.Append($"; x_wconf {hocrWord.Confidence}");

@@ -119,7 +119,7 @@ namespace HocrEditor.Models
                 size = GetAttributeFromTitle("x_fsize");
             }
 
-            Size = float.Parse(size);
+            FontSize = (int)float.Parse(size);
 
             var baseline = GetAttributeFromTitle("baseline")
                 .Split(" ", StringSplitOptions.RemoveEmptyEntries)
@@ -140,7 +140,7 @@ namespace HocrEditor.Models
         };
 
         public (float,int) Baseline { get; }
-        public float Size { get; }
+        public int FontSize { get; }
     }
 
     public record HocrTextFloat : HocrLine
@@ -210,17 +210,10 @@ namespace HocrEditor.Models
             Confidence = int.Parse(GetAttributeFromTitle("x_wconf"));
 
             Language = language;
-
-            var fsize = GetAttributeFromTitle("x_fsize");
-            if (!string.IsNullOrEmpty(fsize))
-            {
-                FontSize = int.Parse(fsize);
-            }
         }
 
         public string InnerText { get; set; }
         public float Confidence { get; }
-        public int FontSize { get; }
     }
 
     public record HocrImage : HocrNode

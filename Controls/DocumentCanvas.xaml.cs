@@ -1318,7 +1318,7 @@ public partial class DocumentCanvas
 
                         canvas.DrawRect(bounds, paint);
 
-                        var fontSize = ((HocrWord)node.HocrNode).FontSize;
+                        var fontSize = ((HocrLine)elements[node.ParentId].Item1.HocrNode).FontSize;
 
                         paint.TextSize = fontSize * fontInchRatio * page.Dpi.Item2 * transformation.ScaleY * 0.75f;
 
@@ -1646,6 +1646,7 @@ public partial class DocumentCanvas
         var rect = transformation.MapRect(element.Bounds);
 
         var word = (HocrWord)editingNode.HocrNode;
+        var line = (HocrLine)elements[word.ParentId].Item1.HocrNode;
         var page = (HocrPage?)editingNode.FindParent(HocrNodeType.Page)?.HocrNode;
 
         Canvas.SetLeft(TextBox, rect.Left);
@@ -1654,7 +1655,7 @@ public partial class DocumentCanvas
         TextBox.Height = rect.Height;
 
         var fontDpiRatio = (page?.Dpi.Item2 ?? 300) / 72f;
-        var fontSize = transformation.ScaleX * word.FontSize * fontDpiRatio * 0.6f;
+        var fontSize = transformation.ScaleX * line.FontSize * fontDpiRatio * 0.6f;
 
         TextBox.FontSize = fontSize;
         TextBlock.SetLineHeight(TextBox, fontSize);

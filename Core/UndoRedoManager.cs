@@ -121,7 +121,9 @@ public sealed class UndoRedoManager
     private void RemoveRedoCommands()
     {
         if (commands.Count > CurrentIndex + 1)
+        {
             commands.RemoveRange(CurrentIndex + 1, commands.Count - CurrentIndex - 1);
+        }
     }
 
     private void OnUndoStackChanged()

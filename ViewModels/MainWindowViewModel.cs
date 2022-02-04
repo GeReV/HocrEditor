@@ -58,7 +58,7 @@ namespace HocrEditor.ViewModels
                 Document.Filename = dialog.FileName;
             }
 
-            var htmlDocument = new HocrWriter(Document.Filename).Build(Document.BuildDocumentModel());
+            var htmlDocument = new HocrWriter(Document.BuildDocumentModel(), Document.Filename).Build();
 
             htmlDocument.Save(Document.Filename);
         }
@@ -184,8 +184,8 @@ namespace HocrEditor.ViewModels
                                 }
 
                                 var averageFontSize = page.HocrPage.Descendants
-                                    .Where(node => node.NodeType == HocrNodeType.Word)
-                                    .Cast<HocrWord>()
+                                    .Where(node => node.NodeType is HocrNodeType.Line or HocrNodeType.Caption or HocrNodeType.TextFloat)
+                                    .Cast<HocrLine>()
                                     .Average(node => node.FontSize);
 
                                 var (dpix, dpiy) = page.HocrPage.Dpi;
