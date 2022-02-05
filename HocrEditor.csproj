@@ -39,4 +39,8 @@
       <Resource Include="Icons\code.png" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include=".github" />
+    </ItemGroup>
+
 </Project>
