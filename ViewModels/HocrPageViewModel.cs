@@ -19,6 +19,8 @@ namespace HocrEditor.ViewModels
 
         public ObservableHashSet<HocrNodeViewModel> SelectedNodes { get; set; } = new();
 
+        public IEnumerable<HocrNodeViewModel> SelectableNodes => Nodes.Where(n => !n.IsRoot);
+
         public bool IsProcessing => HocrPage == null;
 
         public string Image { get; set; }

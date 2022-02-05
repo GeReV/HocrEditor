@@ -1649,15 +1649,13 @@ public partial class DocumentCanvas
 
         var word = (HocrWord)editingNode.HocrNode;
         var line = (HocrLine)elements[word.ParentId].Item1.HocrNode;
-        var page = (HocrPage?)editingNode.FindParent(HocrNodeType.Page)?.HocrNode;
 
         Canvas.SetLeft(TextBox, rect.Left);
         Canvas.SetTop(TextBox, rect.Top);
         TextBox.Width = rect.Width;
         TextBox.Height = rect.Height;
 
-        var fontDpiRatio = (page?.Dpi.Item2 ?? 300) / 72f;
-        var fontSize = transformation.ScaleX * line.FontSize * fontDpiRatio * 0.6f;
+        var fontSize = transformation.ScaleX * line.FontSize * 0.6f;
 
         TextBox.FontSize = fontSize;
         TextBlock.SetLineHeight(TextBox, fontSize);
