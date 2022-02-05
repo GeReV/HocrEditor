@@ -152,6 +152,7 @@
                 <Button Command="{Binding Document.CurrentPage.RedoCommand, FallbackValue={x:Null}}" Content="Redo" />
                 <Separator />
                 <Button
+                    Click="OcrRegionButton_OnClick"
                     Command="{Binding Document.CurrentPage.OcrRegionCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectionBounds, FallbackValue={x:Static models:Rect.Empty}}"
                     Content="OCR Selection" />
