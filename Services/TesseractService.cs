@@ -39,7 +39,7 @@ namespace HocrEditor.Services
             );
         }
 
-        public async Task<string> PerformOcrRegion(string filename, Rectangle region, string[] languages)
+        public async Task<string> PerformOcrRegion(string filename, Rectangle region, IEnumerable<string> languages)
         {
             using var image = Image.FromFile(filename);
 

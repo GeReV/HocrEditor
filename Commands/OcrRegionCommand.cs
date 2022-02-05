@@ -49,7 +49,7 @@ public class OcrRegionCommand : UndoableCommandBase<Models.Rect>
                     var body = await service.PerformOcrRegion(
                         hocrPageViewModel.Image,
                         region,
-                        new[] { "script/Hebrew", "eng" }
+                        Settings.TesseractSelectedLanguages
                     );
 
                     var doc = new HtmlDocument();
