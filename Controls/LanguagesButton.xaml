@@ -1,0 +1,69 @@
+﻿<UserControl x:Class="HocrEditor.Controls.LanguagesButton"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:dd="urn:gong-wpf-dragdrop"
+             mc:Ignorable="d"
+             d:DesignHeight="300"
+             d:DesignWidth="300">
+    <UserControl.Resources>
+        <Style TargetType="{x:Type ToggleButton}"
+               BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}" />
+    </UserControl.Resources>
+    <Grid>
+        <ToggleButton x:Name="Button">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="16" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="Label"
+                           Grid.Column="0">
+                    OCR Languages
+                </TextBlock>
+                <Path x:Name="Arrow"
+                      Grid.Column="1"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Data="M 0 0 L 4 4 L 8 0 Z">
+                    <Path.Fill>
+                        <SolidColorBrush Color="{x:Static SystemColors.ControlTextColor}" />
+                    </Path.Fill>
+                </Path>
+            </Grid>
+        </ToggleButton>
+        <Popup x:Name="Popup"
+               PlacementTarget="{Binding ElementName=Button}"
+               StaysOpen="False"
+               IsOpen="{Binding IsChecked, ElementName=Button}"
+               Closed="Popup_OnClosed">
+            <Border>
+                <ListBox ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                         HorizontalContentAlignment="Stretch"
+                         SelectionMode="Single"
+                         dd:DragDrop.IsDragSource="True"
+                         dd:DragDrop.IsDropTarget="True"
+                         dd:DragDrop.DragDropContext="languages">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="{x:Type ListBoxItem}">
+                            <Setter Property="Padding"
+                                    Value="0" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel HorizontalAlignment="Stretch">
+                                <CheckBox IsChecked="{Binding IsSelected}"
+                                          VerticalAlignment="Center"
+                                          VerticalContentAlignment="Center"
+                                          Content="{Binding DisplayText}"
+                                          Padding="2" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

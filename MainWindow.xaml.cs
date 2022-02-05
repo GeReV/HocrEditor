@@ -1,9 +1,13 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using HocrEditor.Controls;
+using HocrEditor.Core;
 using HocrEditor.Helpers;
+using HocrEditor.Services;
 using HocrEditor.ViewModels;
 
 namespace HocrEditor
@@ -13,18 +17,74 @@ namespace HocrEditor
     /// </summary>
     public partial class MainWindow
     {
-        private MainWindowViewModel ViewModel => (MainWindowViewModel)DataContext;
-
         public MainWindow()
         {
             InitializeComponent();
 
             DataContext = new MainWindowViewModel(this);
+
+            Loaded += OnLoaded;
         }
 
-        private void Button_OnClick(object? sender, RoutedEventArgs e)
+        private async void OnLoaded(object sender, RoutedEventArgs e)
         {
+            await InitializeLanguages();
+        }
 
+        private async Task InitializeLanguages()
+        {
+            var tesseractPath = Settings.TesseractPath;
+
+            if (tesseractPath == null)
+            {
+                return;
+            }
+
+            var languages = await new TesseractService(tesseractPath).GetLanguages();
+
+            if (!languages.Any())
+            {
+                throw new InvalidOperationException("Tesseract returned no available languages.");
+            }
+
+            var selectedLanguages = Settings.TesseractSelectedLanguages;
+
+            if (!selectedLanguages.Any())
+            {
+                const string english = "eng";
+
+                selectedLanguages.Add(languages.Contains(english) ? english : languages.First());
+            }
+
+            languages.Sort(
+                (a, b) =>
+                {
+                    var indexA = selectedLanguages.IndexOf(a);
+                    var indexB = selectedLanguages.IndexOf(b);
+
+                    return (indexA, indexB) switch
+                    {
+                        // Unselected languages are compared based on name.
+                        (-1, -1) =>
+                            // Scripts sink to bottom. Everything else is string compared.
+                            (a.StartsWith("script/"), b.StartsWith("script/")) switch
+                            {
+                                (true, false) => 1,
+                                (false, true) => -1,
+                                _ => string.Compare(a, b, StringComparison.Ordinal),
+                            },
+                        // Selected languages rise up.
+                        (-1, _) => 1,
+                        (_, -1) => -1,
+                        _ => indexA.CompareTo(indexB)
+                    };
+                }
+            );
+
+            foreach (var language in languages)
+            {
+                ViewModel.TesseractLanguages.Add(new TesseractLanguage(language, selectedLanguages.Contains(language)));
+            }
         }
 
         private void Canvas_OnNodesChanged(object? sender, NodesChangedEventArgs e)

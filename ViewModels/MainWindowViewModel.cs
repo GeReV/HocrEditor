@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using HocrEditor.Core;
+using HocrEditor.Helpers;
 using HocrEditor.Models;
 using HocrEditor.Services;
 using HtmlAgilityPack;
@@ -24,6 +28,15 @@ namespace HocrEditor.ViewModels
 
             SaveCommand = new RelayCommand<bool>(Save);
             OpenCommand = new RelayCommand(Open);
+
+            TesseractLanguages.CollectionChanged += TesseractLanguagesChanged;
+            TesseractLanguages.SubscribeItemPropertyChanged(TesseractLanguagesChanged);
+        }
+
+        private void TesseractLanguagesChanged(object? sender, EventArgs e)
+        {
+            Settings.TesseractSelectedLanguages =
+                TesseractLanguages.Where(l => l.IsSelected).Select(l => l.Language).ToList();
         }
 
         public bool AutoClean
@@ -33,6 +46,8 @@ namespace HocrEditor.ViewModels
         }
 
         public bool IsSelecting { get; set; }
+
+        public ObservableCollection<TesseractLanguage> TesseractLanguages { get; } = new();
 
         public HocrDocumentViewModel Document { get; set; } = new();
 
@@ -152,7 +167,11 @@ namespace HocrEditor.ViewModels
                 Task.Run(
                         async () =>
                         {
-                            var body = await service.PerformOcr(page.Image, new[] { "script/Hebrew", "eng" });
+                            var languages = TesseractLanguages.Where(l => l.IsSelected)
+                                .Select(l => l.Language)
+                                .ToArray();
+
+                            var body = await service.PerformOcr(page.Image, languages);
 
                             var doc = new HtmlDocument();
                             doc.LoadHtml(body);
@@ -184,7 +203,10 @@ namespace HocrEditor.ViewModels
                                 }
 
                                 var averageFontSize = page.HocrPage.Descendants
-                                    .Where(node => node.NodeType is HocrNodeType.Line or HocrNodeType.Caption or HocrNodeType.TextFloat)
+                                    .Where(
+                                        node => node.NodeType is HocrNodeType.Line or HocrNodeType.Caption
+                                            or HocrNodeType.TextFloat
+                                    )
                                     .Cast<HocrLine>()
                                     .Average(node => node.FontSize);
 

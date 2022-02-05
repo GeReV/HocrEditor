@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -16,9 +17,9 @@ namespace HocrEditor.Services
 
         public string TesseractPath { get; private set; }
 
-        public async void GetLanguages()
+        public async Task<List<string>> GetLanguages()
         {
-            var languages = await Task.Run(
+            return await Task.Run(
                 async () =>
                 {
                     var result = await ProcessRunner.Run(TesseractPath, "--list-langs");

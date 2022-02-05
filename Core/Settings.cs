@@ -1,5 +1,8 @@
-﻿using System.Collections.Specialized;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Configuration;
+using System.Linq;
 
 namespace HocrEditor.Core
 {
@@ -16,6 +19,14 @@ namespace HocrEditor.Core
             }
         }
 
+        public static List<string> TesseractSelectedLanguages
+        {
+            get => (GetSetting(nameof(TesseractSelectedLanguages)) ?? string.Empty)
+                .Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .ToList();
+            set => SetSetting(nameof(TesseractSelectedLanguages), string.Join(';', value));
+        }
+
         public static bool AutoClean
         {
             get => GetSettingAs(nameof(AutoClean), true);
@@ -26,27 +37,28 @@ namespace HocrEditor.Core
 
         private static T? GetSettingAs<T>(string key) => GetValueAs<T>(ConfigurationManager.AppSettings, key);
 
-        private static T GetSettingAs<T>(string key, T defaultValue) => GetValueAs<T>(ConfigurationManager.AppSettings, key) ?? defaultValue;
+        private static T GetSettingAs<T>(string key, T defaultValue) =>
+            GetValueAs<T>(ConfigurationManager.AppSettings, key) ?? defaultValue;
 
         private static void SetSetting<T>(string key, T value) where T : notnull
         {
             // try
             // {
-                var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-                var settings = configFile.AppSettings.Settings;
+            var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            var settings = configFile.AppSettings.Settings;
 
-                if (settings[key] == null)
-                {
-                    settings.Add(key, value.ToString());
-                }
-                else
-                {
-                    settings[key].Value = value.ToString();
-                }
+            if (settings[key] == null)
+            {
+                settings.Add(key, value.ToString());
+            }
+            else
+            {
+                settings[key].Value = value.ToString();
+            }
 
-                configFile.Save(ConfigurationSaveMode.Modified);
+            configFile.Save(ConfigurationSaveMode.Modified);
 
-                ConfigurationManager.RefreshSection(configFile.AppSettings.SectionInformation.Name);
+            ConfigurationManager.RefreshSection(configFile.AppSettings.SectionInformation.Name);
             // }
             // catch (ConfigurationErrorsException)
             // {

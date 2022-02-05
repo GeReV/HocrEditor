@@ -136,6 +136,8 @@
                         Command="Open" />
                 <Button Content="Save"
                         Command="Save" />
+                <Separator />
+                <controls:LanguagesButton ItemsSource="{Binding TesseractLanguages}" />
             </ToolBar>
             <ToolBar>
                 <Button Content="Undo"
