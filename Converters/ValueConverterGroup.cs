@@ -1,4 +1,5 @@
-﻿using System;
+﻿// Adapted from: https://gist.github.com/awatertrevi/68924981bdea1800f5af162e4eb2b1f5
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -6,7 +7,6 @@ using System.Windows.Data;
 
 namespace HocrEditor.Converters;
 
-// https://gist.github.com/awatertrevi/68924981bdea1800f5af162e4eb2b1f5
 public class ValueConverterGroup : List<IValueConverter>, IValueConverter
 {
     private string[]? parameters;

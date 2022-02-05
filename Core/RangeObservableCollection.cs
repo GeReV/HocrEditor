@@ -1,4 +1,4 @@
-﻿// https://gist.github.com/weitzhandler/65ac9113e31d12e697cb58cd92601091
+﻿// Adapted from: https://gist.github.com/weitzhandler/65ac9113e31d12e697cb58cd92601091
 
 using System;
 using System.Collections;

@@ -1,4 +1,5 @@
-﻿// https://github.com/dotnet/efcore/blob/547f75a88e3bc19bedfec9e270141ae51a6742fe/src/EFCore/ChangeTracking/ObservableHashSet.cs
+﻿// Adapted from source of EFCore (https://github.com/dotnet/efcore)
+// https://github.com/dotnet/efcore/blob/547f75a88e3bc19bedfec9e270141ae51a6742fe/src/EFCore/ChangeTracking/ObservableHashSet.cs
 
 using System;
 using System.Collections;
