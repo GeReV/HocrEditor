@@ -166,8 +166,7 @@ namespace HocrEditor.ViewModels
                         async () =>
                         {
                             var languages = TesseractLanguages.Where(l => l.IsSelected)
-                                .Select(l => l.Language)
-                                .ToArray();
+                                .Select(l => l.Language);
 
                             var body = await service.PerformOcr(page.Image, languages);
 

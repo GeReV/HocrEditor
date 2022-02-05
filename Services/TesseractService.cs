@@ -29,7 +29,7 @@ namespace HocrEditor.Services
             );
         }
 
-        public async Task<string> PerformOcr(string filename, string[] languages)
+        public async Task<string> PerformOcr(string filename, IEnumerable<string> languages)
         {
             using var image = Image.FromFile(filename);
 
