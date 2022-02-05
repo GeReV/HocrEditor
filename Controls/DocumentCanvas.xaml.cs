@@ -1023,7 +1023,7 @@ public partial class DocumentCanvas
         {
             var (parentNode, parentElement) = elements[ascendant.Id];
 
-            if (node.BBox.Equals(parentNode.BBox))
+            if (!parentNode.IsRoot && parentNode.BBox.Equals(node.BBox))
             {
                 (node, _) = (parentNode, parentElement);
             }
