@@ -15,7 +15,7 @@ namespace HocrEditor.ViewModels
         public int LastId { get; set; }
         public HocrPage? HocrPage { get; private set; }
 
-        public RangeObservableCollection<HocrNodeViewModel> Nodes { get; private set; } = new();
+        public RangeObservableCollection<HocrNodeViewModel> Nodes { get; } = new();
 
         public ObservableHashSet<HocrNodeViewModel> SelectedNodes { get; set; } = new();
 
