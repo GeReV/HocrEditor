@@ -285,6 +285,8 @@ public partial class DocumentCanvas
             documentCanvas.elementPool.Return(element);
         }
 
+        documentCanvas.rootId = -1;
+
         documentCanvas.elements.Clear();
 
         if (e.OldValue is ObservableCollection<HocrNodeViewModel> oldNodes && oldNodes.Any())
@@ -294,19 +296,20 @@ public partial class DocumentCanvas
             oldNodes.CollectionChanged -= documentCanvas.NodesOnCollectionChanged;
         }
 
-        if (e.NewValue is ObservableCollection<HocrNodeViewModel> newNodes && newNodes.Any())
+        if (e.NewValue is ObservableCollection<HocrNodeViewModel> newNodes)
         {
-            var rootNode = newNodes[0];
-
-            documentCanvas.BuildDocumentElements(rootNode.Descendants.Prepend(rootNode));
-
             newNodes.SubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
 
             newNodes.CollectionChanged += documentCanvas.NodesOnCollectionChanged;
 
-            documentCanvas.CenterTransformation();
+            if (newNodes.Any())
+            {
+                documentCanvas.BuildDocumentElements(newNodes);
 
-            documentCanvas.Refresh();
+                documentCanvas.CenterTransformation();
+
+                documentCanvas.Refresh();
+            }
         }
     }
 
@@ -454,7 +457,14 @@ public partial class DocumentCanvas
             case NotifyCollectionChangedAction.Add:
                 if (e.NewItems != null)
                 {
+                    var isNewDocument = rootId < 0;
+
                     BuildDocumentElements(e.NewItems.Cast<HocrNodeViewModel>());
+
+                    if (isNewDocument)
+                    {
+                        CenterTransformation();
+                    }
                 }
 
                 UpdateCanvasSelection();
