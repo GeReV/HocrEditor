@@ -135,7 +135,7 @@ public partial class DocumentCanvas
     );
 
     public static readonly RoutedEvent NodesEditedEvent = EventManager.RegisterRoutedEvent(
-        "NodesEdited",
+        nameof(NodesEdited),
         RoutingStrategy.Bubble,
         typeof(EventHandler<NodesEditedEventArgs>),
         typeof(DocumentCanvas)
