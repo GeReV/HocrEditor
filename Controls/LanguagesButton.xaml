@@ -28,7 +28,7 @@
                       VerticalAlignment="Center"
                       Data="M 0 0 L 4 4 L 8 0 Z">
                     <Path.Fill>
-                        <SolidColorBrush Color="{x:Static SystemColors.ControlTextColor}" />
+                        <SolidColorBrush Color="#444444" />
                     </Path.Fill>
                 </Path>
             </Grid>
