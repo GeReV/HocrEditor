@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -370,14 +369,11 @@ public class TreeViewMultipleSelectionBehavior : Behavior<TreeView>
     private static IList<T> GetItemsRecursively<T>(ItemsControl parentItem)
         where T : ItemsControl
     {
-        if (parentItem == null)
-        {
-            throw new ArgumentNullException(nameof(parentItem));
-        }
+        ArgumentNullException.ThrowIfNull(parentItem);
 
         var items = new List<T>();
 
-        for (int i = 0; i < parentItem.Items.Count; i++)
+        for (var i = 0; i < parentItem.Items.Count; i++)
         {
             var item = parentItem.ItemContainerGenerator.ContainerFromIndex(i) as T;
             if (item != null)
@@ -401,10 +397,7 @@ public class TreeViewMultipleSelectionBehavior : Behavior<TreeView>
     private T? GetRelativeItem<T>(T? item, int relativePosition)
         where T : ItemsControl
     {
-        if (item == null)
-        {
-            throw new ArgumentNullException(nameof(item));
-        }
+        ArgumentNullException.ThrowIfNull(item);
 
         var items = GetItemsRecursively<T>(AssociatedObject);
 

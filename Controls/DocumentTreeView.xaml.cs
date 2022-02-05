@@ -7,7 +7,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using GongSolutions.Wpf.DragDrop;
-using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.ViewModels;
 
@@ -119,11 +118,8 @@ public partial class DocumentTreeView
             parent = parent.Parent;
         }
 
-        if (parent == null)
-        {
-            // This should never be reached.
-            throw new InvalidOperationException($"{nameof(parent)} is expected to not be null.");
-        }
+        // This should never be reached. Parent should always terminate before reaching the root node.
+        ArgumentNullException.ThrowIfNull(parent);
 
         // Find the item from the parent node. This is done recursively by this function.
         // To receive a result from this function, the item for the passed object  must be visible
@@ -167,7 +163,7 @@ public partial class DocumentTreeView
             return;
         }
 
-        Ensure.IsNotNull(nameof(editingNode), editingNode);
+        ArgumentNullException.ThrowIfNull(editingNode);
 
         OnNodeEdited(editableTextBlock.Text);
 

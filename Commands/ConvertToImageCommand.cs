@@ -43,14 +43,12 @@ public class ConvertToImageCommand : UndoableCommandBase<IEnumerable<HocrNodeVie
             return;
         }
 
-        if (hocrPageViewModel.HocrPage == null)
+        ArgumentNullException.ThrowIfNull(hocrPageViewModel.HocrPage);
+
+        var commands = new List<UndoRedoCommand>
         {
-            throw new InvalidOperationException("Expected Page's HocrPage to not be null.");
-        }
-
-        var commands = new List<UndoRedoCommand>();
-
-        commands.Add(new PageRemoveNodesCommand(hocrPageViewModel, selectedNodes.SelectMany(node => node.Children)));
+            new PageRemoveNodesCommand(hocrPageViewModel, selectedNodes.SelectMany(node => node.Children))
+        };
 
         foreach (var node in selectedNodes)
         {

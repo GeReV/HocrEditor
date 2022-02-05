@@ -315,9 +315,9 @@ public partial class DocumentCanvas
 
     private void NodesOnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        Ensure.IsNotNull(nameof(sender), sender);
+        ArgumentNullException.ThrowIfNull(sender);
 
-        var node = (HocrNodeViewModel)sender!;
+        var node = (HocrNodeViewModel)sender;
 
         switch (e.PropertyName)
         {
@@ -1650,7 +1650,7 @@ public partial class DocumentCanvas
 
     private void UpdateTextBox()
     {
-        Ensure.IsNotNull(nameof(editingNode), editingNode);
+        ArgumentNullException.ThrowIfNull(editingNode);
 
         var element = elements[editingNode!.Id].Item2;
         var rect = transformation.MapRect(element.Bounds);
