@@ -190,8 +190,6 @@ public partial class DocumentCanvas
     private int rootId = -1;
     private readonly Dictionary<int, (HocrNodeViewModel, Element)> elements = new();
 
-    private HocrNodeViewModel RootNode => elements[rootId].Item1;
-
     private Element RootElement => elements[rootId].Item2;
 
     private Dictionary<HocrNodeType, bool> nodeVisibilityDictionary = new();
@@ -1281,12 +1279,6 @@ public partial class DocumentCanvas
         using var shaper = new SKShaper(SKTypeface.Default);
         using var paint = new SKPaint(new SKFont(SKTypeface.Default));
 
-        var rootNode = RootNode;
-
-        var page = (HocrPage)rootNode.HocrNode;
-
-        const float fontInchRatio = 1.0f / 72.0f;
-
         void Recurse(int key)
         {
             var (node, element) = elements[key];
@@ -1330,7 +1322,7 @@ public partial class DocumentCanvas
 
                         var fontSize = ((HocrLine)elements[node.ParentId].Item1.HocrNode).FontSize;
 
-                        paint.TextSize = fontSize * fontInchRatio * page.Dpi.Item2 * transformation.ScaleY * 0.75f;
+                        paint.TextSize = fontSize * transformation.ScaleY * 0.75f;
 
                         paint.Color = SKColors.Black;
                         paint.IsStroke = false;

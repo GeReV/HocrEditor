@@ -183,10 +183,8 @@ public class HocrWriter
                 sb.Append($"; scan_res {hocrPage.Dpi.Item1} {hocrPage.Dpi.Item2}");
                 break;
             case HocrLine hocrLine: // Also Caption and TextFloat.
-                var fontSizeFactor = 72.0f / hocrDocument.Pages[pageIndex].Dpi.Item2;
-
                 sb.Append($"; baseline {hocrLine.Baseline.Item1} {hocrLine.Baseline.Item2}");
-                sb.Append($"; x_fsize {hocrLine.FontSize * fontSizeFactor}");
+                sb.Append($"; x_fsize {hocrLine.FontSize}");
                 break;
             case HocrWord hocrWord:
                 sb.Append($"; x_wconf {hocrWord.Confidence}");
