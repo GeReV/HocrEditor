@@ -45,9 +45,12 @@
                         <Image
                             Name="PagePreview"
                             RenderOptions.BitmapScalingMode="HighQuality"
-                            Source="{Binding Image}"
                             Stretch="Uniform"
-                            StretchDirection="DownOnly" />
+                            StretchDirection="DownOnly">
+                            <Image.Source>
+                                <BitmapImage DecodePixelWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=UserControl}}" UriSource="{Binding Image}" />
+                            </Image.Source>
+                        </Image>
                         <ProgressBar
                             IsIndeterminate="True"
                             VerticalAlignment="Bottom"
