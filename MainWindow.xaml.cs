@@ -138,10 +138,5 @@ namespace HocrEditor
         {
             ViewModel.OpenCommand.TryExecute();
         }
-
-        private void OcrRegionButton_OnClick(object sender, RoutedEventArgs e)
-        {
-            ViewModel.IsSelecting = false;
-        }
     }
 }
