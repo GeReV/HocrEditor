@@ -37,6 +37,8 @@
       <Resource Include="Icons\font.png" />
       <None Remove="Icons\code.png" />
       <Resource Include="Icons\code.png" />
+      <None Remove="Icons\heading.png" />
+      <Resource Include="Icons\heading.png" />
     </ItemGroup>
 
     <ItemGroup>

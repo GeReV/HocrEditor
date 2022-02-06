@@ -48,6 +48,8 @@ namespace HocrEditor.Models
                 "ocrx_word" => new HocrWord(id, parentId, title, language, direction, htmlNode.InnerText),
                 "ocr_textfloat" => new HocrTextFloat(id, parentId, title, language, direction, children),
                 "ocr_caption" => new HocrCaption(id, parentId, title, language, direction, children),
+                "ocr_header" => new HocrHeader(id, parentId, title, language, direction, children),
+                "ocr_footer" => new HocrFooter(id, parentId, title, language, direction, children),
                 _ => throw new ArgumentOutOfRangeException($"Unknown class name {className}")
             };
         }
@@ -73,7 +75,6 @@ namespace HocrEditor.Models
         }
 
         public HocrNodeType NodeType { get; init; }
-        public virtual HocrNodeType[] MatchingNodeTypes { get; } = Array.Empty<HocrNodeType>();
         public string Title { get; set; } = string.Empty;
         public int Id { get; set; }
         public int ParentId { get; set; }
@@ -84,6 +85,13 @@ namespace HocrEditor.Models
 
         public Rect BBox { get; set; }
         public List<IHocrNode> ChildNodes { get; }
+
+        public bool IsLineElement => NodeType is
+            HocrNodeType.Line or
+            HocrNodeType.Header or
+            HocrNodeType.Footer or
+            HocrNodeType.Caption or
+            HocrNodeType.TextFloat;
 
         protected string GetAttributeFromTitle(string attribute)
         {

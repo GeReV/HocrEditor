@@ -5,13 +5,14 @@ namespace HocrEditor.Models
 {
     public interface IHocrNode
     {
-        public HocrNodeType NodeType { get; init; }
-        public string Title { get; set; }
+        public HocrNodeType NodeType { get; }
+        public string Title { get; }
         public int Id { get; set; }
         public int ParentId { get; set; }
-        Direction Direction { get; init; }
-        string Language { get; init; }
+        Direction Direction { get; }
+        string Language { get; }
         public Rect BBox { get; set; }
         public List<IHocrNode> ChildNodes { get; }
+        public bool IsLineElement { get; }
     }
 }

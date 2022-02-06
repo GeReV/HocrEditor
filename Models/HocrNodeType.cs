@@ -8,6 +8,8 @@ public enum HocrNodeType
     Line,
     TextFloat,
     Caption,
+    Header,
+    Footer,
     Word,
     Image,
 }

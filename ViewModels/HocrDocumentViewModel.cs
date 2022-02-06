@@ -61,6 +61,8 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
                     HocrNodeType.ContentArea,
                     HocrNodeType.Paragraph,
                     HocrNodeType.Line,
+                    HocrNodeType.Header,
+                    HocrNodeType.Footer,
                     HocrNodeType.Caption,
                     HocrNodeType.TextFloat,
                     HocrNodeType.Word,

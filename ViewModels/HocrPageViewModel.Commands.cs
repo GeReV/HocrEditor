@@ -28,26 +28,17 @@ namespace HocrEditor.ViewModels
 
             var item = list.First();
 
-            switch (item.NodeType)
+            if (item.NodeType == HocrNodeType.Image)
             {
-                case HocrNodeType.Page:
-                case HocrNodeType.ContentArea:
-                case HocrNodeType.Paragraph:
-                case HocrNodeType.Line:
-                case HocrNodeType.TextFloat:
-                case HocrNodeType.Caption:
-                case HocrNodeType.Word:
-                    ExclusiveSelectNodesCommand.TryExecute(
-                        Nodes.Where(n => n.NodeType == item.NodeType && n.InnerText == item.InnerText).ToList()
-                    );
-                    break;
-                case HocrNodeType.Image:
-                    ExclusiveSelectNodesCommand.TryExecute(
+                ExclusiveSelectNodesCommand.TryExecute(
                         Nodes.Where(n => n.NodeType == item.NodeType).ToList()
                     );
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+            }
+            else
+            {
+                ExclusiveSelectNodesCommand.TryExecute(
+                    Nodes.Where(n => n.NodeType == item.NodeType && n.InnerText == item.InnerText).ToList()
+                );
             }
         }
 

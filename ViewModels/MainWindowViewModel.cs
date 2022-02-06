@@ -200,10 +200,7 @@ namespace HocrEditor.ViewModels
                                 }
 
                                 var averageFontSize = page.HocrPage.Descendants
-                                    .Where(
-                                        node => node.NodeType is HocrNodeType.Line or HocrNodeType.Caption
-                                            or HocrNodeType.TextFloat
-                                    )
+                                    .Where(node => node.IsLineElement)
                                     .Cast<HocrLine>()
                                     .Average(node => node.FontSize);
 

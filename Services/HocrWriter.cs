@@ -77,13 +77,13 @@ public class HocrWriter
     private HtmlNode CreateNode(int pageIndex, IHocrNode hocrNode, Direction currentDirection, string currentLanguage)
     {
         var node = document.CreateElement(
-            hocrNode.NodeType switch
+            hocrNode switch
             {
-                HocrNodeType.Page or HocrNodeType.ContentArea => "div",
-                HocrNodeType.Paragraph => "p",
-                HocrNodeType.Line or HocrNodeType.TextFloat or HocrNodeType.Caption => "span",
-                HocrNodeType.Word => "span",
-                HocrNodeType.Image => "div",
+                _ when hocrNode.NodeType is HocrNodeType.Page or HocrNodeType.ContentArea => "div",
+                _ when hocrNode.NodeType is HocrNodeType.Paragraph => "p",
+                _ when hocrNode.IsLineElement => "span",
+                _ when hocrNode.NodeType is HocrNodeType.Word => "span",
+                _ when hocrNode.NodeType is HocrNodeType.Image => "div",
                 _ => throw new ArgumentOutOfRangeException()
             }
         );
@@ -95,6 +95,8 @@ public class HocrWriter
                 HocrNodeType.ContentArea => "ocr_carea",
                 HocrNodeType.Paragraph => "ocr_par",
                 HocrNodeType.Line => "ocr_line",
+                HocrNodeType.Header => "ocr_header",
+                HocrNodeType.Footer => "ocr_footer",
                 HocrNodeType.TextFloat => "ocr_textfloat",
                 HocrNodeType.Caption => "ocr_caption",
                 HocrNodeType.Word => "ocrx_word",
@@ -103,14 +105,14 @@ public class HocrWriter
             }
         );
 
-        var nodeId = hocrNode.NodeType switch
+        var nodeId = hocrNode switch
         {
-            HocrNodeType.Page => "page",
-            HocrNodeType.ContentArea => "block",
-            HocrNodeType.Paragraph => "par",
-            HocrNodeType.Line or HocrNodeType.Caption or HocrNodeType.TextFloat => "line",
-            HocrNodeType.Word => "word",
-            HocrNodeType.Image => "image",
+            _ when hocrNode.IsLineElement => "line",
+            _ when hocrNode.NodeType is HocrNodeType.Page => "page",
+            _ when hocrNode.NodeType is HocrNodeType.ContentArea => "block",
+            _ when hocrNode.NodeType is HocrNodeType.Paragraph => "par",
+            _ when hocrNode.NodeType is HocrNodeType.Word => "word",
+            _ when hocrNode.NodeType is HocrNodeType.Image => "image",
             _ => throw new ArgumentOutOfRangeException()
         };
 

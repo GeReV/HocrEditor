@@ -132,13 +132,6 @@ namespace HocrEditor.Models
             }
         }
 
-        public override HocrNodeType[] MatchingNodeTypes { get; } =
-        {
-            HocrNodeType.Line,
-            HocrNodeType.Caption,
-            HocrNodeType.TextFloat,
-        };
-
         public (float,int) Baseline { get; }
         public int FontSize { get; }
     }
@@ -184,6 +177,50 @@ namespace HocrEditor.Models
         )
         {
             NodeType = HocrNodeType.Caption;
+        }
+    }
+
+    public record HocrHeader : HocrLine
+    {
+        public HocrHeader(
+            int id,
+            int parentId,
+            string title,
+            string language,
+            Direction direction,
+            IEnumerable<IHocrNode> children
+        ) : base(
+            id,
+            parentId,
+            title,
+            language,
+            direction,
+            children
+        )
+        {
+            NodeType = HocrNodeType.Header;
+        }
+    }
+
+    public record HocrFooter : HocrLine
+    {
+        public HocrFooter(
+            int id,
+            int parentId,
+            string title,
+            string language,
+            Direction direction,
+            IEnumerable<IHocrNode> children
+        ) : base(
+            id,
+            parentId,
+            title,
+            language,
+            direction,
+            children
+        )
+        {
+            NodeType = HocrNodeType.Footer;
         }
     }
 

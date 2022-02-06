@@ -20,13 +20,13 @@ namespace HocrEditor.ViewModels
         private static string JoinInnerText(string separator, IEnumerable<HocrNodeViewModel> nodes) =>
             string.Join(separator, nodes.Select(n => n.InnerText));
 
-        public string BuildInnerText() => NodeType switch
+        public string BuildInnerText() => this switch
         {
-            HocrNodeType.Image => "Image",
-            HocrNodeType.Word => ((HocrWord)HocrNode).InnerText,
-            HocrNodeType.Line or HocrNodeType.Caption or HocrNodeType.TextFloat => JoinInnerText(" ", Children),
-            HocrNodeType.Paragraph => JoinInnerText(LineSeparator, Children),
-            HocrNodeType.Page or HocrNodeType.ContentArea => JoinInnerText(ParagraphSeparator, Children),
+            _ when IsLineElement => JoinInnerText(" ", Children),
+            _ when NodeType is HocrNodeType.Image => "Image",
+            _ when NodeType is HocrNodeType.Word => ((HocrWord)HocrNode).InnerText,
+            _ when NodeType is HocrNodeType.Paragraph => JoinInnerText(LineSeparator, Children),
+            _ when NodeType is HocrNodeType.Page or HocrNodeType.ContentArea => JoinInnerText(ParagraphSeparator, Children),
             _ => throw new ArgumentOutOfRangeException()
         };
 
@@ -40,7 +40,8 @@ namespace HocrEditor.ViewModels
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- Setter used by PropertyChangedCommand.
         public IHocrNode HocrNode { get; set; }
 
-        public int Id {
+        public int Id
+        {
             get => HocrNode.Id;
             set
             {
@@ -60,6 +61,8 @@ namespace HocrEditor.ViewModels
         }
 
         public HocrNodeType NodeType => HocrNode.NodeType;
+
+        public bool IsLineElement => HocrNode.IsLineElement;
 
         public bool IsRoot => ParentId < 0;
 

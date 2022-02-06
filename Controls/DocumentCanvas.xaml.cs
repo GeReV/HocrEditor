@@ -58,16 +58,16 @@ public partial class DocumentCanvas
         StrokeWidth = 1,
     };
 
-    private static SKColor GetNodeColor(HocrNodeViewModel node) => node.NodeType switch
+    private static SKColor GetNodeColor(HocrNodeViewModel node) => node switch
     {
         // Node colors based on the D3 color category "Paired": https://observablehq.com/@d3/color-schemes
         // ["#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#cab2d6","#6a3d9a","#ffff99","#b15928"]
-        HocrNodeType.Page => SKColor.Empty,
-        HocrNodeType.ContentArea => new SKColor(0xffa6cee3),
-        HocrNodeType.Paragraph => new SKColor(0xffb2df8a),
-        HocrNodeType.Line or HocrNodeType.TextFloat or HocrNodeType.Caption => new SKColor(0xfffdbf6f),
-        HocrNodeType.Word => new SKColor(0xfffb9a99),
-        HocrNodeType.Image => new SKColor(0xffcab2d6),
+        _ when node.NodeType is HocrNodeType.Page => SKColor.Empty,
+        _ when node.NodeType is HocrNodeType.ContentArea => new SKColor(0xffa6cee3),
+        _ when node.NodeType is HocrNodeType.Paragraph => new SKColor(0xffb2df8a),
+        _ when node.NodeType is HocrNodeType.Word => new SKColor(0xfffb9a99),
+        _ when node.NodeType is HocrNodeType.Image => new SKColor(0xffcab2d6),
+        _ when node.IsLineElement => new SKColor(0xfffdbf6f),
         _ => throw new ArgumentOutOfRangeException()
     };
 
