@@ -52,6 +52,7 @@ namespace HocrEditor.ViewModels
             MergeCommand = new MergeNodes(this);
             CropCommand = new CropNodes(this);
             ConvertToImageCommand = new ConvertToImageCommand(this);
+            ReverseChildNodesCommand = new ReverseChildNodesCommand(this);
             MoveNodesCommand = new MoveNodesCommand(this);
             EditNodesCommand = new RelayCommand<NodesEditedEventArgs>(EditNodes, CanEditNodes);
 

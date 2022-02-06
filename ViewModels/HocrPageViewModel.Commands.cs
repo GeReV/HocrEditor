@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using HocrEditor.Commands;
@@ -48,6 +49,8 @@ namespace HocrEditor.ViewModels
         public IRelayCommand<ICollection<HocrNodeViewModel>> MergeCommand { get; }
         public IRelayCommand<ICollection<HocrNodeViewModel>> CropCommand { get; }
         public ConvertToImageCommand ConvertToImageCommand { get; set; }
+
+        public IRelayCommand<ObservableCollection<HocrNodeViewModel>> ReverseChildNodesCommand { get; set; }
         public IRelayCommand<NodesEditedEventArgs> EditNodesCommand { get; }
         public IRelayCommand<NodesMovedEventArgs> MoveNodesCommand { get; }
 
@@ -67,6 +70,7 @@ namespace HocrEditor.ViewModels
             MergeCommand.NotifyCanExecuteChanged();
             CropCommand.NotifyCanExecuteChanged();
             ConvertToImageCommand.NotifyCanExecuteChanged();
+            ReverseChildNodesCommand.NotifyCanExecuteChanged();
             EditNodesCommand.NotifyCanExecuteChanged();
             ExclusiveSelectNodesCommand.NotifyCanExecuteChanged();
             DeselectNodesCommand.NotifyCanExecuteChanged();

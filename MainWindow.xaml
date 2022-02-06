@@ -109,12 +109,6 @@
                     Command="{Binding Document.CurrentPage.CropCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                     Header="_Crop" />
-                <Separator />
-
-                <MenuItem
-                    Command="{Binding Document.CurrentPage.ConvertToImageCommand, FallbackValue={x:Null}}"
-                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    Header="C_onvert Nodes to Image" />
             </MenuItem>
             <MenuItem Header="_Select">
                 <MenuItem
@@ -137,6 +131,16 @@
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                     Header="_Identical Nodes"
                     InputGestureText="Ctrl+Shift+A" />
+            </MenuItem>
+            <MenuItem Header="Tools">
+                <MenuItem
+                    Command="{Binding Document.CurrentPage.ConvertToImageCommand, FallbackValue={x:Null}}"
+                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                    Header="C_onvert Nodes to Image" />
+                <MenuItem
+                    Command="{Binding Document.CurrentPage.ReverseChildNodesCommand, FallbackValue={x:Null}}"
+                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                    Header="_Reverse children" />
             </MenuItem>
         </Menu>
         <ToolBarTray DockPanel.Dock="Top">
@@ -168,10 +172,6 @@
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                     Content="Crop" />
                 <ToggleButton Content="Auto Clean" IsChecked="{Binding AutoClean}" />
-                <Button
-                    Command="{Binding Document.CurrentPage.ConvertToImageCommand, FallbackValue={x:Null}}"
-                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    Content="Convert Nodes to Image" />
                 <Separator />
                 <ToggleButton Content="Select Region" IsChecked="{Binding IsSelecting}" />
                 <Button
@@ -186,6 +186,16 @@
                         Source="/Icons/code.png"
                         Width="16" />
                 </ToggleButton>
+            </ToolBar>
+            <ToolBar>
+                <Button
+                    Command="{Binding Document.CurrentPage.ConvertToImageCommand, FallbackValue={x:Null}}"
+                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                    Content="Convert Nodes to Image" />
+                <Button
+                    Command="{Binding Document.CurrentPage.ReverseChildNodesCommand, FallbackValue={x:Null}}"
+                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                    Content="Reverse children" />
             </ToolBar>
             <ToolBar ItemsSource="{Binding Document.NodeVisibility}">
                 <ToolBar.Resources>
