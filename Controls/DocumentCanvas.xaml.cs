@@ -238,28 +238,22 @@ public partial class DocumentCanvas
 
         ClipToBounds = true;
 
-        Loaded += OnLoaded;
         Unloaded += OnUnloaded;
     }
 
-    private void OnLoaded(object sender, RoutedEventArgs e)
+    private static void OnUnloaded(object sender, RoutedEventArgs e)
     {
-        ParentWindow.KeyDown += WindowOnKeyDown;
-    }
-
-    private void OnUnloaded(object sender, RoutedEventArgs e)
-    {
-        ParentWindow.KeyDown -= WindowOnKeyDown;
-
         HandleFillPaint.Dispose();
         HandleStrokePaint.Dispose();
     }
 
-    private void WindowOnKeyDown(object sender, KeyEventArgs e)
+    protected override void OnKeyDown(KeyEventArgs e)
     {
+        base.OnKeyDown(e);
+
         switch (e.Key)
         {
-            case Key.Return when IsFocused:
+            case Key.Return:
             {
                 BeginEditing();
                 break;
@@ -269,6 +263,141 @@ public partial class DocumentCanvas
                 IsSelecting = false;
                 break;
             }
+            case Key.Tab:
+            {
+                e.Handled = true;
+
+                CycleSelectedNode();
+
+                break;
+            }
+        }
+    }
+
+    private void CycleSelectedNode()
+    {
+        // This only makes sense if we have a single node selected.
+        if (SelectedItems is not { Count: 1 })
+        {
+            return;
+        }
+
+        var selectedNode = SelectedItems.First();
+
+        HocrNodeViewModel? next = null;
+
+        var item = selectedNode;
+
+        if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+        {
+            while (item is { Parent: { } })
+            {
+                var siblings = item.Parent.Children;
+
+                var index = siblings.IndexOf(item);
+
+                // Another sibling is available.
+                if (index > 0)
+                {
+                    // If the previous candidate is of the same type as our selected node, pick it.
+                    // This way, stepping words will pick the previous word, stepping paragraphs will pick the previous paragraph, etc.
+                    if (siblings[index - 1].NodeType == selectedNode.NodeType)
+                    {
+                        next = siblings[index - 1];
+
+                        break;
+                    }
+
+                    // Next candidate isn't the same type, assumed to be a type that would be a parent (i.e. when picking word and current is a line or paragraph).
+                    // Pick the previous sibling and drill down the first child of each node until we find a node of the same type.
+                    item = siblings[index - 1];
+
+                    var found = true;
+
+                    while (item.NodeType != selectedNode.NodeType)
+                    {
+                        if (!item.Children.Any())
+                        {
+                            // Reached a dead-end, need to step up again and keep walking.
+                            found = false;
+                            break;
+                        }
+
+                        item = item.Children.Last();
+                    }
+
+                    if (found)
+                    {
+                        next = item;
+
+                        break;
+                    }
+                }
+
+                // No sibling is available, step up so we take the previous sibling of the parent.
+                item = item.Parent;
+            }
+        }
+        else
+        {
+            while (item is { Parent: { } })
+            {
+                var siblings = item.Parent.Children;
+
+                var index = siblings.IndexOf(item);
+
+                // Another sibling is available.
+                if (index < siblings.Count - 1)
+                {
+                    // If the next candidate is of the same type as our selected node, pick it.
+                    // This way, stepping words will pick the next word, stepping paragraphs will pick the next paragraph, etc.
+                    if (siblings[index + 1].NodeType == selectedNode.NodeType)
+                    {
+                        next = siblings[index + 1];
+
+                        break;
+                    }
+
+                    // Next candidate isn't the same type, assumed to be a type that would be a parent (i.e. when picking word and current is a line or paragraph).
+                    // Pick the next sibling and drill down the first child of each node until we find a node of the same type.
+                    item = siblings[index + 1];
+
+                    var found = true;
+
+                    while (item.NodeType != selectedNode.NodeType)
+                    {
+                        if (!item.Children.Any())
+                        {
+                            // Reached a dead-end, need to step up again and keep walking.
+                            found = false;
+                            break;
+                        }
+
+                        item = item.Children.First();
+                    }
+
+                    if (found)
+                    {
+                        next = item;
+
+                        break;
+                    }
+                }
+
+                // No sibling is available, step up so we take the next sibling of the parent.
+                item = item.Parent;
+            }
+        }
+
+        if (next != null)
+        {
+            OnSelectionChanged(
+                new SelectionChangedEventArgs(
+                    Selector.SelectionChangedEvent,
+                    SelectedItems.ToList(),
+                    new List<HocrNodeViewModel> { next }
+                )
+            );
         }
     }
 
@@ -1605,6 +1734,8 @@ public partial class DocumentCanvas
         {
             return;
         }
+
+        e.Handled = true;
 
         EndEditing();
 
