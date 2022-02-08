@@ -7,7 +7,7 @@ namespace HocrEditor.Helpers;
 
 public static class BindingHelpers
 {
-    private static readonly Dictionary<INotifyCollectionChanged, NotifyCollectionChangedEventHandler>
+    private static readonly Dictionary<(INotifyCollectionChanged, PropertyChangedEventHandler), NotifyCollectionChangedEventHandler>
         CollectionChangedHandlerDictionary = new();
 
     public static void SubscribeItemPropertyChanged<T>(
@@ -35,7 +35,9 @@ public static class BindingHelpers
             }
         }
 
-        CollectionChangedHandlerDictionary.Add(collection, CollectionChangedHandler);
+        var key = (collection, handler);
+
+        CollectionChangedHandlerDictionary.Add(key, CollectionChangedHandler);
 
         collection.CollectionChanged += CollectionChangedHandler;
 
@@ -51,9 +53,11 @@ public static class BindingHelpers
     )
         where T : INotifyPropertyChanged
     {
-        var collectionChangedHandler = CollectionChangedHandlerDictionary[collection];
+        var key = (collection, handler);
 
-        CollectionChangedHandlerDictionary.Remove(collection);
+        var collectionChangedHandler = CollectionChangedHandlerDictionary[key];
+
+        CollectionChangedHandlerDictionary.Remove(key);
 
         collection.CollectionChanged -= collectionChangedHandler;
 
