@@ -1,6 +1,6 @@
 ﻿<core:WindowBase
     Height="1080"
-    Title="hOCR Editor"
+    Title="{Binding WindowTitle}"
     Width="1920"
     d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}"
     mc:Ignorable="d"

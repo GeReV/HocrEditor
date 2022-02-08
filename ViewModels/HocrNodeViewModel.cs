@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
+using PropertyChanged;
 
 namespace HocrEditor.ViewModels
 {
@@ -126,8 +127,10 @@ namespace HocrEditor.ViewModels
 
         public ObservableCollection<HocrNodeViewModel> Children { get; } = new();
 
+        [DoNotSetChanged]
         public bool IsExpanded { get; set; }
 
+        [DoNotSetChanged]
         public bool IsSelected { get; set; }
 
         public IEnumerable<HocrNodeViewModel> Descendants => Children.RecursiveSelect(n => n.Children);
@@ -157,6 +160,7 @@ namespace HocrEditor.ViewModels
 
         public bool IsEditable => NodeType == HocrNodeType.Word;
 
+        [DoNotSetChanged]
         public bool IsEditing { get; set; }
 
         private void ChildrenOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)

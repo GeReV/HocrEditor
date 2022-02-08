@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using HocrEditor.Core;
@@ -22,13 +24,15 @@ namespace HocrEditor.ViewModels
         {
             this.window = window;
 
+            Document.PropertyChanged += DocumentOnPropertyChanged;
+
+            TesseractLanguages.CollectionChanged += TesseractLanguagesChanged;
+            TesseractLanguages.SubscribeItemPropertyChanged(TesseractLanguagesChanged);
+
             ImportCommand = new RelayCommand(Import);
 
             SaveCommand = new RelayCommand<bool>(Save);
             OpenCommand = new RelayCommand(Open);
-
-            TesseractLanguages.CollectionChanged += TesseractLanguagesChanged;
-            TesseractLanguages.SubscribeItemPropertyChanged(TesseractLanguagesChanged);
         }
 
         private void TesseractLanguagesChanged(object? sender, EventArgs e)
@@ -45,6 +49,24 @@ namespace HocrEditor.ViewModels
 
         public bool IsSelecting { get; set; }
 
+        public string WindowTitle
+        {
+            get
+            {
+                var sb = new StringBuilder();
+
+                if (!string.IsNullOrEmpty(Document.Title))
+                {
+                    sb.Append(Document.Title);
+                    sb.Append(" - ");
+                }
+
+                sb.Append("hOCR Editor");
+
+                return sb.ToString();
+            }
+        }
+
         public ObservableCollection<TesseractLanguage> TesseractLanguages { get; } = new();
 
         public HocrDocumentViewModel Document { get; set; } = new();
@@ -52,6 +74,24 @@ namespace HocrEditor.ViewModels
         public IRelayCommand<bool> SaveCommand { get; }
         public IRelayCommand OpenCommand { get; }
         public IRelayCommand ImportCommand { get; }
+
+        private void OnDocumentChanged(HocrDocumentViewModel oldValue, HocrDocumentViewModel newValue)
+        {
+            oldValue.PropertyChanged -= DocumentOnPropertyChanged;
+            newValue.PropertyChanged += DocumentOnPropertyChanged;
+        }
+
+        private void DocumentOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            switch (e.PropertyName)
+            {
+                case nameof(HocrDocumentViewModel.IsChanged):
+                {
+                    OnPropertyChanged(nameof(WindowTitle));
+                    break;
+                }
+            }
+        }
 
         private void Save(bool forceSaveAs)
         {
@@ -75,11 +115,13 @@ namespace HocrEditor.ViewModels
             var htmlDocument = new HocrWriter(Document, Document.Filename).Build();
 
             htmlDocument.Save(Document.Filename);
+
+            Document.MarkAsUnchanged();
         }
 
         private void Open()
         {
-            if (Document.IsDirty)
+            if (Document.IsChanged)
             {
                 // TODO: Handle existing document.
             }
@@ -114,13 +156,17 @@ namespace HocrEditor.ViewModels
                         {
                             var hocrDocument = await hocrDocumentTask;
 
-                            Document = new HocrDocumentViewModel(
+                            var documentViewModel = new HocrDocumentViewModel(
                                 hocrDocument,
                                 hocrDocument.Pages.Select(hocrPage => new HocrPageViewModel(hocrPage))
                             )
                             {
                                 Filename = filename
                             };
+
+                            documentViewModel.MarkAsUnchanged();
+
+                            Document = documentViewModel;
                         }
                         catch (Exception ex)
                         {

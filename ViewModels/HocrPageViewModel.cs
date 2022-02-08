@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using HocrEditor.Commands;
 using HocrEditor.Controls;
 using HocrEditor.Core;
+using HocrEditor.Helpers;
 using HocrEditor.Models;
 using Microsoft.Toolkit.Mvvm.Input;
 
@@ -69,6 +71,8 @@ namespace HocrEditor.ViewModels
             RedoCommand = new RelayCommand(UndoRedoManager.Redo, CanRedo);
 
             Nodes.CollectionChanged += HandleNodesChanged;
+            Nodes.SubscribeItemPropertyChanged(HandleNodePropertyChanged);
+
             SelectedNodes.CollectionChanged += HandleSelectedNodesChanged;
 
             UndoRedoManager.UndoStackChanged += UpdateUndoRedoCommands;
@@ -101,6 +105,31 @@ namespace HocrEditor.ViewModels
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        private void HandleNodePropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            ArgumentNullException.ThrowIfNull(sender);
+
+            var node = (HocrNodeViewModel)sender;
+
+            if (!node.IsChanged)
+            {
+                return;
+            }
+
+            IsChanged = true;
+            OnPropertyChanged(nameof(IsChanged));
+        }
+
+        public override void MarkAsUnchanged()
+        {
+            foreach (var node in Nodes)
+            {
+                node.MarkAsUnchanged();
+            }
+
+            base.MarkAsUnchanged();
         }
 
         public void Build(HocrPage hocrPage)

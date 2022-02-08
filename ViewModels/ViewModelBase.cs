@@ -8,6 +8,13 @@ namespace HocrEditor.ViewModels
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        public bool IsChanged { get; set; }
+
+        public virtual void MarkAsUnchanged()
+        {
+            IsChanged = false;
+        }
+
         [NotifyPropertyChangedInvocator]
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {

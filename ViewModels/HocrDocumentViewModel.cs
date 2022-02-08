@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Text;
 using System.Windows.Data;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
@@ -15,9 +16,24 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
 {
     public UndoRedoManager UndoRedoManager { get; } = new();
 
-    public bool IsDirty { get; set; }
-
     public string? Filename { get; set; }
+
+    public string Title
+    {
+        get
+        {
+            var sb = new StringBuilder();
+
+            if (IsChanged)
+            {
+                sb.Append('*');
+            }
+
+            sb.Append(Filename ?? "New document");
+
+            return sb.ToString();
+        }
+    }
 
     private HocrDocument HocrDocument { get; set; }
 
@@ -77,11 +93,20 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
     public IRelayCommand NextPageCommand { get; }
     public IRelayCommand PreviousPageCommand { get; }
 
+    public HocrDocumentViewModel() : this(
+        new HocrDocument(Enumerable.Empty<HocrPage>()),
+        Enumerable.Empty<HocrPageViewModel>()
+    )
+    {
+    }
+
     public HocrDocumentViewModel(HocrDocument hocrDocument, IEnumerable<HocrPageViewModel> pages)
     {
         HocrDocument = hocrDocument;
 
         Pages = new ObservableCollection<HocrPageViewModel>(pages);
+
+        Pages.SubscribeItemPropertyChanged(PagesChanged);
 
         PagesCollectionView = CollectionViewSource.GetDefaultView(Pages);
         PagesCollectionView.CurrentChanged += PagesCollectionViewOnCurrentChanged;
@@ -98,6 +123,18 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
         );
     }
 
+    private void PagesChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(HocrPageViewModel.IsChanged):
+            {
+                IsChanged = Pages.Any(p => p.IsChanged);
+                break;
+            }
+        }
+    }
+
     public bool CanDeletePage(HocrPageViewModel? page) => page != null && Pages.Contains(page);
 
     public void DeletePage(HocrPageViewModel? page)
@@ -110,11 +147,14 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
         UndoRedoManager.ExecuteCommand(Pages.ToCollectionRemoveCommand(page));
     }
 
-    public HocrDocumentViewModel() : this(
-        new HocrDocument(Enumerable.Empty<HocrPage>()),
-        Enumerable.Empty<HocrPageViewModel>()
-    )
+    public override void MarkAsUnchanged()
     {
+        foreach (var page in Pages)
+        {
+            page.MarkAsUnchanged();
+        }
+
+        base.MarkAsUnchanged();
     }
 
     public HocrDocument BuildDocumentModel()
