@@ -10,7 +10,6 @@
     xmlns:controls="clr-namespace:HocrEditor.Controls"
     xmlns:core="clr-namespace:HocrEditor.Core"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:dd="urn:gong-wpf-dragdrop"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:HocrEditor.Models"
     xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
@@ -237,6 +236,7 @@
                 SelectionBounds="{Binding Document.SelectionBounds}"
                 SelectionChanged="Canvas_OnSelectionChanged" />
             <controls:DocumentTreeView
+                FlowDirection="{Binding Document.FlowDirection}"
                 Grid.Column="2"
                 ItemsSource="{Binding Document.CurrentPage.Nodes[0].Children, FallbackValue={x:Null}}"
                 NodesEdited="OnNodeEdited"

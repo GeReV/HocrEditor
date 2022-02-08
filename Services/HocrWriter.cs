@@ -33,6 +33,13 @@ public class HocrWriter
     {
         var html = document.CreateElement("html");
 
+        html.SetAttributeValue("lang", "en");
+
+        if (hocrDocumentViewModel.Direction == Direction.Rtl)
+        {
+            html.SetAttributeValue("dir", "rtl");
+        }
+
         html.AppendChild(CreateHead());
         html.AppendChild(CreateBody());
 
