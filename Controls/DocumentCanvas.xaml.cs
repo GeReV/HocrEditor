@@ -288,105 +288,57 @@ public partial class DocumentCanvas
 
         var item = selectedNode;
 
-        if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+        var stepBack = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
+
+        var step = stepBack ? -1 : +1;
+
+
+        while (item is { Parent: { } })
         {
-            while (item is { Parent: { } })
+            var siblings = item.Parent.Children;
+
+            var index = siblings.IndexOf(item);
+
+            // Another sibling is available.
+            if ((stepBack && index > 0) || (!stepBack && index < siblings.Count - 1))
             {
-                var siblings = item.Parent.Children;
-
-                var index = siblings.IndexOf(item);
-
-                // Another sibling is available.
-                if (index > 0)
+                // If the next candidate is of the same type as our selected node, pick it.
+                // This way, stepping words will pick the next word, stepping paragraphs will pick the next paragraph, etc.
+                if (siblings[index + step].NodeType == selectedNode.NodeType)
                 {
-                    // If the previous candidate is of the same type as our selected node, pick it.
-                    // This way, stepping words will pick the previous word, stepping paragraphs will pick the previous paragraph, etc.
-                    if (siblings[index - 1].NodeType == selectedNode.NodeType)
-                    {
-                        next = siblings[index - 1];
+                    next = siblings[index + step];
 
-                        break;
-                    }
-
-                    // Next candidate isn't the same type, assumed to be a type that would be a parent (i.e. when picking word and current is a line or paragraph).
-                    // Pick the previous sibling and drill down the first child of each node until we find a node of the same type.
-                    item = siblings[index - 1];
-
-                    var found = true;
-
-                    while (item.NodeType != selectedNode.NodeType)
-                    {
-                        if (!item.Children.Any())
-                        {
-                            // Reached a dead-end, need to step up again and keep walking.
-                            found = false;
-                            break;
-                        }
-
-                        item = item.Children.Last();
-                    }
-
-                    if (found)
-                    {
-                        next = item;
-
-                        break;
-                    }
+                    break;
                 }
 
-                // No sibling is available, step up so we take the previous sibling of the parent.
-                item = item.Parent;
-            }
-        }
-        else
-        {
-            while (item is { Parent: { } })
-            {
-                var siblings = item.Parent.Children;
+                // Next candidate isn't the same type, assumed to be a type that would be a parent (i.e. when picking word and current is a line or paragraph).
+                // Pick the next sibling and drill down the first child of each node until we find a node of the same type.
+                item = siblings[index + step];
 
-                var index = siblings.IndexOf(item);
+                var found = true;
 
-                // Another sibling is available.
-                if (index < siblings.Count - 1)
+                while (item.NodeType != selectedNode.NodeType)
                 {
-                    // If the next candidate is of the same type as our selected node, pick it.
-                    // This way, stepping words will pick the next word, stepping paragraphs will pick the next paragraph, etc.
-                    if (siblings[index + 1].NodeType == selectedNode.NodeType)
+                    if (!item.Children.Any())
                     {
-                        next = siblings[index + 1];
-
+                        // Reached a dead-end, need to step up again and keep walking.
+                        found = false;
                         break;
                     }
 
-                    // Next candidate isn't the same type, assumed to be a type that would be a parent (i.e. when picking word and current is a line or paragraph).
-                    // Pick the next sibling and drill down the first child of each node until we find a node of the same type.
-                    item = siblings[index + 1];
-
-                    var found = true;
-
-                    while (item.NodeType != selectedNode.NodeType)
-                    {
-                        if (!item.Children.Any())
-                        {
-                            // Reached a dead-end, need to step up again and keep walking.
-                            found = false;
-                            break;
-                        }
-
-                        item = item.Children.First();
-                    }
-
-                    if (found)
-                    {
-                        next = item;
-
-                        break;
-                    }
+                    item = stepBack ? item.Children.Last() : item.Children.First();
                 }
 
-                // No sibling is available, step up so we take the next sibling of the parent.
-                item = item.Parent;
+                if (found)
+                {
+                    next = item;
+
+                    break;
+                }
             }
+
+            // No sibling is available, step up so we take the next sibling of the parent.
+            item = item.Parent;
         }
 
         if (next != null)
