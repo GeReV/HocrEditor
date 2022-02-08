@@ -77,7 +77,7 @@
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
                 <MenuItem Command="Open" Header="_Open..." />
-                <MenuItem Command="Save" Header="_Save..." />
+                <MenuItem Command="Save" Header="_Save" />
                 <MenuItem Command="SaveAs" Header="Save _as..." />
                 <Separator />
                 <MenuItem Command="{Binding ImportCommand}" Header="_Import..." />
@@ -144,45 +144,85 @@
         </Menu>
         <ToolBarTray DockPanel.Dock="Top">
             <ToolBar>
-                <Button Command="{Binding ImportCommand}" Content="Import" />
-                <Button Command="Open" Content="Open" />
-                <Button Command="Save" Content="Save" />
+                <Button Command="{Binding ImportCommand}" ToolTip="Import">
+                    <Image Source="/Icons/document--plus.png" />
+
+                </Button>
+                <Button Command="Open" ToolTip="Open">
+                    <Image Source="/Icons/folder-open-document.png" />
+                </Button>
+                <Button Command="Save" ToolTip="Save">
+                    <Image Source="/Icons/disk-black.png" />
+                </Button>
                 <Separator />
                 <controls:LanguagesButton ItemsSource="{Binding TesseractLanguages}" />
             </ToolBar>
             <ToolBar>
-                <Button Command="{Binding Document.CurrentPage.UndoCommand, FallbackValue={x:Null}}" Content="Undo" />
-                <Button Command="{Binding Document.CurrentPage.RedoCommand, FallbackValue={x:Null}}" Content="Redo" />
+                <Button Command="{Binding Document.CurrentPage.UndoCommand, FallbackValue={x:Null}}" ToolTip="Undo">
+                    <Image Source="/Icons/arrow-curve-180-left.png" />
+                </Button>
+                <Button Command="{Binding Document.CurrentPage.RedoCommand, FallbackValue={x:Null}}" ToolTip="Redo">
+                    <Image Source="/Icons/arrow-curve.png" />
+                </Button>
                 <Separator />
                 <Button
                     Command="{Binding Document.CurrentPage.OcrRegionCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectionBounds, FallbackValue={x:Static models:Rect.Empty}}"
-                    Content="OCR Selection" />
+                    ToolTip="Perform OCR on selection">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="/Icons/spectacle.png" />
+                        <TextBlock Margin="2,0,0,0">OCR Region</TextBlock>
+                    </StackPanel>
+                </Button>
                 <Button
                     Command="{Binding Document.CurrentPage.DeleteCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    Content="Delete" />
+                    ToolTip="Delete">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="/Icons/minus-circle.png" />
+                        <TextBlock Margin="2,0,0,0">Delete</TextBlock>
+                    </StackPanel>
+                </Button>
                 <Button
                     Command="{Binding Document.CurrentPage.MergeCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    Content="Merge" />
+                    ToolTip="Merge nodes">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="/Icons/sql-join-outer.png" />
+                        <TextBlock Margin="2,0,0,0">Merge</TextBlock>
+                    </StackPanel>
+                </Button>
                 <Button
                     Command="{Binding Document.CurrentPage.CropCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    Content="Crop" />
-                <ToggleButton Content="Auto Clean" IsChecked="{Binding AutoClean}" />
+                    ToolTip="Crop nodes">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="/Icons/ruler-crop.png" />
+                        <TextBlock Margin="2,0,0,0">Crop</TextBlock>
+                    </StackPanel>
+                </Button>
+                <ToggleButton IsChecked="{Binding AutoClean}" ToolTip="Auto clean">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="/Icons/broom.png" />
+                        <TextBlock Margin="2,0,0,0">Auto Clean</TextBlock>
+                    </StackPanel>
+                </ToggleButton>
                 <Separator />
-                <ToggleButton Content="Select Region" IsChecked="{Binding IsSelecting}" />
+                <ToggleButton IsChecked="{Binding IsSelecting}" ToolTip="Select region">
+                    <Image Source="/Icons/selection.png" />
+                </ToggleButton>
                 <Button
                     Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    Content="Select Identical Nodes" />
+                    ToolTip="Select identical nodes">
+                    <Image Source="/Icons/selection-select-input.png" />
+                </Button>
                 <Separator />
-                <ToggleButton IsChecked="{Binding Document.ShowText}" ToolTip="Show Text">
+                <ToggleButton IsChecked="{Binding Document.ShowText}" ToolTip="Show text">
                     <Image
                         Height="16"
                         RenderOptions.BitmapScalingMode="HighQuality"
-                        Source="/Icons/code.png"
+                        Source="/Icons/edit.png"
                         Width="16" />
                 </ToggleButton>
             </ToolBar>

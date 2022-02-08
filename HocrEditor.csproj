@@ -24,24 +24,57 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="Icons\i-cursor.png" />
-      <Resource Include="Icons\i-cursor.png" />
-      <None Remove="Icons\image.png" />
+      <None Include="Icons\image.png" />
       <Resource Include="Icons\image.png" />
-      <None Remove="Icons\paragraph.png" />
-      <Resource Include="Icons\paragraph.png" />
-      <None Remove="Icons\object-group.png" />
-      <Resource Include="Icons\object-group.png" />
-      <None Remove="Icons\file-lines.png" />
-      <Resource Include="Icons\file-lines.png" />
-      <None Remove="Icons\font.png" />
-      <Resource Include="Icons\font.png" />
-      <None Remove="Icons\code.png" />
-      <Resource Include="Icons\code.png" />
-      <None Remove="Icons\heading.png" />
-      <Resource Include="Icons\heading.png" />
       <None Remove="Resources\iso15924.txt" />
       <Resource Include="Resources\iso15924.txt" />
+      <None Remove="Icons\edit-heading.png" />
+      <Resource Include="Icons\edit-heading.png" />
+      <None Remove="Icons\edit-pilcrow.png" />
+      <Resource Include="Icons\edit-pilcrow.png" />
+      <None Remove="Icons\edit-direction.png" />
+      <Resource Include="Icons\edit-direction.png" />
+      <None Remove="Icons\edit-lipsum.png" />
+      <Resource Include="Icons\edit-lipsum.png" />
+      <None Remove="Icons\edit-direction-rtl.png" />
+      <Resource Include="Icons\edit-direction-rtl.png" />
+      <None Remove="Icons\edit-quotation.png" />
+      <Resource Include="Icons\edit-quotation.png" />
+      <None Remove="Icons\ruler-crop.png" />
+      <Resource Include="Icons\ruler-crop.png" />
+      <None Remove="Icons\layers-group.png" />
+      <Resource Include="Icons\layers-group.png" />
+      <None Remove="Icons\edit.png" />
+      <Resource Include="Icons\edit.png" />
+      <None Remove="Icons\document.png" />
+      <Resource Include="Icons\document.png" />
+      <None Remove="Icons\document-text.png" />
+      <Resource Include="Icons\document-text.png" />
+      <None Remove="Icons\selection.png" />
+      <Resource Include="Icons\selection.png" />
+      <None Remove="Icons\selection-input.png" />
+      <None Remove="Icons\sql-join-outer.png" />
+      <Resource Include="Icons\sql-join-outer.png" />
+      <None Remove="Icons\arrow-curve.png" />
+      <Resource Include="Icons\arrow-curve.png" />
+      <None Remove="Icons\arrow-curve-180-left.png" />
+      <Resource Include="Icons\arrow-curve-180-left.png" />
+      <None Remove="Icons\broom.png" />
+      <Resource Include="Icons\broom.png" />
+      <None Remove="Icons\minus-circle.png" />
+      <Resource Include="Icons\minus-circle.png" />
+      <None Remove="Icons\edit-language.png" />
+      <Resource Include="Icons\edit-language.png" />
+      <None Remove="Icons\spectacle.png" />
+      <Resource Include="Icons\spectacle.png" />
+      <None Remove="Icons\folder-open-document.png" />
+      <Resource Include="Icons\folder-open-document.png" />
+      <None Remove="Icons\disk-black.png" />
+      <Resource Include="Icons\disk-black.png" />
+      <None Remove="Icons\document--plus.png" />
+      <Resource Include="Icons\document--plus.png" />
+      <None Remove="Icons\selection-select-input.png" />
+      <Resource Include="Icons\selection-select-input.png" />
     </ItemGroup>
 
     <ItemGroup>

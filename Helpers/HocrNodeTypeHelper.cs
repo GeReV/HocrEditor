@@ -22,14 +22,14 @@ public static class HocrNodeTypeHelper
 
     public static string? GetIcon(HocrNodeType nodeType) => nodeType switch
     {
-        HocrNodeType.Page => "/Icons/file-lines.png",
-        HocrNodeType.ContentArea => "/Icons/object-group.png",
-        HocrNodeType.Paragraph => "/Icons/paragraph.png",
+        HocrNodeType.Page => "/Icons/document.png",
+        HocrNodeType.ContentArea => "/Icons/layers-group.png",
+        HocrNodeType.Paragraph => "/Icons/edit-pilcrow.png",
         HocrNodeType.Line or HocrNodeType.TextFloat or HocrNodeType.Caption or HocrNodeType.Footer =>
-            "/Icons/i-cursor.png",
-        HocrNodeType.Header => "/Icons/heading.png",
+            "/Icons/edit-lipsum.png",
+        HocrNodeType.Header => "/Icons/edit-heading.png",
         HocrNodeType.Image => "/Icons/image.png",
-        HocrNodeType.Word => "/Icons/font.png",
+        HocrNodeType.Word => "/Icons/edit-quotation.png",
         _ => throw new ArgumentOutOfRangeException()
     };
 }
