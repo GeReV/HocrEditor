@@ -78,6 +78,8 @@ namespace HocrEditor.ViewModels
         private void OnDocumentChanged(HocrDocumentViewModel oldValue, HocrDocumentViewModel newValue)
         {
             oldValue.PropertyChanged -= DocumentOnPropertyChanged;
+            oldValue.Dispose();
+
             newValue.PropertyChanged += DocumentOnPropertyChanged;
         }
 
@@ -85,7 +87,7 @@ namespace HocrEditor.ViewModels
         {
             switch (e.PropertyName)
             {
-                case nameof(HocrDocumentViewModel.IsChanged):
+                case nameof(IsChanged):
                 {
                     OnPropertyChanged(nameof(WindowTitle));
                     break;
@@ -314,10 +316,12 @@ namespace HocrEditor.ViewModels
 
         public override void Dispose()
         {
-            Document.PropertyChanged -= DocumentOnPropertyChanged;
-
             TesseractLanguages.CollectionChanged -= TesseractLanguagesChanged;
             TesseractLanguages.UnsubscribeItemPropertyChanged(TesseractLanguagesChanged);
+            TesseractLanguages.Dispose();
+
+            Document.PropertyChanged -= DocumentOnPropertyChanged;
+            Document.Dispose();
         }
     }
 }

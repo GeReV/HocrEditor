@@ -18,4 +18,9 @@ namespace HocrEditor.ViewModels;
         public string? ToolTip => Enum.GetName(NodeType);
 
         public bool Visible { get; set; } = true;
+
+        public override void Dispose()
+        {
+            // No-op.
+        }
     }

@@ -15,4 +15,9 @@ public class TesseractLanguage : ViewModelBase
     public string Language { get; }
 
     public bool IsSelected { get; set; }
+
+    public override void Dispose()
+    {
+        // No-op.
+    }
 }

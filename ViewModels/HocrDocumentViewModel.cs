@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
@@ -127,7 +128,7 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
     {
         switch (e.PropertyName)
         {
-            case nameof(HocrPageViewModel.IsChanged):
+            case nameof(IsChanged):
             {
                 IsChanged = Pages.Any(p => p.IsChanged);
                 break;
@@ -181,5 +182,9 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
         Pages.UnsubscribeItemPropertyChanged(PagesChanged);
 
         PagesCollectionView.CurrentChanged -= PagesCollectionViewOnCurrentChanged;
+
+        Pages.Dispose();
+
+        NodeVisibility.Dispose();
     }
 }

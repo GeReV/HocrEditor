@@ -174,12 +174,14 @@ namespace HocrEditor.ViewModels
 
         public override void Dispose()
         {
-            Nodes.CollectionChanged -= HandleNodesChanged;
-            Nodes.UnsubscribeItemPropertyChanged(HandleNodePropertyChanged);
+            UndoRedoManager.UndoStackChanged -= UpdateUndoRedoCommands;
 
             SelectedNodes.CollectionChanged -= HandleSelectedNodesChanged;
 
-            UndoRedoManager.UndoStackChanged -= UpdateUndoRedoCommands;
+            Nodes.CollectionChanged -= HandleNodesChanged;
+            Nodes.UnsubscribeItemPropertyChanged(HandleNodePropertyChanged);
+
+            Nodes.Dispose();
         }
     }
 }

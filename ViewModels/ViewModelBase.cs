@@ -7,7 +7,7 @@ namespace HocrEditor.ViewModels
 {
     public abstract class ViewModelBase : INotifyPropertyChanged, IDisposable
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
+        #region IsChanged
 
         public bool IsChanged { get; set; }
 
@@ -16,12 +16,26 @@ namespace HocrEditor.ViewModels
             IsChanged = false;
         }
 
+        #endregion
+
+        #region PropertyChanged
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+
         [NotifyPropertyChangedInvocator]
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        #endregion
+
+        #region Disposables
+
         public abstract void Dispose();
+
+        #endregion
+
     }
 }
