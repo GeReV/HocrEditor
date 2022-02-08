@@ -176,5 +176,10 @@ namespace HocrEditor.ViewModels
                 item.OnPropertyChanged(nameof(DisplayText));
             }
         }
+
+        public override void Dispose()
+        {
+            Children.CollectionChanged -= ChildrenOnCollectionChanged;
+        }
     }
 }

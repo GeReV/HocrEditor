@@ -175,4 +175,11 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
     {
         OnPropertyChanged(nameof(CurrentPage));
     }
+
+    public override void Dispose()
+    {
+        Pages.UnsubscribeItemPropertyChanged(PagesChanged);
+
+        PagesCollectionView.CurrentChanged -= PagesCollectionViewOnCurrentChanged;
+    }
 }

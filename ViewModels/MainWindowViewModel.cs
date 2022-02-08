@@ -311,5 +311,13 @@ namespace HocrEditor.ViewModels
 
             return tesseractPath;
         }
+
+        public override void Dispose()
+        {
+            Document.PropertyChanged -= DocumentOnPropertyChanged;
+
+            TesseractLanguages.CollectionChanged -= TesseractLanguagesChanged;
+            TesseractLanguages.UnsubscribeItemPropertyChanged(TesseractLanguagesChanged);
+        }
     }
 }

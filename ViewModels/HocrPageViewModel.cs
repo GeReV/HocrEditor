@@ -171,5 +171,15 @@ namespace HocrEditor.ViewModels
 
             return dictionary;
         }
+
+        public override void Dispose()
+        {
+            Nodes.CollectionChanged -= HandleNodesChanged;
+            Nodes.UnsubscribeItemPropertyChanged(HandleNodePropertyChanged);
+
+            SelectedNodes.CollectionChanged -= HandleSelectedNodesChanged;
+
+            UndoRedoManager.UndoStackChanged -= UpdateUndoRedoCommands;
+        }
     }
 }
