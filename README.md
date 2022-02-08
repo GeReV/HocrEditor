@@ -8,7 +8,7 @@ The editor aims to provide a set of tools for convenient visual editing of autom
 
 Some icons by [Yusuke Kamiyamane](http://p.yusukekamiyamane.com/). Licensed under a [Creative Commons Attribution 3.0 License](http://creativecommons.org/licenses/by/3.0/).
 
-![Screenshot](/.github/screenshot.jpg)
+![Screenshot](/.github/screenshot.png)
 
 
 ## Depdendencies
