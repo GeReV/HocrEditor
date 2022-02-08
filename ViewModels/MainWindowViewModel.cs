@@ -71,7 +71,8 @@ namespace HocrEditor.ViewModels
                 Document.Filename = dialog.FileName;
             }
 
-            var htmlDocument = new HocrWriter(Document.BuildDocumentModel(), Document.Filename).Build();
+            // TODO: Figure out syncing and using the model.
+            var htmlDocument = new HocrWriter(Document, Document.Filename).Build();
 
             htmlDocument.Save(Document.Filename);
         }

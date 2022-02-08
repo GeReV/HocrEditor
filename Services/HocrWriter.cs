@@ -5,22 +5,23 @@ using System.Linq;
 using System.Text;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
+using HocrEditor.ViewModels;
 using HtmlAgilityPack;
 
 namespace HocrEditor.Services;
 
 public class HocrWriter
 {
-    private readonly HocrDocument hocrDocument;
+    private readonly HocrDocumentViewModel hocrDocumentViewModel;
     private readonly string filename;
 
     private readonly HtmlDocument document = new();
 
     private readonly Dictionary<string, uint> nodeCounters = new();
 
-    public HocrWriter(HocrDocument hocrDocument, string filename)
+    public HocrWriter(HocrDocumentViewModel hocrDocumentViewModel, string filename)
     {
-        this.hocrDocument = hocrDocument;
+        this.hocrDocumentViewModel = hocrDocumentViewModel;
         this.filename = filename;
     }
 
@@ -41,19 +42,19 @@ public class HocrWriter
     {
         var head = document.CreateElement("head");
 
-        head.AppendChild(document.CreateMeta("ocr-system", hocrDocument.OcrSystem));
+        head.AppendChild(document.CreateMeta("ocr-system", hocrDocumentViewModel.OcrSystem));
 
-        if (hocrDocument.Capabilities.Any())
+        if (hocrDocumentViewModel.Capabilities.Any())
         {
             head.AppendChild(
-                document.CreateMeta("ocr-capabilities", string.Join(' ', hocrDocument.Capabilities))
+                document.CreateMeta("ocr-capabilities", string.Join(' ', hocrDocumentViewModel.Capabilities))
             );
         }
 
         // TODO
         // head.AppendChild(document.CreateMeta("ocr-langs", ""));
 
-        head.AppendChild(document.CreateMeta("ocr-number-of-pages", hocrDocument.Pages.Count.ToString()));
+        head.AppendChild(document.CreateMeta("ocr-number-of-pages", hocrDocumentViewModel.Pages.Count.ToString()));
 
         head.AppendChild(document.CreateElement("title"));
 
@@ -64,18 +65,36 @@ public class HocrWriter
     {
         var body = document.CreateElement("body");
 
-        for (var index = 0; index < hocrDocument.Pages.Count; index++)
+        for (var index = 0; index < hocrDocumentViewModel.Pages.Count; index++)
         {
-            var page = hocrDocument.Pages[index];
+            var page = hocrDocumentViewModel.Pages[index];
 
-            body.AppendChild(CreateNode(index, page, page.Direction, page.Language));
+            ArgumentNullException.ThrowIfNull(page.HocrPage);
+
+            body.AppendChild(
+                CreateNode(
+                    index,
+                    page.Nodes.First(n => n.IsRoot),
+                    page.HocrPage.Direction,
+                    page.HocrPage.Language
+                )
+            );
         }
 
         return body;
     }
 
-    private HtmlNode CreateNode(int pageIndex, IHocrNode hocrNode, Direction currentDirection, string currentLanguage)
+    private HtmlNode CreateNode(
+        int pageIndex,
+        HocrNodeViewModel hocrNodeViewModel,
+        Direction currentDirection,
+        string currentLanguage
+    )
     {
+        var hocrNode = hocrNodeViewModel.HocrNode;
+
+        ArgumentNullException.ThrowIfNull(hocrNode);
+
         var node = document.CreateElement(
             hocrNode switch
             {
@@ -157,7 +176,7 @@ public class HocrWriter
         }
         else
         {
-            foreach (var childNode in hocrNode.ChildNodes)
+            foreach (var childNode in hocrNodeViewModel.Children)
             {
                 node.AppendChild(CreateNode(pageIndex, childNode, currentDirection, currentLanguage));
             }
