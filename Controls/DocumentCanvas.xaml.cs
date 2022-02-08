@@ -256,11 +256,32 @@ public partial class DocumentCanvas
             case Key.Return:
             {
                 BeginEditing();
+
                 break;
             }
             case Key.Escape when IsSelecting:
             {
                 IsSelecting = false;
+
+                break;
+            }
+            case Key.Home:
+            {
+                e.Handled = true;
+
+                CenterTransformation();
+                Refresh();
+
+                break;
+            }
+            case Key.F:
+            {
+                // e.Handled = true;
+
+                // TODO: Center view on selection.
+
+                // Refresh();
+
                 break;
             }
             case Key.Tab:
@@ -969,7 +990,7 @@ public partial class DocumentCanvas
 
                 if (editingNode != null)
                 {
-                    Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
+                    UpdateTextBox();
                 }
 
                 break;
@@ -1009,7 +1030,7 @@ public partial class DocumentCanvas
 
                 if (editingNode != null)
                 {
-                    Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
+                    UpdateTextBox();
                 }
 
                 break;
@@ -1020,7 +1041,7 @@ public partial class DocumentCanvas
 
                 if (editingNode != null)
                 {
-                    Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
+                    UpdateTextBox();
                 }
 
                 break;
@@ -1083,7 +1104,7 @@ public partial class DocumentCanvas
 
         if (editingNode != null)
         {
-            Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
+            UpdateTextBox();
         }
     }
 
@@ -1682,12 +1703,12 @@ public partial class DocumentCanvas
 
     private void TextBox_OnKeyDown(object sender, KeyEventArgs e)
     {
+        e.Handled = true;
+
         if (e.Key is not Key.Return or Key.Escape)
         {
             return;
         }
-
-        e.Handled = true;
 
         EndEditing();
 
@@ -1720,32 +1741,35 @@ public partial class DocumentCanvas
         TextBox.FlowDirection =
             paragraph?.Direction == Direction.Rtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
 
-        Dispatcher.InvokeAsync(UpdateTextBox, DispatcherPriority.Render);
+        UpdateTextBox();
     }
 
-    private void UpdateTextBox()
-    {
-        ArgumentNullException.ThrowIfNull(editingNode);
+    private void UpdateTextBox() => Dispatcher.BeginInvoke(
+        () =>
+        {
+            ArgumentNullException.ThrowIfNull(editingNode);
 
-        var element = elements[editingNode!.Id].Item2;
-        var rect = transformation.MapRect(element.Bounds);
+            var element = elements[editingNode!.Id].Item2;
+            var rect = transformation.MapRect(element.Bounds);
 
-        var word = (HocrWord)editingNode.HocrNode;
-        var line = (HocrLine)elements[word.ParentId].Item1.HocrNode;
+            var word = (HocrWord)editingNode.HocrNode;
+            var line = (HocrLine)elements[word.ParentId].Item1.HocrNode;
 
-        Canvas.SetLeft(TextBox, rect.Left);
-        Canvas.SetTop(TextBox, rect.Top);
-        TextBox.Width = rect.Width;
-        TextBox.Height = rect.Height;
+            Canvas.SetLeft(TextBox, rect.Left);
+            Canvas.SetTop(TextBox, rect.Top);
+            TextBox.Width = rect.Width;
+            TextBox.Height = rect.Height;
 
-        var fontSize = transformation.ScaleX * line.FontSize * 0.6f;
+            var fontSize = transformation.ScaleX * line.FontSize * 0.6f;
 
-        TextBox.FontSize = fontSize;
-        TextBlock.SetLineHeight(TextBox, fontSize);
+            TextBox.FontSize = fontSize;
+            TextBlock.SetLineHeight(TextBox, fontSize);
 
-        TextBox.Focus();
-        TextBox.SelectAll();
-    }
+            TextBox.Focus();
+            TextBox.SelectAll();
+        },
+        DispatcherPriority.Render
+    );
 
     private void EndEditing()
     {
