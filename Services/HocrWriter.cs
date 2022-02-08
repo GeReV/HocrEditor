@@ -3,15 +3,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using HocrEditor.Core.Iso15924;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 using HocrEditor.ViewModels;
 using HtmlAgilityPack;
+using Iso639;
 
 namespace HocrEditor.Services;
 
 public class HocrWriter
 {
+    private const string SCRIPT_PREFIX = "script/";
+
     private readonly HocrDocumentViewModel hocrDocumentViewModel;
     private readonly string filename;
 
@@ -51,8 +55,24 @@ public class HocrWriter
             );
         }
 
-        // TODO
-        // head.AppendChild(document.CreateMeta("ocr-langs", ""));
+        var allLanguages = hocrDocumentViewModel.Pages
+            .SelectMany(page => page.Nodes.Select(n => n.HocrNode.Language))
+            .Distinct()
+            .ToList();
+
+        var languages = GetLanguages(allLanguages);
+
+        if (languages.Any())
+        {
+            head.AppendChild(document.CreateMeta("ocr-langs", string.Join(' ', languages.Select(l => l.Part1))));
+        }
+
+        var scripts = GetScripts(allLanguages);
+
+        if (scripts.Any())
+        {
+            head.AppendChild(document.CreateMeta("ocr-scripts", string.Join(' ', scripts.Select(s => s.Code))));
+        }
 
         head.AppendChild(document.CreateMeta("ocr-number-of-pages", hocrDocumentViewModel.Pages.Count.ToString()));
 
@@ -60,6 +80,39 @@ public class HocrWriter
 
         return head;
     }
+
+    private static List<Script> GetScripts(List<string> languages)
+    {
+        return languages.Where(lang => lang.StartsWith(SCRIPT_PREFIX))
+            .Select(script => Core.Iso15924.Script.FromName(script.Remove(0, SCRIPT_PREFIX.Length), true))
+            .OfType<Script>()
+            .ToList();
+    }
+
+    private static List<Language> GetLanguages(IEnumerable<string> languages) =>
+        languages
+            .Select(
+                lang =>
+                {
+                    if (lang.StartsWith(SCRIPT_PREFIX))
+                    {
+                        var script = Core.Iso15924.Script.FromName(lang.Remove(0, SCRIPT_PREFIX.Length), true);
+
+                        if (script == null)
+                        {
+                            return null;
+                        }
+
+                        return Language
+                            .FromName(script.Name, true)
+                            .FirstOrDefault(l => l.Type == LanguageType.Living); // TODO: Find a better ranking method.
+                    }
+
+                    return Language.FromPart3(lang);
+                }
+            )
+            .OfType<Language>()
+            .ToList();
 
     private HtmlNode CreateBody()
     {
