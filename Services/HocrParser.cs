@@ -30,6 +30,10 @@ namespace HocrEditor.Services
 
         public HocrDocument Parse(HtmlDocument document)
         {
+            var html = document.DocumentNode.SelectSingleNode("//html");
+
+            var htmlDirection = html.GetAttributeValue("dir", "ltr") == "rtl" ? Direction.Rtl : Direction.Ltr;
+
             var pageNodes = document.DocumentNode.SelectNodes("//body/div[@class='ocr_page']");
 
             var pages = new List<HocrPage>();
@@ -38,7 +42,7 @@ namespace HocrEditor.Services
             {
                 idCounter = 0;
 
-                var page = (HocrPage)Parse(pageNode, -1, string.Empty, Direction.Ltr);
+                var page = (HocrPage)Parse(pageNode, -1, string.Empty, htmlDirection);
 
                 pages.Add(page);
             }

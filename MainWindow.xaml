@@ -8,12 +8,16 @@
     x:TypeArguments="viewModels:MainWindowViewModel"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:controls="clr-namespace:HocrEditor.Controls"
+    xmlns:converters="clr-namespace:HocrEditor.Converters"
     xmlns:core="clr-namespace:HocrEditor.Core"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:HocrEditor.Models"
     xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Window.Resources>
+        <converters:RadioButtonCheckedConverter x:Key="RadioButtonCheckedConverter" />
+    </Window.Resources>
     <Window.CommandBindings>
         <CommandBinding Command="Close" Executed="CloseCommandBinding_OnExecuted" />
         <CommandBinding Command="Save" Executed="SaveCommandBinding_OnExecuted" />
@@ -208,6 +212,19 @@
                     </StackPanel>
                 </ToggleButton>
                 <Separator />
+                <RadioButton
+                    GroupName="PageDirection"
+                    IsChecked="{Binding Document.CurrentPage.Direction, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static models:Direction.Ltr}, FallbackValue={x:Null}}"
+                    ToolTip="Left to Right">
+                    <Image Source="/Icons/edit-direction.png" />
+                </RadioButton>
+                <RadioButton
+                    GroupName="PageDirection"
+                    IsChecked="{Binding Document.CurrentPage.Direction, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static models:Direction.Rtl}, FallbackValue={x:Null}}"
+                    ToolTip="Right to Left">
+                    <Image Source="/Icons/edit-direction-rtl.png" />
+                </RadioButton>
+                <Separator />
                 <ToggleButton IsChecked="{Binding IsSelecting}" ToolTip="Select region">
                     <Image Source="/Icons/selection.png" />
                 </ToggleButton>
@@ -276,7 +293,7 @@
                 SelectionBounds="{Binding Document.SelectionBounds}"
                 SelectionChanged="Canvas_OnSelectionChanged" />
             <controls:DocumentTreeView
-                FlowDirection="{Binding Document.FlowDirection}"
+                FlowDirection="{Binding Document.CurrentPage.FlowDirection, FallbackValue={x:Static models:Direction.Ltr}}"
                 Grid.Column="2"
                 ItemsSource="{Binding Document.CurrentPage.Nodes[0].Children, FallbackValue={x:Null}}"
                 NodesEdited="OnNodeEdited"

@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
-using System.Windows;
 using System.Windows.Data;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
@@ -42,12 +41,6 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
     public ObservableCollection<HocrPageViewModel> Pages { get; }
 
     public ICollectionView PagesCollectionView { get; }
-
-    public Direction Direction
-    {
-        get => HocrDocument.Direction;
-        set => HocrDocument.Direction = value;
-    }
 
     public string OcrSystem
     {
@@ -100,9 +93,6 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
 
     public IRelayCommand NextPageCommand { get; }
     public IRelayCommand PreviousPageCommand { get; }
-
-    public FlowDirection FlowDirection =>
-        Direction == Direction.Ltr ? FlowDirection.LeftToRight : FlowDirection.RightToLeft;
 
     public HocrDocumentViewModel() : this(
         new HocrDocument(Enumerable.Empty<HocrPage>()),

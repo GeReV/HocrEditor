@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 using HocrEditor.Commands;
 using HocrEditor.Controls;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 using Microsoft.Toolkit.Mvvm.Input;
+using Rect = HocrEditor.Models.Rect;
 
 namespace HocrEditor.ViewModels
 {
@@ -26,6 +28,11 @@ namespace HocrEditor.ViewModels
         public bool IsProcessing => HocrPage == null;
 
         public string Image { get; set; }
+
+        public Direction Direction { get; set; }
+
+        public FlowDirection FlowDirection =>
+            Direction == Direction.Ltr ? FlowDirection.LeftToRight : FlowDirection.RightToLeft;
 
         private Rect selectionBounds;
 
@@ -135,6 +142,9 @@ namespace HocrEditor.ViewModels
         public void Build(HocrPage hocrPage)
         {
             HocrPage = hocrPage;
+
+            Image = hocrPage.Image;
+            Direction = hocrPage.Direction;
 
             var nodeCache = BuildNodeCache(HocrPage.Descendants.Prepend(HocrPage));
 

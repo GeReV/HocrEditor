@@ -33,9 +33,11 @@ public class HocrWriter
     {
         var html = document.CreateElement("html");
 
+        // TODO: Change this value based on common language or just leave as-is?
         html.SetAttributeValue("lang", "en");
 
-        if (hocrDocumentViewModel.Direction == Direction.Rtl)
+        var commonDirection = hocrDocumentViewModel.Pages.CountBy(page => page.Direction).MaxBy(pair => pair.Value).Key;
+        if (commonDirection == Direction.Rtl)
         {
             html.SetAttributeValue("dir", "rtl");
         }
@@ -88,13 +90,11 @@ public class HocrWriter
         return head;
     }
 
-    private static List<Script> GetScripts(List<string> languages)
-    {
-        return languages.Where(lang => lang.StartsWith(SCRIPT_PREFIX))
+    private static List<Script> GetScripts(List<string> languages) =>
+        languages.Where(lang => lang.StartsWith(SCRIPT_PREFIX))
             .Select(script => Core.Iso15924.Script.FromName(script.Remove(0, SCRIPT_PREFIX.Length), true))
             .OfType<Script>()
             .ToList();
-    }
 
     private static List<Language> GetLanguages(IEnumerable<string> languages) =>
         languages
@@ -103,7 +103,7 @@ public class HocrWriter
                 {
                     if (lang.StartsWith(SCRIPT_PREFIX))
                     {
-                        var script = Core.Iso15924.Script.FromName(lang.Remove(0, SCRIPT_PREFIX.Length), true);
+                        var script = Script.FromName(lang.Remove(0, SCRIPT_PREFIX.Length), true);
 
                         if (script == null)
                         {
