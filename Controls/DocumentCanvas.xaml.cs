@@ -1094,7 +1094,7 @@ public partial class DocumentCanvas
         var pointerP = e.GetPosition(this).ToSKPoint();
         var p = inverseTransformation.MapPoint(pointerP);
 
-        var newScale = (float)Math.Pow(2, delta * 0.05);
+        var newScale = (float)Math.Pow(2, delta * 0.05f);
 
         UpdateTransformation(SKMatrix.CreateScale(newScale, newScale, p.X, p.Y));
 
@@ -1286,8 +1286,27 @@ public partial class DocumentCanvas
 
     private void UpdateTransformation(SKMatrix matrix)
     {
-        transformation =
-            transformation.PreConcat(matrix);
+        const float transformationScaleMin = 1 / 32.0f;
+        const float transformationScaleMax = 8.0f;
+
+        var nextTransformation = transformation.PreConcat(matrix);
+
+        // TODO: Clamping to the exact zoom limits is not as straightforward as setting the scale, as the translation
+        //  needs to adapt. Figure it out.
+        if (nextTransformation.ScaleX < transformation.ScaleX &&
+            nextTransformation.ScaleX < transformationScaleMin)
+        {
+            return;
+        }
+
+        if (nextTransformation.ScaleX > transformation.ScaleX &&
+            nextTransformation.ScaleX > transformationScaleMax)
+        {
+            return;
+        }
+
+        transformation = nextTransformation;
+
         inverseTransformation = transformation.Invert();
 
         scaleTransformation.ScaleX = transformation.ScaleX;
