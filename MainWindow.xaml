@@ -254,11 +254,21 @@
                 <Button
                     Command="{Binding Document.CurrentPage.ConvertToImageCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    Content="Convert Nodes to Image" />
+                    ToolTip="Convert selected nodes to images">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="/Icons/image-import.png" />
+                        <TextBlock Margin="2,0,0,0">Convert to Images</TextBlock>
+                    </StackPanel>
+                </Button>
                 <Button
                     Command="{Binding Document.CurrentPage.ReverseChildNodesCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    Content="Reverse children" />
+                    ToolTip="Reverse selected node's children">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Image Source="/Icons/sort-alphabet-descending.png" />
+                        <TextBlock Margin="2,0,0,0">Reverse children</TextBlock>
+                    </StackPanel>
+                </Button>
             </ToolBar>
             <ToolBar ItemsSource="{Binding Document.NodeVisibility}">
                 <ToolBar.Resources>

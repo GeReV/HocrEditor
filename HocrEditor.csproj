@@ -77,6 +77,11 @@
       <Resource Include="Icons\selection-select-input.png" />
       <None Remove="Icons\edit-number.png" />
       <Resource Include="Icons\edit-number.png" />
+      <Resource Include="Icons\sort-alphabet-descending.png" />
+      <None Remove="Icons\image-import.png" />
+      <Resource Include="Icons\image-import.png" />
+      <None Remove="Icons\sort-alphabet-descending.png" />
+      <Resource Include="Icons\sort-alphabet-descending.png" />
     </ItemGroup>
 
     <ItemGroup>
