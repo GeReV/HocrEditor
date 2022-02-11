@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -30,8 +31,9 @@ internal enum MouseState
     Panning,
     Dragging,
     Resizing,
-    Selecting,
-    DraggingSelection,
+    SelectingNodes,
+    SelectingRegion,
+    DraggingSelectionRegion,
 }
 
 public class Element
@@ -126,14 +128,14 @@ public partial class DocumentCanvas
         )
     );
 
-    public static readonly DependencyProperty IsSelectingProperty = DependencyProperty.Register(
-        nameof(IsSelecting),
-        typeof(bool),
+    public static readonly DependencyProperty SelectionToolProperty = DependencyProperty.Register(
+        nameof(SelectionTool),
+        typeof(SelectionTool),
         typeof(DocumentCanvas),
         new FrameworkPropertyMetadata(
-            default(bool),
+            default(SelectionTool),
             FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
-            IsSelectingChanged
+            SelectionToolChanged
         )
     );
 
@@ -191,10 +193,10 @@ public partial class DocumentCanvas
         set => SetValue(IsShowNumberingProperty, value);
     }
 
-    public bool IsSelecting
+    public SelectionTool SelectionTool
     {
-        get => (bool)GetValue(IsSelectingProperty);
-        set => SetValue(IsSelectingProperty, value);
+        get => (SelectionTool)GetValue(SelectionToolProperty);
+        set => SetValue(SelectionToolProperty, value);
     }
 
     public Rect SelectionBounds
@@ -230,6 +232,8 @@ public partial class DocumentCanvas
 
     private SKRect resizeLimitInside = SKRect.Empty;
     private SKRect resizeLimitOutside = SKRect.Empty;
+
+    private SKRect nodeSelection = SKRect.Empty;
 
     private Cursor? currentCursor;
     private readonly CanvasSelection canvasSelection = new();
@@ -275,9 +279,9 @@ public partial class DocumentCanvas
 
                 break;
             }
-            case Key.Escape when IsSelecting:
+            case Key.Escape when SelectionTool != SelectionTool.None:
             {
-                IsSelecting = false;
+                SelectionTool = SelectionTool.None;
 
                 break;
             }
@@ -514,23 +518,23 @@ public partial class DocumentCanvas
         documentCanvas.Refresh();
     }
 
-    private static void IsSelectingChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void SelectionToolChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var documentCanvas = (DocumentCanvas)d;
 
-        var newValue = (bool)e.NewValue;
+        var newValue = (SelectionTool)e.NewValue;
 
-        if (newValue)
-        {
-            documentCanvas.Cursor = documentCanvas.currentCursor = Cursors.Cross;
-        }
-        else
+        if (newValue == SelectionTool.None)
         {
             documentCanvas.Cursor = documentCanvas.currentCursor = null;
 
             documentCanvas.ClearCanvasSelection();
 
             documentCanvas.Refresh();
+        }
+        else
+        {
+            documentCanvas.Cursor = documentCanvas.currentCursor = Cursors.Cross;
         }
     }
 
@@ -746,11 +750,32 @@ public partial class DocumentCanvas
 
                 var normalizedPosition = inverseTransformation.MapPoint(position);
 
-                if (IsSelecting)
+                if (SelectionTool == SelectionTool.SelectNodes)
+                {
+                    mouseMoveState = MouseState.SelectingNodes;
+
+                    EndEditing();
+
+                    ClearSelection();
+
+                    dragLimit = RootElement.Bounds;
+
+                    var bounds = SKRect.Create(normalizedPosition, SKSize.Empty);
+
+                    bounds.Clamp(dragLimit);
+
+                    nodeSelection = bounds;
+
+                    SelectNodesWithinRegion(bounds);
+
+                    break;
+                }
+
+                if (SelectionTool == SelectionTool.SelectRegion)
                 {
                     if (!canvasSelection.IsEmpty && canvasSelection.Bounds.Contains(normalizedPosition))
                     {
-                        mouseMoveState = MouseState.DraggingSelection;
+                        mouseMoveState = MouseState.DraggingSelectionRegion;
 
                         var parentBounds = RootElement.Bounds;
 
@@ -763,7 +788,7 @@ public partial class DocumentCanvas
                     }
                     else
                     {
-                        mouseMoveState = MouseState.Selecting;
+                        mouseMoveState = MouseState.SelectingRegion;
 
                         EndEditing();
 
@@ -820,6 +845,44 @@ public partial class DocumentCanvas
         Refresh();
     }
 
+    private HashSet<HocrNodeViewModel> SelectNodesWithinRegion(SKRect selection)
+    {
+        if (rootId < 0)
+        {
+            throw new InvalidOperationException($"Expected {rootId} to be greater or equal to 0.");
+        }
+
+        selection = transformation.MapRect(selection);
+
+        var selectedNodes = new HashSet<HocrNodeViewModel>();
+
+        void Recurse(int key)
+        {
+            var (node, element) = elements[key];
+
+            var bounds = transformation.MapRect(element.Bounds);
+
+            if (!selection.IntersectsWithInclusive(bounds))
+            {
+                return;
+            }
+
+            if (!node.IsRoot)
+            {
+                selectedNodes.Add(node);
+            }
+
+            foreach (var childKey in node.Children.Select(c => c.Id))
+            {
+                Recurse(childKey);
+            }
+        }
+
+        Recurse(rootId);
+
+        return selectedNodes;
+    }
+
     protected override void OnMouseUp(MouseButtonEventArgs e)
     {
         base.OnMouseUp(e);
@@ -865,7 +928,13 @@ public partial class DocumentCanvas
                         ReleaseKeyDownEvents();
                         break;
                     }
-                    case MouseState.Selecting:
+                    case MouseState.SelectingNodes:
+                    {
+                        nodeSelection = SKRect.Empty;
+
+                        break;
+                    }
+                    case MouseState.SelectingRegion:
                     {
                         canvasSelection.Bounds = canvasSelection.Bounds.Standardized;
 
@@ -878,7 +947,7 @@ public partial class DocumentCanvas
 
                         break;
                     }
-                    case MouseState.DraggingSelection:
+                    case MouseState.DraggingSelectionRegion:
                     {
                         SelectionBounds = new Rect(
                             (int)canvasSelection.Left,
@@ -951,46 +1020,48 @@ public partial class DocumentCanvas
         {
             case MouseState.None:
             {
-                if (!canvasSelection.IsEmpty)
+                if (canvasSelection.IsEmpty)
                 {
-                    var resizeHandles = canvasSelection.ResizeHandles;
+                    return;
+                }
 
-                    var hoveringOnSelection = false;
+                var resizeHandles = canvasSelection.ResizeHandles;
 
-                    foreach (var handle in resizeHandles)
+                var hoveringOnSelection = false;
+
+                foreach (var handle in resizeHandles)
+                {
+                    var handleRect = handle.GetRect(transformation);
+
+                    if (!handleRect.Contains(position))
                     {
-                        var handleRect = handle.GetRect(transformation);
-
-                        if (!handleRect.Contains(position))
-                        {
-                            continue;
-                        }
-
-                        Cursor = handle.Direction switch
-                        {
-                            CardinalDirections.NorthWest or CardinalDirections.SouthEast => Cursors.SizeNWSE,
-                            CardinalDirections.North or CardinalDirections.South => Cursors.SizeNS,
-                            CardinalDirections.NorthEast or CardinalDirections.SouthWest => Cursors.SizeNESW,
-                            CardinalDirections.West or CardinalDirections.East => Cursors.SizeWE,
-                            _ => throw new ArgumentOutOfRangeException(nameof(handle.Direction))
-                        };
-
-                        hoveringOnSelection = true;
-
-                        break;
+                        continue;
                     }
 
-                    if (!hoveringOnSelection && transformation.MapRect(canvasSelection.Bounds).Contains(position))
+                    Cursor = handle.Direction switch
                     {
-                        hoveringOnSelection = true;
+                        CardinalDirections.NorthWest or CardinalDirections.SouthEast => Cursors.SizeNWSE,
+                        CardinalDirections.North or CardinalDirections.South => Cursors.SizeNS,
+                        CardinalDirections.NorthEast or CardinalDirections.SouthWest => Cursors.SizeNESW,
+                        CardinalDirections.West or CardinalDirections.East => Cursors.SizeWE,
+                        _ => throw new ArgumentOutOfRangeException(nameof(handle.Direction))
+                    };
 
-                        Cursor = Cursors.SizeAll;
-                    }
+                    hoveringOnSelection = true;
 
-                    if (!hoveringOnSelection)
-                    {
-                        Cursor = currentCursor;
-                    }
+                    break;
+                }
+
+                if (!hoveringOnSelection && transformation.MapRect(canvasSelection.Bounds).Contains(position))
+                {
+                    hoveringOnSelection = true;
+
+                    Cursor = Cursors.SizeAll;
+                }
+
+                if (!hoveringOnSelection)
+                {
+                    Cursor = currentCursor;
                 }
 
                 // Skip refreshing.
@@ -1062,7 +1133,35 @@ public partial class DocumentCanvas
 
                 break;
             }
-            case MouseState.Selecting:
+            case MouseState.SelectingNodes:
+            {
+                var newLocation = inverseTransformation.MapPoint(dragStart) + delta;
+
+                newLocation.Clamp(dragLimit);
+
+                nodeSelection.Right = newLocation.X;
+                nodeSelection.Bottom = newLocation.Y;
+
+                if (mouseMoveState == MouseState.SelectingNodes)
+                {
+                    var selection = SelectNodesWithinRegion(nodeSelection);
+
+                    IList removed = SelectedItems is { Count: > 0 }
+                        ? SelectedItems.Except(selection).ToList()
+                        : Array.Empty<HocrNodeViewModel>();
+
+                    OnSelectionChanged(
+                        new SelectionChangedEventArgs(
+                            Selector.SelectionChangedEvent,
+                            removed,
+                            selection.ToList()
+                        )
+                    );
+                }
+
+                break;
+            }
+            case MouseState.SelectingRegion:
             {
                 var newLocation = inverseTransformation.MapPoint(dragStart) + delta;
 
@@ -1073,7 +1172,7 @@ public partial class DocumentCanvas
 
                 break;
             }
-            case MouseState.DraggingSelection:
+            case MouseState.DraggingSelectionRegion:
             {
                 var newLocation = inverseTransformation.MapPoint(offsetStart) + delta;
 
@@ -1360,7 +1459,7 @@ public partial class DocumentCanvas
         );
     }
 
-    private void DrawScalingHandle(SKCanvas canvas, ResizeHandle handle)
+    private void RenderScalingHandle(SKCanvas canvas, ResizeHandle handle)
     {
         var rect = handle.GetRect(transformation);
 
@@ -1536,6 +1635,8 @@ public partial class DocumentCanvas
         Recurse(rootId, -1);
 
         RenderCanvasSelection(canvas);
+
+        RenderNodeSelection(canvas);
     }
 
     private void RenderCanvasSelection(SKCanvas canvas)
@@ -1559,8 +1660,33 @@ public partial class DocumentCanvas
 
         foreach (var handle in canvasSelection.ResizeHandles)
         {
-            DrawScalingHandle(canvas, handle);
+            RenderScalingHandle(canvas, handle);
         }
+    }
+
+    private void RenderNodeSelection(SKCanvas canvas)
+    {
+        if (nodeSelection.IsEmpty)
+        {
+            return;
+        }
+
+        var bbox = transformation.MapRect(nodeSelection);
+
+        var color = new SKColor(0xff1f78b4);
+
+        var paint = new SKPaint
+        {
+            IsStroke = false,
+            Color = color.WithAlpha(64),
+        };
+
+        canvas.DrawRect(bbox, paint);
+
+        paint.IsStroke = true;
+        paint.Color = color;
+
+        canvas.DrawRect(bbox, paint);
     }
 
     private void PerformResize(SKPoint delta)

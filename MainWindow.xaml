@@ -225,8 +225,11 @@
                     <Image Source="/Icons/edit-direction-rtl.png" />
                 </RadioButton>
                 <Separator />
-                <ToggleButton IsChecked="{Binding IsSelecting}" ToolTip="Select region">
+                <ToggleButton IsChecked="{Binding SelectionTool, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static viewModels:SelectionTool.SelectRegion}}" ToolTip="Select region">
                     <Image Source="/Icons/selection.png" />
+                </ToggleButton>
+                <ToggleButton IsChecked="{Binding SelectionTool, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static viewModels:SelectionTool.SelectNodes}}" ToolTip="Select nodes">
+                    <Image Source="/Icons/selection-select.png" />
                 </ToggleButton>
                 <Button
                     Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand, FallbackValue={x:Null}}"
@@ -299,7 +302,6 @@
                 ItemsSource="{Binding PagesCollectionView}" />
             <controls:DocumentCanvas
                 Grid.Column="1"
-                IsSelecting="{Binding IsSelecting}"
                 IsShowNumbering="{Binding Document.ShowNumbering}"
                 IsShowText="{Binding Document.ShowText}"
                 ItemsSource="{Binding Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
@@ -309,7 +311,8 @@
                 NodesEdited="OnNodeEdited"
                 SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                 SelectionBounds="{Binding Document.SelectionBounds}"
-                SelectionChanged="Canvas_OnSelectionChanged" />
+                SelectionChanged="Canvas_OnSelectionChanged"
+                SelectionTool="{Binding SelectionTool}" />
             <controls:DocumentTreeView
                 FlowDirection="{Binding Document.CurrentPage.FlowDirection, FallbackValue={x:Static models:Direction.Ltr}}"
                 Grid.Column="2"

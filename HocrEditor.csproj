@@ -81,6 +81,8 @@
       <Resource Include="Icons\image-import.png" />
       <None Remove="Icons\sort-alphabet-descending.png" />
       <Resource Include="Icons\sort-alphabet-descending.png" />
+      <None Remove="Icons\selection-select.png" />
+      <Resource Include="Icons\selection-select.png" />
     </ItemGroup>
 
     <ItemGroup>

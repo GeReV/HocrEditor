@@ -47,7 +47,7 @@ namespace HocrEditor.ViewModels
             set => Settings.AutoClean = value;
         }
 
-        public bool IsSelecting { get; set; }
+        public SelectionTool SelectionTool { get; set; }
 
         public string WindowTitle
         {
