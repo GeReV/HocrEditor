@@ -112,7 +112,17 @@ public partial class DocumentCanvas
         typeof(DocumentCanvas),
         new PropertyMetadata(
             false,
-            IsShowTextChanged
+            IsShowInfoChanged
+        )
+    );
+
+    public static readonly DependencyProperty IsShowNumberingProperty = DependencyProperty.Register(
+        nameof(IsShowNumbering),
+        typeof(bool),
+        typeof(DocumentCanvas),
+        new PropertyMetadata(
+            false,
+            IsShowInfoChanged
         )
     );
 
@@ -173,6 +183,12 @@ public partial class DocumentCanvas
     {
         get => (bool)GetValue(IsShowTextProperty);
         set => SetValue(IsShowTextProperty, value);
+    }
+
+    public bool IsShowNumbering
+    {
+        get => (bool)GetValue(IsShowNumberingProperty);
+        set => SetValue(IsShowNumberingProperty, value);
     }
 
     public bool IsSelecting
@@ -491,7 +507,7 @@ public partial class DocumentCanvas
         Refresh();
     }
 
-    private static void IsShowTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void IsShowInfoChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var documentCanvas = (DocumentCanvas)d;
 
@@ -1398,9 +1414,15 @@ public partial class DocumentCanvas
         }
 
         using var shaper = new SKShaper(SKTypeface.Default);
-        using var paint = new SKPaint(new SKFont(SKTypeface.Default));
+        using var paint = new SKPaint(new SKFont(SKTypeface.Default))
+        {
+            StrokeWidth = 1,
+        };
 
-        void Recurse(int key)
+        const float counterFontSize = 9.0f;
+        var counterTextSize = counterFontSize / 72.0f * ((HocrPage)elements[rootId].Item1.HocrNode).Dpi.Item2;
+
+        void Recurse(int key, int index)
         {
             var (node, element) = elements[key];
 
@@ -1434,6 +1456,8 @@ public partial class DocumentCanvas
                 {
                     var color = GetNodeColor(node);
 
+                    var scale = transformation.ScaleY;
+
                     if (node.NodeType == HocrNodeType.Word && IsShowText)
                     {
                         paint.IsStroke = false;
@@ -1443,7 +1467,7 @@ public partial class DocumentCanvas
 
                         var fontSize = ((HocrLine)elements[node.ParentId].Item1.HocrNode).FontSize;
 
-                        paint.TextSize = fontSize * transformation.ScaleY * 0.75f;
+                        paint.TextSize = fontSize * scale * 0.75f;
 
                         paint.Color = SKColors.Black;
                         paint.IsStroke = false;
@@ -1468,21 +1492,48 @@ public partial class DocumentCanvas
                         canvas.DrawRect(bounds, paint);
                     }
 
+                    if (IsShowNumbering && index >= 0)
+                    {
+                        paint.TextSize = counterTextSize * scale;
+
+                        var rectBounds = SKRect.Empty;
+                        paint.MeasureText("99", ref rectBounds);
+
+                        paint.IsStroke = false;
+                        paint.Color = color;
+
+                        rectBounds.Bottom += rectBounds.Height * 0.2f;
+                        rectBounds.Location = bounds.Location;
+
+                        canvas.DrawRect(rectBounds, paint);
+
+                        paint.Color = SKColors.Black;
+
+                        var text = index.ToString();
+
+                        var textBounds = SKRect.Empty;
+                        paint.MeasureText(text, ref textBounds);
+
+                        textBounds.Offset(rectBounds.MidX - textBounds.MidX, rectBounds.MidY - textBounds.MidY);
+
+                        canvas.DrawText(text, textBounds.Left, textBounds.Bottom, paint);
+                    }
+
                     paint.Color = node.IsSelected ? SKColors.Red : color;
                     paint.IsStroke = true;
-                    paint.StrokeWidth = 1;
 
                     canvas.DrawRect(bounds, paint);
                 }
             }
 
+            var counter = node.Children.Count > 1 ? 0 : -1;
             foreach (var childKey in node.Children.Select(c => c.Id))
             {
-                Recurse(childKey);
+                Recurse(childKey, counter >= 0 ? ++counter : counter);
             }
         }
 
-        Recurse(rootId);
+        Recurse(rootId, -1);
 
         RenderCanvasSelection(canvas);
     }

@@ -58,6 +58,8 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
 
     public bool ShowText { get; set; }
 
+    public bool ShowNumbering { get; set; }
+
     public Rect SelectionBounds
     {
         get => CurrentPage?.SelectionBounds ?? Rect.Empty;

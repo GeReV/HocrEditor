@@ -242,6 +242,13 @@
                         Source="/Icons/edit.png"
                         Width="16" />
                 </ToggleButton>
+                <ToggleButton IsChecked="{Binding Document.ShowNumbering}" ToolTip="Show node numbering">
+                    <Image
+                        Height="16"
+                        RenderOptions.BitmapScalingMode="HighQuality"
+                        Source="/Icons/edit-number.png"
+                        Width="16" />
+                </ToggleButton>
             </ToolBar>
             <ToolBar>
                 <Button
@@ -283,6 +290,7 @@
             <controls:DocumentCanvas
                 Grid.Column="1"
                 IsSelecting="{Binding IsSelecting}"
+                IsShowNumbering="{Binding Document.ShowNumbering}"
                 IsShowText="{Binding Document.ShowText}"
                 ItemsSource="{Binding Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
                 Margin="-1,0"

@@ -75,6 +75,8 @@
       <Resource Include="Icons\document--plus.png" />
       <None Remove="Icons\selection-select-input.png" />
       <Resource Include="Icons\selection-select-input.png" />
+      <None Remove="Icons\edit-number.png" />
+      <Resource Include="Icons\edit-number.png" />
     </ItemGroup>
 
     <ItemGroup>
