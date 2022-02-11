@@ -1773,12 +1773,12 @@ public partial class DocumentCanvas
 
     private void TextBox_OnKeyDown(object sender, KeyEventArgs e)
     {
-        e.Handled = true;
-
-        if (e.Key is not Key.Return or Key.Escape)
+        if (e.Key is not (Key.Return or Key.Escape))
         {
             return;
         }
+
+        e.Handled = true;
 
         EndEditing();
 
