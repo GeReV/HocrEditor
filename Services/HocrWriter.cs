@@ -232,7 +232,7 @@ public class HocrWriter
 
         if (hocrNode is HocrWord hocrWord)
         {
-            node.AppendChild(document.CreateTextNode(hocrWord.InnerText));
+            node.AppendChild(document.CreateTextNode(HtmlEntity.Entitize(hocrWord.InnerText, true, true)));
         }
         else
         {
