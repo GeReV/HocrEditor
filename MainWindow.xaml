@@ -279,7 +279,10 @@
                 </ToolBar.Resources>
                 <ToolBar.ItemTemplate>
                     <DataTemplate>
-                        <ToggleButton IsChecked="{Binding Visible}" ToolTip="{Binding ToolTip}">
+                        <ToggleButton
+                            Click="NodeVisibilityButton_OnClicked"
+                            IsChecked="{Binding Visible}"
+                            ToolTip="{Binding ToolTip}">
                             <Image
                                 Height="16"
                                 RenderOptions.BitmapScalingMode="HighQuality"

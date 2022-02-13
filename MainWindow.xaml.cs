@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using HocrEditor.Controls;
 using HocrEditor.Core;
@@ -137,6 +138,36 @@ namespace HocrEditor
         private void OpenCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             ViewModel.OpenCommand.TryExecute();
+        }
+
+        private void NodeVisibilityButton_OnClicked(object sender, RoutedEventArgs e)
+        {
+            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.None)
+            {
+                return;
+            }
+
+            e.Handled = true;
+
+            var button = (ToggleButton)sender;
+
+            var currentNodeVisibility = (NodeVisibility)button.DataContext;
+
+            var isChecked = button.IsChecked.GetValueOrDefault();
+
+            var otherVisibilities = ViewModel.Document.NodeVisibility.Where(nv => nv != currentNodeVisibility).ToList();
+
+            if (otherVisibilities.All(v => v.Visible == isChecked))
+            {
+                isChecked = !isChecked;
+            }
+
+            foreach (var nodeVisibility in otherVisibilities)
+            {
+                nodeVisibility.Visible = isChecked;
+            }
+
+            button.IsChecked = !isChecked;
         }
     }
 }
