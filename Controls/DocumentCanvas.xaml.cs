@@ -1225,7 +1225,7 @@ public partial class DocumentCanvas
 
     private void SelectNode(SKPoint normalizedPosition)
     {
-        var key = GetElementKeyAtPoint(normalizedPosition);
+        var key = GetVisibleElementKeyAtPoint(normalizedPosition);
 
         if (key < 0)
         {
@@ -1773,17 +1773,29 @@ public partial class DocumentCanvas
         }
     }
 
-    private int GetElementKeyAtPoint(SKPoint p)
+    private int GetVisibleElementKeyAtPoint(SKPoint p)
     {
         var selectedKeys = SelectedItems?.Select(n => n.Id).ToHashSet() ?? new HashSet<int>();
 
+        bool NodeIsVisible(int key)
+        {
+            var node = elements[key].Item1;
+
+            var visible = nodeVisibilityDictionary[node.NodeType];
+
+            return visible;
+        }
+
         var key = elements.Keys
             .Where(k => !selectedKeys.Contains(k))
+            .Where(NodeIsVisible)
             .FirstOrDefault(k => elements[k].Item2.Bounds.Contains(p), -1);
 
         return key < 0
             ? -1
-            : GetHierarchy(elements[key].Item1).LastOrDefault(k => elements[k].Item2.Bounds.Contains(p));
+            : GetHierarchy(elements[key].Item1)
+                .Where(NodeIsVisible)
+                .LastOrDefault(k => elements[k].Item2.Bounds.Contains(p));
     }
 
     private static IEnumerable<int> GetHierarchy(
