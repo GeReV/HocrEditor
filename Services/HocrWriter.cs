@@ -216,7 +216,7 @@ public class HocrWriter
         node.SetAttributeValue("id", id);
         node.SetAttributeValue("title", BuildTitle(hocrNode, pageIndex));
 
-        if (hocrNode.Direction != currentDirection)
+        if (hocrNode.Direction != currentDirection || hocrNode.NodeType == HocrNodeType.Page)
         {
             currentDirection = hocrNode.Direction;
 
