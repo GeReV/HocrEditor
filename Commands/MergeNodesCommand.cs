@@ -8,11 +8,11 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class MergeNodes : UndoableCommandBase<ICollection<HocrNodeViewModel>>
+public class MergeNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewModel>>
 {
     private readonly HocrPageViewModel hocrPageViewModel;
 
-    public MergeNodes(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
+    public MergeNodesCommand(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
     {
         this.hocrPageViewModel = hocrPageViewModel;
     }
@@ -26,16 +26,11 @@ public class MergeNodes : UndoableCommandBase<ICollection<HocrNodeViewModel>>
             return;
         }
 
-        var selectedNodes = nodes.OrderBy(node => hocrPageViewModel.Nodes.IndexOf(node)).ToList();
-
-        if (!selectedNodes.Any())
-        {
-            return;
-        }
-
         // All child nodes will be merged into the first one, which will be the "host".
-        var hostNode = selectedNodes.First();
-        var rest = selectedNodes.Skip(1).ToArray();
+        var hostNode = nodes.First();
+
+        // Children will be merged by their order in the document.
+        var rest = nodes.Skip(1).OrderBy(node => hocrPageViewModel.Nodes.IndexOf(node)).ToList();
 
         if (rest.Any(node => node.NodeType != hostNode.NodeType))
         {
@@ -62,7 +57,13 @@ public class MergeNodes : UndoableCommandBase<ICollection<HocrNodeViewModel>>
                 sb.Append(node.InnerText);
             }
 
-            commands.Add(PropertyChangeCommand.FromProperty(hostNode, n => n.BBox, NodeHelpers.CalculateUnionRect(rest.Prepend(hostNode))));
+            commands.Add(
+                PropertyChangeCommand.FromProperty(
+                    hostNode,
+                    n => n.BBox,
+                    NodeHelpers.CalculateUnionRect(rest.Prepend(hostNode))
+                )
+            );
             commands.Add(PropertyChangeCommand.FromProperty(hostNode, n => n.InnerText, sb.ToString()));
         }
         else

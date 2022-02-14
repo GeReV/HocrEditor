@@ -6,11 +6,11 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class CropNodes : UndoableCommandBase<ICollection<HocrNodeViewModel>>
+public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewModel>>
 {
     private readonly HocrPageViewModel hocrPageViewModel;
 
-    public CropNodes(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
+    public CropNodesCommand(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
     {
         this.hocrPageViewModel = hocrPageViewModel;
     }

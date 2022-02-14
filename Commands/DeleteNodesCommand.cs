@@ -7,11 +7,11 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class DeleteNodes : UndoableCommandBase<ICollection<HocrNodeViewModel>>
+public class DeleteNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewModel>>
 {
     private readonly HocrPageViewModel hocrPageViewModel;
 
-    public DeleteNodes(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
+    public DeleteNodesCommand(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
     {
         this.hocrPageViewModel = hocrPageViewModel;
     }

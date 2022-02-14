@@ -39,15 +39,17 @@ public class DocumentTreeViewDropHandler : DefaultDropHandler
         {
             var isDroppingInto = dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.TargetItemCenter);
 
+            var hocrNodeType = data.First().NodeType;
+
             if (isDroppingInto)
             {
-                return targetItem.NodeType == HocrNodeTypeHelper.GetParentNodeType(data.First().NodeType);
+                return hocrNodeType == targetItem.NodeType || targetItem.NodeType == HocrNodeTypeHelper.GetParentNodeType(hocrNodeType);
             }
 
             if (dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.BeforeTargetItem) ||
                 dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.AfterTargetItem))
             {
-                return targetItem.Parent?.NodeType == HocrNodeTypeHelper.GetParentNodeType(data.First().NodeType);
+                return targetItem.Parent?.NodeType == HocrNodeTypeHelper.GetParentNodeType(hocrNodeType);
             }
         }
 

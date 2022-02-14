@@ -5,6 +5,7 @@ using GongSolutions.Wpf.DragDrop.Utilities;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Controls;
 using HocrEditor.Core;
+using HocrEditor.Helpers;
 using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
@@ -31,6 +32,15 @@ public class MoveNodesCommand : UndoableCommandBase<NodesMovedEventArgs>
         var destinationList = e.TargetCollection.TryGetList();
         var data = DefaultDropHandler.ExtractData(e.Data).OfType<object>().ToList();
         var isSameCollection = false;
+
+        if (data.TrueForAll(item => IsSameNodeType(item, e.TargetOwner)))
+        {
+            var list = data.Prepend(e.TargetOwner).Cast<HocrNodeViewModel>().ToList();
+
+            new MergeNodesCommand(hocrPageViewModel).TryExecute(list);
+
+            return;
+        }
 
         var commands = new List<UndoRedoCommand>();
 
@@ -111,4 +121,8 @@ public class MoveNodesCommand : UndoableCommandBase<NodesMovedEventArgs>
 
         UndoRedoManager.ExecuteCommands(commands);
     }
+
+    private static bool IsSameNodeType(object a, object b) => a is HocrNodeViewModel nodeA &&
+                                                              b is HocrNodeViewModel nodeB &&
+                                                              nodeA.NodeType == nodeB.NodeType;
 }

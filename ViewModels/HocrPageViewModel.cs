@@ -57,9 +57,9 @@ namespace HocrEditor.ViewModels
             Image = image;
 
             OcrRegionCommand = new OcrRegionCommand(this);
-            DeleteCommand = new DeleteNodes(this);
-            MergeCommand = new MergeNodes(this);
-            CropCommand = new CropNodes(this);
+            DeleteCommand = new DeleteNodesCommand(this);
+            MergeCommand = new MergeNodesCommand(this);
+            CropCommand = new CropNodesCommand(this);
             ConvertToImageCommand = new ConvertToImageCommand(this);
             ReverseChildNodesCommand = new ReverseChildNodesCommand(this);
             MoveNodesCommand = new MoveNodesCommand(this);
