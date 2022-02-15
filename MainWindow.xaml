@@ -11,6 +11,7 @@
     xmlns:converters="clr-namespace:HocrEditor.Converters"
     xmlns:core="clr-namespace:HocrEditor.Core"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hocrEditor="clr-namespace:HocrEditor"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:HocrEditor.Models"
     xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
@@ -23,6 +24,7 @@
         <CommandBinding Command="Save" Executed="SaveCommandBinding_OnExecuted" />
         <CommandBinding Command="SaveAs" Executed="SaveCommandBinding_OnExecuted" />
         <CommandBinding Command="Open" Executed="OpenCommandBinding_OnExecuted" />
+        <CommandBinding Command="{x:Static hocrEditor:MainWindow.MergeCommand}" Executed="MergeCommandBinding_OnExecuted" />
     </Window.CommandBindings>
     <Window.InputBindings>
         <!--  Editing keybindings  -->
@@ -31,7 +33,7 @@
             CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
             Key="Delete" />
         <KeyBinding
-            Command="{Binding Document.CurrentPage.MergeCommand, FallbackValue={x:Null}}"
+            Command="{x:Static hocrEditor:MainWindow.MergeCommand}"
             CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
             Key="M"
             Modifiers="Control" />
@@ -104,7 +106,7 @@
                     Header="_Delete"
                     InputGestureText="Del" />
                 <MenuItem
-                    Command="{Binding Document.CurrentPage.MergeCommand, FallbackValue={x:Null}}"
+                    Command="{x:Static hocrEditor:MainWindow.MergeCommand}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                     Header="_Merge"
                     InputGestureText="Ctrl+M" />
@@ -188,7 +190,7 @@
                     </StackPanel>
                 </Button>
                 <Button
-                    Command="{Binding Document.CurrentPage.MergeCommand, FallbackValue={x:Null}}"
+                    Command="{x:Static hocrEditor:MainWindow.MergeCommand}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                     ToolTip="Merge nodes">
                     <StackPanel Orientation="Horizontal">

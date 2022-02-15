@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using HocrEditor.Behaviors;
 using HocrEditor.Controls;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
@@ -18,6 +19,8 @@ namespace HocrEditor
     /// </summary>
     public partial class MainWindow
     {
+        public static readonly RoutedCommand MergeCommand = new();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -168,6 +171,30 @@ namespace HocrEditor
             }
 
             button.IsChecked = !isChecked;
+        }
+
+        private void MergeCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            // By default, we'll just return the focus to the original item.
+            var focusOwner = Keyboard.FocusedElement;
+
+            if (focusOwner is TreeViewItem treeViewItem)
+            {
+                // If we're focused on a TreeViewItem, keep the owner TreeView since the item may be detached from it.
+                focusOwner = treeViewItem.FindVisualAncestor<TreeView>();
+            }
+
+            ViewModel.Document.CurrentPage?.MergeCommand.TryExecute(e.Parameter);
+
+            if (focusOwner is TreeView treeView)
+            {
+                // Find the first selected item and focus on it.
+                focusOwner = treeView
+                    .FindVisualChildren<TreeViewItem>()
+                    .FirstOrDefault(TreeViewMultipleSelectionBehavior.GetIsItemSelected);
+            }
+
+            Keyboard.Focus(focusOwner);
         }
     }
 }
