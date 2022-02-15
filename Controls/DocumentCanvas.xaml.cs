@@ -128,14 +128,14 @@ public partial class DocumentCanvas
         )
     );
 
-    public static readonly DependencyProperty SelectionToolProperty = DependencyProperty.Register(
-        nameof(SelectionTool),
-        typeof(SelectionTool),
+    public static readonly DependencyProperty IsSelectingProperty = DependencyProperty.Register(
+        nameof(IsSelecting),
+        typeof(bool),
         typeof(DocumentCanvas),
         new FrameworkPropertyMetadata(
-            default(SelectionTool),
+            default(bool),
             FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
-            SelectionToolChanged
+            IsSelectingChanged
         )
     );
 
@@ -193,10 +193,10 @@ public partial class DocumentCanvas
         set => SetValue(IsShowNumberingProperty, value);
     }
 
-    public SelectionTool SelectionTool
+    public bool IsSelecting
     {
-        get => (SelectionTool)GetValue(SelectionToolProperty);
-        set => SetValue(SelectionToolProperty, value);
+        get => (bool)GetValue(IsSelectingProperty);
+        set => SetValue(IsSelectingProperty, value);
     }
 
     public Rect SelectionBounds
@@ -279,9 +279,9 @@ public partial class DocumentCanvas
 
                 break;
             }
-            case Key.Escape when SelectionTool != SelectionTool.None:
+            case Key.Escape when IsSelecting:
             {
-                SelectionTool = SelectionTool.None;
+                IsSelecting = false;
 
                 break;
             }
@@ -518,23 +518,23 @@ public partial class DocumentCanvas
         documentCanvas.Refresh();
     }
 
-    private static void SelectionToolChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void IsSelectingChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var documentCanvas = (DocumentCanvas)d;
 
-        var newValue = (SelectionTool)e.NewValue;
+        var newValue = (bool)e.NewValue;
 
-        if (newValue == SelectionTool.None)
+        if (newValue)
+        {
+            documentCanvas.Cursor = documentCanvas.currentCursor = Cursors.Cross;
+        }
+        else
         {
             documentCanvas.Cursor = documentCanvas.currentCursor = null;
 
             documentCanvas.ClearCanvasSelection();
 
             documentCanvas.Refresh();
-        }
-        else
-        {
-            documentCanvas.Cursor = documentCanvas.currentCursor = Cursors.Cross;
         }
     }
 
@@ -750,28 +750,7 @@ public partial class DocumentCanvas
 
                 var normalizedPosition = inverseTransformation.MapPoint(position);
 
-                if (SelectionTool == SelectionTool.SelectNodes)
-                {
-                    mouseMoveState = MouseState.SelectingNodes;
-
-                    EndEditing();
-
-                    ClearSelection();
-
-                    dragLimit = RootElement.Bounds;
-
-                    var bounds = SKRect.Create(normalizedPosition, SKSize.Empty);
-
-                    bounds.Clamp(dragLimit);
-
-                    nodeSelection = bounds;
-
-                    SelectNodesWithinRegion(bounds);
-
-                    break;
-                }
-
-                if (SelectionTool == SelectionTool.SelectRegion)
+                if (IsSelecting)
                 {
                     if (!canvasSelection.IsEmpty && canvasSelection.Bounds.Contains(normalizedPosition))
                     {
@@ -819,6 +798,21 @@ public partial class DocumentCanvas
                 EndEditing();
 
                 SelectNode(normalizedPosition);
+
+                if (!selectedElements.Any() && RootElement.Bounds.Contains(normalizedPosition))
+                {
+                    mouseMoveState = MouseState.SelectingNodes;
+
+                    dragLimit = RootElement.Bounds;
+
+                    var bounds = SKRect.Create(normalizedPosition, SKSize.Empty);
+
+                    bounds.Clamp(dragLimit);
+
+                    nodeSelection = bounds;
+
+                    SelectNodesWithinRegion(bounds);
+                }
 
                 break;
             }
@@ -1263,7 +1257,6 @@ public partial class DocumentCanvas
 
             return;
         }
-
 
         // Page is unselectable.
         if (node.NodeType == HocrNodeType.Page)
