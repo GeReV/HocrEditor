@@ -52,7 +52,7 @@ public partial class DocumentTreeView
     }
 
     public static readonly RoutedEvent NodesEditedEvent = EventManager.RegisterRoutedEvent(
-        "NodesEdited",
+        nameof(NodesEdited),
         RoutingStrategy.Bubble,
         typeof(EventHandler<NodesEditedEventArgs>),
         typeof(DocumentTreeView)
@@ -65,7 +65,7 @@ public partial class DocumentTreeView
     }
 
     public static readonly RoutedEvent NodesMovedEvent = EventManager.RegisterRoutedEvent(
-        "NodesMoved",
+        nameof(NodesMoved),
         RoutingStrategy.Bubble,
         typeof(EventHandler<NodesMovedEventArgs>),
         typeof(DocumentTreeView)
