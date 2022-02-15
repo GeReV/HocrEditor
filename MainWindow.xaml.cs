@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Threading;
 using HocrEditor.Behaviors;
 using HocrEditor.Controls;
 using HocrEditor.Core;
@@ -103,11 +104,17 @@ namespace HocrEditor
                 var items = e.AddedItems.Cast<HocrNodeViewModel>().ToList();
                 ViewModel.Document.CurrentPage?.AppendSelectNodesCommand.TryExecute(items);
 
-                foreach (var parent in items.SelectMany(n => n.Ascendants))
-                {
-                    // Close on deselect?
-                    parent.IsExpanded = true;
-                }
+                Dispatcher.BeginInvoke(
+                    () =>
+                    {
+                        foreach (var parent in items.SelectMany(n => n.Ascendants))
+                        {
+                            // Close on deselect?
+                            parent.IsExpanded = true;
+                        }
+                    },
+                    DispatcherPriority.ContextIdle
+                );
             }
 
             if (e.RemovedItems.Count > 0)
