@@ -81,10 +81,19 @@
       <Resource Include="Icons\image-import.png" />
       <None Remove="Icons\sort-alphabet-descending.png" />
       <Resource Include="Icons\sort-alphabet-descending.png" />
+      <None Remove=".github\**" />
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include=".github" />
+      <Compile Remove=".github\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove=".github\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Page Remove=".github\**" />
     </ItemGroup>
 
 </Project>
