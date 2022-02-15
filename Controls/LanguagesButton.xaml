@@ -20,7 +20,10 @@
                     <ColumnDefinition Width="16" />
                 </Grid.ColumnDefinitions>
                 <Image Source="/Icons/edit-language.png" />
-                <TextBlock Grid.Column="1" x:Name="Label">
+                <TextBlock
+                    Grid.Column="1"
+                    Margin="2,0,0,0"
+                    x:Name="Label">
                     OCR Languages
                 </TextBlock>
                 <Path
