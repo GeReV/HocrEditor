@@ -1140,9 +1140,14 @@ public partial class DocumentCanvas
                 {
                     var selection = SelectNodesWithinRegion(nodeSelection);
 
-                    IList removed = SelectedItems is { Count: > 0 }
-                        ? SelectedItems.Except(selection).ToList()
-                        : Array.Empty<HocrNodeViewModel>();
+                    IList removed = Array.Empty<HocrNodeViewModel>();
+
+                    if (SelectedItems is { Count:> 0})
+                    {
+                        removed = SelectedItems.Except(selection).ToList();
+
+                        selection.ExceptWith(SelectedItems);
+                    }
 
                     OnSelectionChanged(
                         new SelectionChangedEventArgs(
