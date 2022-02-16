@@ -16,7 +16,7 @@ using Microsoft.Win32;
 
 namespace HocrEditor.ViewModels
 {
-    public class MainWindowViewModel : ViewModelBase
+    public sealed class MainWindowViewModel : ViewModelBase
     {
         private readonly Window window;
 
