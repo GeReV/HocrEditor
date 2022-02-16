@@ -468,12 +468,15 @@ public partial class DocumentCanvas
     {
         var documentCanvas = (DocumentCanvas)d;
 
-        if (documentCanvas.SelectedItems == null)
+        if (e.OldValue is INotifyCollectionChanged oldCollection)
         {
-            return;
+            oldCollection.CollectionChanged -= documentCanvas.SelectedNodesOnCollectionChanged;
         }
 
-        documentCanvas.SelectedItems.CollectionChanged += documentCanvas.SelectedNodesOnCollectionChanged;
+        if (e.NewValue is INotifyCollectionChanged newCollection)
+        {
+            newCollection.CollectionChanged += documentCanvas.SelectedNodesOnCollectionChanged;
+        }
 
         documentCanvas.Refresh();
     }
