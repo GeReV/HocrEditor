@@ -1139,27 +1139,24 @@ public partial class DocumentCanvas
                 nodeSelection.Right = newLocation.X;
                 nodeSelection.Bottom = newLocation.Y;
 
-                if (mouseMoveState == MouseState.SelectingNodes)
+                var selection = SelectNodesWithinRegion(nodeSelection);
+
+                IList removed = Array.Empty<HocrNodeViewModel>();
+
+                if (SelectedItems is { Count: > 0 })
                 {
-                    var selection = SelectNodesWithinRegion(nodeSelection);
+                    removed = SelectedItems.Except(selection).ToList();
 
-                    IList removed = Array.Empty<HocrNodeViewModel>();
-
-                    if (SelectedItems is { Count:> 0})
-                    {
-                        removed = SelectedItems.Except(selection).ToList();
-
-                        selection.ExceptWith(SelectedItems);
-                    }
-
-                    OnSelectionChanged(
-                        new SelectionChangedEventArgs(
-                            Selector.SelectionChangedEvent,
-                            removed,
-                            selection.ToList()
-                        )
-                    );
+                    selection.ExceptWith(SelectedItems);
                 }
+
+                OnSelectionChanged(
+                    new SelectionChangedEventArgs(
+                        Selector.SelectionChangedEvent,
+                        removed,
+                        selection.ToList()
+                    )
+                );
 
                 break;
             }
