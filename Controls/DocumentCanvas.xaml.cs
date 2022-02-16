@@ -534,11 +534,9 @@ public partial class DocumentCanvas
         else
         {
             documentCanvas.Cursor = documentCanvas.currentCursor = null;
-
-            documentCanvas.ClearCanvasSelection();
-
-            documentCanvas.Refresh();
         }
+
+        documentCanvas.Refresh();
     }
 
     private void AddSelectedElements(IEnumerable<HocrNodeViewModel> nodes)
@@ -1639,7 +1637,7 @@ public partial class DocumentCanvas
 
     private void RenderCanvasSelection(SKCanvas canvas)
     {
-        if (canvasSelection.IsEmpty)
+        if (canvasSelection.IsEmpty || IsSelecting)
         {
             return;
         }
