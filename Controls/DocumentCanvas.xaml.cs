@@ -42,7 +42,7 @@ public class Element
     public SKRect Bounds { get; set; }
 }
 
-public partial class DocumentCanvas
+public sealed partial class DocumentCanvas
 {
     private static readonly SKSize CenterPadding = new(-10.0f, -10.0f);
 
@@ -205,6 +205,16 @@ public partial class DocumentCanvas
         set => SetValue(SelectionBoundsProperty, value);
     }
 
+    public event EventHandler<NodesChangedEventArgs>? NodesChanged;
+
+    public event EventHandler<NodesEditedEventArgs> NodesEdited
+    {
+        add => AddHandler(NodesEditedEvent, value);
+        remove => RemoveHandler(NodesEditedEvent, value);
+    }
+
+    public event SelectionChangedEventHandler? SelectionChanged;
+
     private int rootId = -1;
     private readonly Dictionary<int, (HocrNodeViewModel, Element)> elements = new();
 
@@ -238,16 +248,6 @@ public partial class DocumentCanvas
     private Cursor? currentCursor;
     private readonly CanvasSelection canvasSelection = new();
     private ResizeHandle? selectedResizeHandle;
-
-    public event EventHandler<NodesChangedEventArgs>? NodesChanged;
-
-    public event EventHandler<NodesEditedEventArgs> NodesEdited
-    {
-        add => AddHandler(NodesEditedEvent, value);
-        remove => RemoveHandler(NodesEditedEvent, value);
-    }
-
-    public event SelectionChangedEventHandler? SelectionChanged;
 
     private Window? parentWindow;
     private Window ParentWindow => parentWindow ??= Window.GetWindow(this) ?? throw new InvalidOperationException();
