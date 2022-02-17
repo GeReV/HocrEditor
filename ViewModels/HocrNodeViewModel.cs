@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Windows.Threading;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 using PropertyChanged;
@@ -130,8 +131,34 @@ namespace HocrEditor.ViewModels
         [DoNotSetChanged]
         public bool IsExpanded { get; set; }
 
+
+        private bool isSelected;
+
         [DoNotSetChanged]
-        public bool IsSelected { get; set; }
+        public bool IsSelected
+        {
+            get => isSelected;
+            set
+            {
+                isSelected = value;
+
+                if (value)
+                {
+                    // TODO: Is this a correct usage?
+                    Dispatcher.CurrentDispatcher.BeginInvoke(
+                        () =>
+                        {
+                            foreach (var node in Ascendants)
+                            {
+                                // Close on deselect?
+                                node.IsExpanded = true;
+                            }
+                        },
+                        DispatcherPriority.ContextIdle
+                    );
+                }
+            }
+        }
 
         public IEnumerable<HocrNodeViewModel> Descendants => Children.RecursiveSelect(n => n.Children);
 
