@@ -224,6 +224,9 @@ public sealed partial class DocumentCanvas
 
     private readonly HashSet<int> selectedElements = new();
 
+    private List<int> selectedKeyCandidates = new();
+    private int selectedKey = -1;
+
     private HocrNodeViewModel? editingNode;
 
     private bool IsEditing => editingNode != null;
@@ -701,17 +704,15 @@ public sealed partial class DocumentCanvas
 
                 mouseMoveState = MouseState.Dragging;
 
-                if (canvasSelection.Bounds.Contains(normalizedPosition))
-                {
-                    // Dragging the selection, no need to select anything else.
-                    offsetStart = transformation.MapPoint(canvasSelection.Bounds.Location);
-
-                    break;
-                }
-
                 EndEditing();
 
                 SelectNode(normalizedPosition);
+
+                if (canvasSelection.Bounds.Contains(normalizedPosition))
+                {
+                    // Dragging the selection, no need to select anything else.
+                    break;
+                }
 
                 if (!selectedElements.Any() && RootElement.Bounds.Contains(normalizedPosition))
                 {
@@ -889,11 +890,6 @@ public sealed partial class DocumentCanvas
                     OnNodesChanged(new NodesChangedEventArgs(changes));
 
                     dragLimit = CalculateDragLimitBounds(selectedItems);
-                }
-
-                if (!mouseMoved)
-                {
-                    SelectNode(inverseTransformation.MapPoint(position));
                 }
 
                 break;
@@ -1135,44 +1131,44 @@ public sealed partial class DocumentCanvas
 
     private void SelectNode(SKPoint normalizedPosition)
     {
-        var key = GetVisibleElementKeyAtPoint(normalizedPosition);
+        // TODO: Should we have a priority for selecting, i.e. the smallest/deepest child first?
+        // Get keys for all nodes overlapping at this point.
+        var newKeyCandidates = GetVisibleElementKeysAtPoint(normalizedPosition);
 
-        if (key < 0)
+        if (!newKeyCandidates.Any())
         {
             ClearSelection();
 
+            selectedKey = -1;
+            selectedKeyCandidates.Clear();
+
             return;
         }
 
-        var node = elements[key].Item1;
-
-        foreach (var ascendant in node.Ascendants)
+        // Keep track of the current list of candidates. If they're the same from one click to another, we cycle through
+        //  them. Otherwise, we replace the list and start over.
+        if (!newKeyCandidates.SequenceEqual(selectedKeyCandidates))
         {
-            var (parentNode, parentElement) = elements[ascendant.Id];
-
-            if (!parentNode.IsRoot && parentNode.BBox.Equals(node.BBox))
-            {
-                (node, _) = (parentNode, parentElement);
-            }
-            else
-            {
-                break;
-            }
+            selectedKeyCandidates = newKeyCandidates;
         }
 
+        var index = selectedKeyCandidates.IndexOf(selectedKey);
+
+        // If the current (new or previous) list of candidates contains the current selected key, just cycle to the next
+        //  one.
+        // This handles a case where we get a different set of candidates, but the currently selected candidate is in
+        //  that set as well.
+        selectedKey = selectedKeyCandidates.Contains(selectedKey)
+            ? selectedKeyCandidates[(index + 1) % selectedKeyCandidates.Count]
+            : PickFirstCandidate(selectedKeyCandidates);
+
+        var node = elements[selectedKey].Item1;
+
         // TODO: Should probably choose node at mouseup, because user intention isn't clear at mouse down
+
         //  i.e. about to drag selection or choose a different item
         var selectedNodes = SelectedItems ??
                             throw new InvalidOperationException("Expected ViewModel to not be null");
-
-        if (canvasSelection.Bounds.Contains(normalizedPosition) &&
-            (node.NodeType == HocrNodeType.Page || selectedNodes.Contains(node)))
-        {
-            // Dragging the selection, no need to select anything else.
-            offsetStart = transformation.MapPoint(canvasSelection.Bounds.Location);
-
-            return;
-        }
 
         // Page is unselectable.
         if (node.NodeType == HocrNodeType.Page)
@@ -1202,6 +1198,16 @@ public sealed partial class DocumentCanvas
 
         dragLimit = CalculateDragLimitBounds(selectedNodes);
     }
+
+    private int PickFirstCandidate(IEnumerable<int> candidates) =>
+        candidates.MinBy(
+            k =>
+            {
+                var node = elements[k].Item1;
+
+                return node.BBox.Width * node.BBox.Height;
+            }
+        );
 
     private void AddSelectedNode(HocrNodeViewModel node)
     {
@@ -1682,10 +1688,8 @@ public sealed partial class DocumentCanvas
         }
     }
 
-    private int GetVisibleElementKeyAtPoint(SKPoint p)
+    private List<int> GetVisibleElementKeysAtPoint(SKPoint p)
     {
-        var selectedKeys = SelectedItems?.Select(n => n.Id).ToHashSet() ?? new HashSet<int>();
-
         bool NodeIsVisible(int key)
         {
             var node = elements[key].Item1;
@@ -1695,16 +1699,12 @@ public sealed partial class DocumentCanvas
             return visible;
         }
 
-        var key = elements.Keys
-            .Where(k => !selectedKeys.Contains(k))
+        return elements.Keys
             .Where(NodeIsVisible)
-            .FirstOrDefault(k => elements[k].Item2.Bounds.Contains(p), -1);
-
-        return key < 0
-            ? -1
-            : GetHierarchy(elements[key].Item1)
-                .Where(NodeIsVisible)
-                .LastOrDefault(k => elements[k].Item2.Bounds.Contains(p));
+            .Where(k => elements[k].Item1.NodeType != HocrNodeType.Page)
+            .Where(k => elements[k].Item2.Bounds.Contains(p))
+            .OrderByDescending(k => elements[k].Item1.NodeType)
+            .ToList();
     }
 
     private static IEnumerable<int> GetHierarchy(
