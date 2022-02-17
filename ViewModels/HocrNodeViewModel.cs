@@ -148,6 +148,7 @@ namespace HocrEditor.ViewModels
                     Dispatcher.CurrentDispatcher.BeginInvoke(
                         () =>
                         {
+                            // TODO: Would filtering them first be quicker?
                             foreach (var node in Ascendants)
                             {
                                 // Close on deselect?
