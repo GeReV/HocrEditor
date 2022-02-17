@@ -68,6 +68,7 @@ namespace HocrEditor.ViewModels
             ExclusiveSelectNodesCommand = new ExclusiveSelectNodesCommand(this);
             AppendSelectNodesCommand = new AppendSelectNodesCommand(this);
             DeselectNodesCommand = new DeselectNodesCommand(this);
+            CycleSelectionCommand = new CycleSelectionCommand(this);
 
             SelectIdenticalNodesCommand =
                 new RelayCommand<ICollection<HocrNodeViewModel>>(SelectIdenticalNodes, CanSelectIdenticalNodes);

@@ -28,6 +28,11 @@
     </Window.CommandBindings>
     <Window.InputBindings>
         <!--  Editing keybindings  -->
+        <KeyBinding Command="{Binding Document.CurrentPage.CycleSelectionCommand, FallbackValue={x:Null}}" Key="Tab" />
+        <KeyBinding
+            Command="{Binding Document.CurrentPage.CycleSelectionCommand, FallbackValue={x:Null}}"
+            Key="Tab"
+            Modifiers="Shift" />
         <KeyBinding
             Command="{Binding Document.CurrentPage.DeleteCommand, FallbackValue={x:Null}}"
             CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"

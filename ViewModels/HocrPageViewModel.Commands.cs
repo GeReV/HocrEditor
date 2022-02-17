@@ -57,6 +57,7 @@ namespace HocrEditor.ViewModels
         public IRelayCommand<IList<HocrNodeViewModel>> ExclusiveSelectNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> AppendSelectNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> DeselectNodesCommand { get; }
+        public IRelayCommand CycleSelectionCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> SelectIdenticalNodesCommand { get; }
 
         public IRelayCommand<List<NodesChangedEventArgs.NodeChange>> UpdateNodesCommand { get; }
@@ -74,6 +75,7 @@ namespace HocrEditor.ViewModels
             EditNodesCommand.NotifyCanExecuteChanged();
             ExclusiveSelectNodesCommand.NotifyCanExecuteChanged();
             DeselectNodesCommand.NotifyCanExecuteChanged();
+            CycleSelectionCommand.NotifyCanExecuteChanged();
             SelectIdenticalNodesCommand.NotifyCanExecuteChanged();
         }
 
