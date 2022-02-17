@@ -1160,7 +1160,7 @@ public sealed partial class DocumentCanvas
         //  that set as well.
         selectedKey = selectedKeyCandidates.Contains(selectedKey)
             ? selectedKeyCandidates[(index + 1) % selectedKeyCandidates.Count]
-            : PickFirstCandidate(selectedKeyCandidates);
+            : PickFirstSelectionCandidate(selectedKeyCandidates);
 
         var node = elements[selectedKey].Item1;
 
@@ -1199,7 +1199,10 @@ public sealed partial class DocumentCanvas
         dragLimit = CalculateDragLimitBounds(selectedNodes);
     }
 
-    private int PickFirstCandidate(IEnumerable<int> candidates) =>
+
+    // Pick the node with the smallest area, as it's likely the most specific one.
+    //  (e.g. word rather than line or paragraph)
+    private int PickFirstSelectionCandidate(IEnumerable<int> candidates) =>
         candidates.MinBy(
             k =>
             {
