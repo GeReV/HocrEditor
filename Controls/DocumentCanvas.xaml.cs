@@ -1786,7 +1786,7 @@ public sealed partial class DocumentCanvas
         Refresh();
     }
 
-    protected virtual void OnNodesChanged(NodesChangedEventArgs e)
+    private void OnNodesChanged(NodesChangedEventArgs e)
     {
         NodesChanged?.Invoke(this, e);
     }
@@ -1803,7 +1803,7 @@ public sealed partial class DocumentCanvas
         );
     }
 
-    protected virtual void OnSelectionChanged(SelectionChangedEventArgs e)
+    private void OnSelectionChanged(SelectionChangedEventArgs e)
     {
         SelectionChanged?.Invoke(this, e);
     }
