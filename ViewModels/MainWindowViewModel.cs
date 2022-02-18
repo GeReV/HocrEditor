@@ -11,6 +11,7 @@ using HocrEditor.Helpers;
 using HocrEditor.Models;
 using HocrEditor.Services;
 using HtmlAgilityPack;
+using JetBrains.Annotations;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Win32;
 
@@ -75,9 +76,7 @@ namespace HocrEditor.ViewModels
         public IRelayCommand OpenCommand { get; }
         public IRelayCommand ImportCommand { get; }
 
-        // Hooked up automatically by Fody.
-        // ReSharper disable once UnusedMember.Local
-        // ReSharper disable SuggestBaseTypeForParameter
+        [UsedImplicitly]
         private void OnDocumentChanged(HocrDocumentViewModel oldValue, HocrDocumentViewModel newValue)
         {
             oldValue.PropertyChanged -= DocumentOnPropertyChanged;
@@ -85,7 +84,6 @@ namespace HocrEditor.ViewModels
 
             newValue.PropertyChanged += DocumentOnPropertyChanged;
         }
-        // ReSharper restore SuggestBaseTypeForParameter
 
         private void DocumentOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
