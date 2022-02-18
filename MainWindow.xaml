@@ -11,6 +11,7 @@
     xmlns:converters="clr-namespace:HocrEditor.Converters"
     xmlns:core="clr-namespace:HocrEditor.Core"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="clr-namespace:HocrEditor.Helpers"
     xmlns:hocrEditor="clr-namespace:HocrEditor"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:HocrEditor.Models"
@@ -155,119 +156,110 @@
         </Menu>
         <ToolBarTray DockPanel.Dock="Top">
             <ToolBar>
-                <controls:IconButton
+                <Button
                     Command="{Binding ImportCommand}"
-                    ImageSource="/Icons/document--plus.png"
-                    ToolTip="Import" />
-                <controls:IconButton
+                    ToolTip="Import"
+                    helpers:IconButton.Source="/Icons/document--plus.png" />
+                <Button
                     Command="Open"
-                    ImageSource="/Icons/folder-open-document.png"
-                    ToolTip="Open" />
-                <controls:IconButton
+                    ToolTip="Open"
+                    helpers:IconButton.Source="/Icons/folder-open-document.png" />
+                <Button
                     Command="Save"
-                    ImageSource="/Icons/disk-black.png"
-                    ToolTip="Save" />
+                    ToolTip="Save"
+                    helpers:IconButton.Source="/Icons/disk-black.png" />
                 <Separator />
                 <controls:LanguagesButton ItemsSource="{Binding TesseractLanguages}" />
             </ToolBar>
             <ToolBar>
-                <controls:IconButton
+                <Button
                     Command="{Binding Document.CurrentPage.UndoCommand, FallbackValue={x:Null}}"
-                    ImageSource="/Icons/arrow-curve-180-left.png"
-                    ToolTip="Undo" />
+                    ToolTip="Undo"
+                    helpers:IconButton.Source="/Icons/arrow-curve-180-left.png" />
 
-                <controls:IconButton
+                <Button
                     Command="{Binding Document.CurrentPage.RedoCommand, FallbackValue={x:Null}}"
-                    ImageSource="/Icons/arrow-curve.png"
-                    ToolTip="Redo" />
+                    ToolTip="Redo"
+                    helpers:IconButton.Source="/Icons/arrow-curve.png" />
                 <Separator />
-                <controls:IconButton
+                <Button
                     Command="{Binding Document.CurrentPage.OcrRegionCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectionBounds, FallbackValue={x:Static models:Rect.Empty}}"
-                    ImageSource="/Icons/spectacle.png"
-                    ToolTip="Perform OCR on selection">
+                    ToolTip="Perform OCR on selection"
+                    helpers:IconButton.Source="/Icons/spectacle.png">
                     OCR Region
-                </controls:IconButton>
-                <controls:IconButton
+                </Button>
+                <Button
                     Command="{Binding Document.CurrentPage.DeleteCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    ImageSource="/Icons/minus-circle.png"
-                    ToolTip="Delete">
+                    ToolTip="Delete"
+                    helpers:IconButton.Source="/Icons/minus-circle.png">
                     Delete
-                </controls:IconButton>
-                <controls:IconButton
+                </Button>
+                <Button
                     Command="{x:Static hocrEditor:MainWindow.MergeCommand}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    ImageSource="/Icons/sql-join-outer.png"
-                    ToolTip="Merge nodes">
+                    ToolTip="Merge nodes"
+                    helpers:IconButton.Source="/Icons/sql-join-outer.png">
                     Merge
-                </controls:IconButton>
-                <controls:IconButton
+                </Button>
+                <Button
                     Command="{Binding Document.CurrentPage.CropCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    ImageSource="/Icons/ruler-crop.png"
-                    ToolTip="Crop nodes">
+                    ToolTip="Crop nodes"
+                    helpers:IconButton.Source="/Icons/ruler-crop.png">
                     Crop
-                </controls:IconButton>
-                <ToggleButton IsChecked="{Binding AutoClean}" ToolTip="Auto clean">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="/Icons/broom.png" />
-                        <TextBlock Margin="2,0,0,0">Auto Clean</TextBlock>
-                    </StackPanel>
-                </ToggleButton>
+                </Button>
+                <ToggleButton
+                    IsChecked="{Binding AutoClean}"
+                    ToolTip="Auto clean"
+                    helpers:IconButton.Source="/Icons/broom.png" />
                 <Separator />
                 <RadioButton
                     GroupName="PageDirection"
                     IsChecked="{Binding Document.CurrentPage.Direction, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static models:Direction.Ltr}, FallbackValue={x:Null}}"
-                    ToolTip="Left to Right">
-                    <Image Source="/Icons/edit-direction.png" />
-                </RadioButton>
+                    ToolTip="Left to Right"
+                    helpers:IconButton.Source="/Icons/edit-direction.png" />
                 <RadioButton
                     GroupName="PageDirection"
                     IsChecked="{Binding Document.CurrentPage.Direction, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static models:Direction.Rtl}, FallbackValue={x:Null}}"
-                    ToolTip="Right to Left">
-                    <Image Source="/Icons/edit-direction-rtl.png" />
-                </RadioButton>
+                    ToolTip="Right to Left"
+                    helpers:IconButton.Source="/Icons/edit-direction-rtl.png" />
                 <Separator />
-                <ToggleButton IsChecked="{Binding IsSelecting}" ToolTip="Select region">
-                    <Image Source="/Icons/selection.png" />
-                </ToggleButton>
-                <controls:IconButton
+                <ToggleButton
+                    IsChecked="{Binding IsSelecting}"
+                    ToolTip="Select region"
+                    helpers:IconButton.Source="/Icons/selection.png" />
+                <Button
                     Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    ImageSource="/Icons/selection-select-input.png"
-                    ToolTip="Select identical nodes" />
+                    ToolTip="Select identical nodes"
+                    helpers:IconButton.Source="/Icons/selection-select-input.png" />
                 <Separator />
-                <ToggleButton IsChecked="{Binding Document.ShowText}" ToolTip="Show text">
-                    <Image
-                        Height="16"
-                        RenderOptions.BitmapScalingMode="HighQuality"
-                        Source="/Icons/edit.png"
-                        Width="16" />
-                </ToggleButton>
-                <ToggleButton IsChecked="{Binding Document.ShowNumbering}" ToolTip="Show node numbering">
-                    <Image
-                        Height="16"
-                        RenderOptions.BitmapScalingMode="HighQuality"
-                        Source="/Icons/edit-number.png"
-                        Width="16" />
-                </ToggleButton>
+                <ToggleButton
+                    IsChecked="{Binding Document.ShowText}"
+                    ToolTip="Show text"
+                    helpers:IconButton.Source="/Icons/edit.png" />
+                <ToggleButton
+                    IsChecked="{Binding Document.ShowNumbering}"
+                    ToolTip="Show node numbering"
+                    helpers:IconButton.Source="/Icons/edit-number.png" />
             </ToolBar>
             <ToolBar>
-                <controls:IconButton
+                <Button
                     Command="{Binding Document.CurrentPage.ConvertToImageCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    ImageSource="/Icons/image-import.png"
-                    ToolTip="Convert selected nodes to images">
+                    ToolTip="Convert selected nodes to images"
+                    helpers:IconButton.Source="/Icons/image-import.png">
                     Convert to Images
-                </controls:IconButton>
-                <controls:IconButton
+                </Button>
+                <Button
                     Command="{Binding Document.CurrentPage.ReverseChildNodesCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    ImageSource="/Icons/sort-alphabet-descending.png"
-                    ToolTip="Reverse selected node's children">
+                    ToolTip="Reverse selected node's children"
+                    helpers:IconButton.Source="/Icons/sort-alphabet-descending.png">
                     Reverse children
-                </controls:IconButton>
+                </Button>
             </ToolBar>
             <ToolBar ItemsSource="{Binding Document.NodeVisibility}">
                 <ToolBar.Resources>
@@ -278,13 +270,8 @@
                         <ToggleButton
                             Click="NodeVisibilityButton_OnClicked"
                             IsChecked="{Binding Visible}"
-                            ToolTip="{Binding ToolTip}">
-                            <Image
-                                Height="16"
-                                RenderOptions.BitmapScalingMode="HighQuality"
-                                Source="{Binding IconPath}"
-                                Width="16" />
-                        </ToggleButton>
+                            ToolTip="{Binding ToolTip}"
+                            helpers:IconButton.Source="{Binding IconPath}" />
                     </DataTemplate>
                 </ToolBar.ItemTemplate>
             </ToolBar>

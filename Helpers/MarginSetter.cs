@@ -31,6 +31,18 @@ public class MarginSetter
     public static void SetMargin(DependencyObject obj, Thickness value)
     {
         obj.SetValue(MarginProperty, value);
+
+        Update(obj);
+    }
+
+    private static void Update(DependencyObject obj)
+    {
+        if (obj is not Panel panel)
+        {
+            return;
+        }
+
+        UpdateMargins(panel);
     }
 
     // Using a DependencyProperty as the backing store for Margin.  This enables animation, styling, binding, etc...
@@ -68,6 +80,11 @@ public class MarginSetter
     {
         var panel = (Panel)sender;
 
+        UpdateMargins(panel);
+    }
+
+    private static void UpdateMargins(Panel panel)
+    {
         // Go over the children and set margin for them:
         for (var i = 0; i < panel.Children.Count; i++)
         {

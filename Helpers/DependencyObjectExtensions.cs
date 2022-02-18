@@ -64,6 +64,27 @@ public static class DependencyObjectExtensions
     }
 
     /// <summary>
+    /// Attempts to find a visual child of the specified type.
+    /// </summary>
+    /// <typeparam name="T">The type of the child.</typeparam>
+    /// <param name="obj">The object to search.</param>
+    /// <returns>A matching visual child, otherwise null.</returns>
+    public static T? FindImmediateVisualChild<T>(this DependencyObject obj)
+        where T : DependencyObject
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
+        {
+            var child = VisualTreeHelper.GetChild(obj, i);
+            if (child is T dependencyObject)
+            {
+                return dependencyObject;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Attempts to find all visual children of the specified type.
     /// </summary>
     /// <typeparam name="T">The type of the child.</typeparam>
