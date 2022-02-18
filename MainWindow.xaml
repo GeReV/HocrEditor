@@ -155,63 +155,60 @@
         </Menu>
         <ToolBarTray DockPanel.Dock="Top">
             <ToolBar>
-                <Button Command="{Binding ImportCommand}" ToolTip="Import">
-                    <Image Source="/Icons/document--plus.png" />
-
-                </Button>
-                <Button Command="Open" ToolTip="Open">
-                    <Image Source="/Icons/folder-open-document.png" />
-                </Button>
-                <Button Command="Save" ToolTip="Save">
-                    <Image Source="/Icons/disk-black.png" />
-                </Button>
+                <controls:IconButton
+                    Command="{Binding ImportCommand}"
+                    ImageSource="/Icons/document--plus.png"
+                    ToolTip="Import" />
+                <controls:IconButton
+                    Command="Open"
+                    ImageSource="/Icons/folder-open-document.png"
+                    ToolTip="Open" />
+                <controls:IconButton
+                    Command="Save"
+                    ImageSource="/Icons/disk-black.png"
+                    ToolTip="Save" />
                 <Separator />
                 <controls:LanguagesButton ItemsSource="{Binding TesseractLanguages}" />
             </ToolBar>
             <ToolBar>
-                <Button Command="{Binding Document.CurrentPage.UndoCommand, FallbackValue={x:Null}}" ToolTip="Undo">
-                    <Image Source="/Icons/arrow-curve-180-left.png" />
-                </Button>
-                <Button Command="{Binding Document.CurrentPage.RedoCommand, FallbackValue={x:Null}}" ToolTip="Redo">
-                    <Image Source="/Icons/arrow-curve.png" />
-                </Button>
+                <controls:IconButton
+                    Command="{Binding Document.CurrentPage.UndoCommand, FallbackValue={x:Null}}"
+                    ImageSource="/Icons/arrow-curve-180-left.png"
+                    ToolTip="Undo" />
+
+                <controls:IconButton
+                    Command="{Binding Document.CurrentPage.RedoCommand, FallbackValue={x:Null}}"
+                    ImageSource="/Icons/arrow-curve.png"
+                    ToolTip="Redo" />
                 <Separator />
-                <Button
+                <controls:IconButton
                     Command="{Binding Document.CurrentPage.OcrRegionCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectionBounds, FallbackValue={x:Static models:Rect.Empty}}"
+                    ImageSource="/Icons/spectacle.png"
                     ToolTip="Perform OCR on selection">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="/Icons/spectacle.png" />
-                        <TextBlock Margin="2,0,0,0">OCR Region</TextBlock>
-                    </StackPanel>
-                </Button>
-                <Button
+                    OCR Region
+                </controls:IconButton>
+                <controls:IconButton
                     Command="{Binding Document.CurrentPage.DeleteCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                    ImageSource="/Icons/minus-circle.png"
                     ToolTip="Delete">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="/Icons/minus-circle.png" />
-                        <TextBlock Margin="2,0,0,0">Delete</TextBlock>
-                    </StackPanel>
-                </Button>
-                <Button
+                    Delete
+                </controls:IconButton>
+                <controls:IconButton
                     Command="{x:Static hocrEditor:MainWindow.MergeCommand}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                    ImageSource="/Icons/sql-join-outer.png"
                     ToolTip="Merge nodes">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="/Icons/sql-join-outer.png" />
-                        <TextBlock Margin="2,0,0,0">Merge</TextBlock>
-                    </StackPanel>
-                </Button>
-                <Button
+                    Merge
+                </controls:IconButton>
+                <controls:IconButton
                     Command="{Binding Document.CurrentPage.CropCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                    ImageSource="/Icons/ruler-crop.png"
                     ToolTip="Crop nodes">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="/Icons/ruler-crop.png" />
-                        <TextBlock Margin="2,0,0,0">Crop</TextBlock>
-                    </StackPanel>
-                </Button>
+                    Crop
+                </controls:IconButton>
                 <ToggleButton IsChecked="{Binding AutoClean}" ToolTip="Auto clean">
                     <StackPanel Orientation="Horizontal">
                         <Image Source="/Icons/broom.png" />
@@ -235,12 +232,11 @@
                 <ToggleButton IsChecked="{Binding IsSelecting}" ToolTip="Select region">
                     <Image Source="/Icons/selection.png" />
                 </ToggleButton>
-                <Button
+                <controls:IconButton
                     Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    ToolTip="Select identical nodes">
-                    <Image Source="/Icons/selection-select-input.png" />
-                </Button>
+                    ImageSource="/Icons/selection-select-input.png"
+                    ToolTip="Select identical nodes" />
                 <Separator />
                 <ToggleButton IsChecked="{Binding Document.ShowText}" ToolTip="Show text">
                     <Image
@@ -258,24 +254,20 @@
                 </ToggleButton>
             </ToolBar>
             <ToolBar>
-                <Button
+                <controls:IconButton
                     Command="{Binding Document.CurrentPage.ConvertToImageCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                    ImageSource="/Icons/image-import.png"
                     ToolTip="Convert selected nodes to images">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="/Icons/image-import.png" />
-                        <TextBlock Margin="2,0,0,0">Convert to Images</TextBlock>
-                    </StackPanel>
-                </Button>
-                <Button
+                    Convert to Images
+                </controls:IconButton>
+                <controls:IconButton
                     Command="{Binding Document.CurrentPage.ReverseChildNodesCommand, FallbackValue={x:Null}}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                    ImageSource="/Icons/sort-alphabet-descending.png"
                     ToolTip="Reverse selected node's children">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Image Source="/Icons/sort-alphabet-descending.png" />
-                        <TextBlock Margin="2,0,0,0">Reverse children</TextBlock>
-                    </StackPanel>
-                </Button>
+                    Reverse children
+                </controls:IconButton>
             </ToolBar>
             <ToolBar ItemsSource="{Binding Document.NodeVisibility}">
                 <ToolBar.Resources>
