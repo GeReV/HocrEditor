@@ -2,6 +2,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:controls="clr-namespace:HocrEditor.Controls"
     xmlns:converters="clr-namespace:HocrEditor.Converters"
+    xmlns:helpers="clr-namespace:HocrEditor.Helpers"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <converters:ValueConverterGroup x:Key="NullableToVisibilityConverter">
@@ -16,10 +17,12 @@
             BorderThickness="{TemplateBinding Border.BorderThickness}"
             Name="border"
             SnapsToDevicePixels="True">
-            <StackPanel Margin="{TemplateBinding Control.Padding}" Orientation="Horizontal">
+            <StackPanel
+                Margin="{TemplateBinding Control.Padding}"
+                Orientation="Horizontal"
+                helpers:MarginSetter.Margin="0,0,2,0">
                 <Image
                     Height="16"
-                    Margin="0,0,2,0"
                     SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"
                     Source="{TemplateBinding ImageSource}"
                     Visibility="{TemplateBinding ImageSource,
