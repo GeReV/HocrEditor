@@ -1,26 +1,48 @@
-﻿<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             mc:Ignorable="d"
-             d:DesignWidth="800"
-             d:DesignHeight="450"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
-             x:Class="HocrEditor.Controls.DocumentCanvas"
-             Focusable="True">
+﻿<UserControl
+    Focusable="True"
+    d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="HocrEditor.Controls.DocumentCanvas"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="clr-namespace:HocrEditor.Helpers"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:HocrEditor.Models"
+    xmlns:skia="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
+    xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid>
-        <Border BorderThickness="1"
-                BorderBrush="{x:Static SystemColors.ControlDarkBrush}">
-            <skia:SKElement Name="Surface"
-                            PaintSurface="Canvas_OnPaintSurface" />
+        <Border BorderBrush="{x:Static SystemColors.ControlDarkBrush}" BorderThickness="1">
+            <skia:SKElement Name="Surface" PaintSurface="Canvas_OnPaintSurface" />
         </Border>
         <Canvas Name="TextBoxLayout">
-            <TextBox Name="TextBox"
-                     Visibility="Collapsed"
-                     TextAlignment="Center"
-                     KeyDown="TextBox_OnKeyDown"
-                     LostFocus="TextBox_OnLostFocus"
-                     TextBlock.LineStackingStrategy="BlockLineHeight"/>
+            <TextBox
+                KeyDown="TextBox_OnKeyDown"
+                LostFocus="TextBox_OnLostFocus"
+                Name="TextBox"
+                TextAlignment="Center"
+                TextBlock.LineStackingStrategy="BlockLineHeight"
+                Visibility="Collapsed" />
+            <Border
+                Background="#EEF5FD"
+                Cursor="Arrow"
+                Name="SelectionPopup"
+                Padding="2">
+                <Border.Resources>
+                    <Style BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" TargetType="Button" />
+                </Border.Resources>
+                <StackPanel Orientation="Horizontal">
+                    <Button
+                        Command="{Binding Document.CurrentPage.OcrRegionCommand, FallbackValue={x:Null}}"
+                        CommandParameter="{Binding Document.CurrentPage.SelectionBounds, FallbackValue={x:Static models:Rect.Empty}}"
+                        ToolTip="Perform OCR on selection"
+                        helpers:IconButton.Source="/Icons/spectacle.png">
+                        OCR Region
+                    </Button>
+                </StackPanel>
+            </Border>
         </Canvas>
     </Grid>
 </UserControl>

@@ -68,6 +68,10 @@ internal class CanvasSelection
         set => bounds.Bottom = value;
     }
 
+    public float Width => bounds.Width;
+
+    public float Height => bounds.Width;
+
     public SKPoint Center => new(bounds.MidX, bounds.MidY);
 
     public SKPoint ResizeRatio {

@@ -143,7 +143,11 @@ public sealed partial class DocumentCanvas
         nameof(SelectionBounds),
         typeof(Rect),
         typeof(DocumentCanvas),
-        new FrameworkPropertyMetadata(default(Rect), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault)
+        new FrameworkPropertyMetadata(
+            default(Rect),
+            FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+            SelectionBoundsChanged
+        )
     );
 
     public static readonly RoutedEvent NodesEditedEvent = EventManager.RegisterRoutedEvent(
@@ -450,9 +454,18 @@ public sealed partial class DocumentCanvas
         else
         {
             documentCanvas.Cursor = documentCanvas.currentCursor = null;
+
+            documentCanvas.ClearCanvasSelection();
         }
 
         documentCanvas.Refresh();
+    }
+
+    private static void SelectionBoundsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var documentCanvas = (DocumentCanvas)d;
+
+        documentCanvas.UpdateSelectionPopup();
     }
 
     private void AddSelectedElements(IEnumerable<HocrNodeViewModel> nodes)
@@ -644,7 +657,7 @@ public sealed partial class DocumentCanvas
 
                 Keyboard.Focus(this);
 
-                if (!canvasSelection.IsEmpty)
+                if (ShouldShowCanvasSelection)
                 {
                     var selectedHandle = canvasSelection.ResizeHandles
                         .FirstOrDefault(handle => handle.GetRect(transformation).Contains(position));
@@ -669,7 +682,7 @@ public sealed partial class DocumentCanvas
 
                 if (IsSelecting)
                 {
-                    if (!canvasSelection.IsEmpty && canvasSelection.Bounds.Contains(normalizedPosition))
+                    if (ShouldShowCanvasSelection && canvasSelection.Bounds.Contains(normalizedPosition))
                     {
                         mouseMoveState = MouseState.DraggingSelectionRegion;
 
@@ -752,44 +765,6 @@ public sealed partial class DocumentCanvas
         }
 
         Refresh();
-    }
-
-    private HashSet<HocrNodeViewModel> SelectNodesWithinRegion(SKRect selection)
-    {
-        if (rootId < 0)
-        {
-            throw new InvalidOperationException($"Expected {rootId} to be greater or equal to 0.");
-        }
-
-        selection = transformation.MapRect(selection);
-
-        var selectedNodes = new HashSet<HocrNodeViewModel>();
-
-        void Recurse(int key)
-        {
-            var (node, element) = elements[key];
-
-            var bounds = transformation.MapRect(element.Bounds);
-
-            if (!selection.IntersectsWithInclusive(bounds))
-            {
-                return;
-            }
-
-            if (!node.IsRoot)
-            {
-                selectedNodes.Add(node);
-            }
-
-            foreach (var childKey in node.Children.Select(c => c.Id))
-            {
-                Recurse(childKey);
-            }
-        }
-
-        Recurse(rootId);
-
-        return selectedNodes;
     }
 
     protected override void OnMouseUp(MouseButtonEventArgs e)
@@ -924,7 +899,7 @@ public sealed partial class DocumentCanvas
         {
             case MouseState.None:
             {
-                if (canvasSelection.IsEmpty)
+                if (!ShouldShowCanvasSelection)
                 {
                     return;
                 }
@@ -979,11 +954,6 @@ public sealed partial class DocumentCanvas
 
                 UpdateTransformation(SKMatrix.CreateTranslation(newLocation.X, newLocation.Y));
 
-                if (editingNode != null)
-                {
-                    UpdateTextBox();
-                }
-
                 break;
             }
             case MouseState.Dragging:
@@ -1019,21 +989,11 @@ public sealed partial class DocumentCanvas
                     };
                 }
 
-                if (editingNode != null)
-                {
-                    UpdateTextBox();
-                }
-
                 break;
             }
             case MouseState.Resizing:
             {
                 PerformResize(delta);
-
-                if (editingNode != null)
-                {
-                    UpdateTextBox();
-                }
 
                 break;
             }
@@ -1122,11 +1082,6 @@ public sealed partial class DocumentCanvas
         dragLimit = CalculateDragLimitBounds(selectedItems);
 
         Refresh();
-
-        if (editingNode != null)
-        {
-            UpdateTextBox();
-        }
     }
 
     private void SelectNode(SKPoint normalizedPosition)
@@ -1199,6 +1154,43 @@ public sealed partial class DocumentCanvas
         dragLimit = CalculateDragLimitBounds(selectedNodes);
     }
 
+    private HashSet<HocrNodeViewModel> SelectNodesWithinRegion(SKRect selection)
+    {
+        if (rootId < 0)
+        {
+            throw new InvalidOperationException($"Expected {rootId} to be greater or equal to 0.");
+        }
+
+        selection = transformation.MapRect(selection);
+
+        var selectedNodes = new HashSet<HocrNodeViewModel>();
+
+        void Recurse(int key)
+        {
+            var (node, element) = elements[key];
+
+            var bounds = transformation.MapRect(element.Bounds);
+
+            if (!selection.IntersectsWithInclusive(bounds))
+            {
+                return;
+            }
+
+            if (!node.IsRoot)
+            {
+                selectedNodes.Add(node);
+            }
+
+            foreach (var childKey in node.Children.Select(c => c.Id))
+            {
+                Recurse(childKey);
+            }
+        }
+
+        Recurse(rootId);
+
+        return selectedNodes;
+    }
 
     // Pick the node with the smallest area, as it's likely the most specific one.
     //  (e.g. word rather than line or paragraph)
@@ -1394,6 +1386,10 @@ public sealed partial class DocumentCanvas
     private void Refresh()
     {
         Dispatcher.InvokeAsync(Surface.InvalidateVisual, DispatcherPriority.Render);
+
+        UpdateTextBox();
+
+        UpdateSelectionPopup();
     }
 
     private void BuildDocumentElements(IEnumerable<HocrNodeViewModel> nodes)
@@ -1559,7 +1555,7 @@ public sealed partial class DocumentCanvas
 
     private void RenderCanvasSelection(SKCanvas canvas)
     {
-        if (canvasSelection.IsEmpty || IsSelecting)
+        if (!ShouldShowCanvasSelection)
         {
             return;
         }
@@ -1581,6 +1577,8 @@ public sealed partial class DocumentCanvas
             RenderScalingHandle(canvas, handle);
         }
     }
+
+    private bool ShouldShowCanvasSelection => canvasSelection.Width > float.Epsilon && canvasSelection.Height > float.Epsilon;
 
     private void RenderNodeSelection(SKCanvas canvas)
     {
@@ -1867,7 +1865,10 @@ public sealed partial class DocumentCanvas
     private void UpdateTextBox() => Dispatcher.BeginInvoke(
         () =>
         {
-            ArgumentNullException.ThrowIfNull(editingNode);
+            if (editingNode == null)
+            {
+                return;
+            }
 
             var element = elements[editingNode!.Id].Item2;
             var rect = transformation.MapRect(element.Bounds);
@@ -1887,6 +1888,19 @@ public sealed partial class DocumentCanvas
 
             TextBox.Focus();
             TextBox.SelectAll();
+        },
+        DispatcherPriority.Render
+    );
+
+    private void UpdateSelectionPopup() => Dispatcher.BeginInvoke(
+        () =>
+        {
+            var bounds = transformation.MapRect(canvasSelection.Bounds);
+
+            SelectionPopup.Visibility = ShouldShowCanvasSelection && IsSelecting ? Visibility.Visible : Visibility.Collapsed;
+
+            Canvas.SetLeft(SelectionPopup, bounds.Left);
+            Canvas.SetTop(SelectionPopup, bounds.Top - SelectionPopup.ActualHeight);
         },
         DispatcherPriority.Render
     );
