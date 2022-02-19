@@ -20,7 +20,7 @@ public static class HocrNodeTypeHelper
         _ => throw new ArgumentOutOfRangeException(nameof(nodeType), nodeType, null)
     };
 
-    public static string? GetIcon(HocrNodeType nodeType) => nodeType switch
+    public static string GetIcon(HocrNodeType nodeType) => nodeType switch
     {
         HocrNodeType.Page => "/Icons/document.png",
         HocrNodeType.ContentArea => "/Icons/layers-group.png",
