@@ -413,7 +413,7 @@ public sealed partial class DocumentCanvas
         if (e.NewValue is ReadOnlyObservableCollection<NodeVisibility> newNodes && newNodes.Any())
         {
             documentCanvas.nodeVisibilityDictionary = new Dictionary<HocrNodeType, bool>(
-                newNodes.Select(nv => new KeyValuePair<HocrNodeType, bool>(nv.NodeType, nv.Visible))
+                newNodes.Select(nv => new KeyValuePair<HocrNodeType, bool>(nv.NodeTypeViewModel.NodeType, nv.Visible))
             );
 
             newNodes.SubscribeItemPropertyChanged(documentCanvas.UpdateNodeVisibility);
@@ -429,7 +429,7 @@ public sealed partial class DocumentCanvas
             throw new ArgumentException($"Expected {nameof(sender)} to be of type {nameof(NodeVisibility)}.");
         }
 
-        nodeVisibilityDictionary[nodeVisibility.NodeType] = nodeVisibility.Visible;
+        nodeVisibilityDictionary[nodeVisibility.NodeTypeViewModel.NodeType] = nodeVisibility.Visible;
 
         Refresh();
     }

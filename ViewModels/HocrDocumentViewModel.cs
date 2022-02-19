@@ -74,20 +74,7 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
 
     public ReadOnlyObservableCollection<NodeVisibility> NodeVisibility { get; } = new(
         new ObservableCollection<NodeVisibility>(
-            new[]
-                {
-                    HocrNodeType.Page,
-                    HocrNodeType.ContentArea,
-                    HocrNodeType.Paragraph,
-                    HocrNodeType.Line,
-                    HocrNodeType.Header,
-                    HocrNodeType.Footer,
-                    HocrNodeType.Caption,
-                    HocrNodeType.TextFloat,
-                    HocrNodeType.Word,
-                    HocrNodeType.Image
-                }
-                .Select(k => new NodeVisibility(k))
+            HocrNodeTypeViewModel.NodeTypes.Select(k => new NodeVisibility(k))
         )
     );
 

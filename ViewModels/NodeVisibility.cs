@@ -6,16 +6,12 @@ namespace HocrEditor.ViewModels;
 
     public class NodeVisibility : ViewModelBase
     {
-        public NodeVisibility(HocrNodeType nodeType)
+        public NodeVisibility(HocrNodeTypeViewModel nodeTypeViewModel)
         {
-            NodeType = nodeType;
+            NodeTypeViewModel = nodeTypeViewModel;
         }
 
-        public HocrNodeType NodeType { get; }
-
-        public string? IconPath => HocrNodeTypeHelper.GetIcon(NodeType);
-
-        public string? ToolTip => Enum.GetName(NodeType);
+        public HocrNodeTypeViewModel NodeTypeViewModel { get; }
 
         public bool Visible { get; set; } = true;
 

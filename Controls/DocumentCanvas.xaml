@@ -29,9 +29,15 @@
                 Background="#EEF5FD"
                 Cursor="Arrow"
                 Name="SelectionPopup"
-                Padding="2">
+                Padding="2"
+                SnapsToDevicePixels="True">
                 <Border.Resources>
                     <Style BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" TargetType="Button" />
+                    <Style BasedOn="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" TargetType="Separator" />
+                    <Style TargetType="Image">
+                        <Setter Property="SnapsToDevicePixels" Value="True" />
+                        <Setter Property="RenderOptions.BitmapScalingMode" Value="NearestNeighbor" />
+                    </Style>
                 </Border.Resources>
                 <StackPanel Orientation="Horizontal">
                     <Button
@@ -41,6 +47,27 @@
                         helpers:IconButton.Source="/Icons/spectacle.png">
                         OCR Region
                     </Button>
+                    <Separator />
+                    <ItemsControl ItemsSource="{x:Static viewModels:HocrNodeTypeViewModel.NodeTypes}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="viewModels:HocrNodeTypeViewModel">
+                                <Button ToolTip="{Binding ToolTip}">
+                                    <Canvas Height="16" Width="16">
+                                        <Image Source="{Binding IconPath}" />
+                                        <Image
+                                            Canvas.Left="8"
+                                            Canvas.Top="8"
+                                            Source="/Icons/plus-small.png" />
+                                    </Canvas>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </Border>
         </Canvas>

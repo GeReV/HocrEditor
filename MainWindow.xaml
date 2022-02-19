@@ -270,8 +270,8 @@
                         <ToggleButton
                             Click="NodeVisibilityButton_OnClicked"
                             IsChecked="{Binding Visible}"
-                            ToolTip="{Binding ToolTip}"
-                            helpers:IconButton.Source="{Binding IconPath}" />
+                            ToolTip="{Binding NodeTypeViewModel.ToolTip}"
+                            helpers:IconButton.Source="{Binding NodeTypeViewModel.IconPath}" />
                     </DataTemplate>
                 </ToolBar.ItemTemplate>
             </ToolBar>

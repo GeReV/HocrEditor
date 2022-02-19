@@ -82,6 +82,8 @@
       <None Remove="Icons\sort-alphabet-descending.png" />
       <Resource Include="Icons\sort-alphabet-descending.png" />
       <None Remove=".github\**" />
+      <None Remove="Icons\plus-small.png" />
+      <Resource Include="Icons\plus-small.png" />
     </ItemGroup>
 
     <ItemGroup>
