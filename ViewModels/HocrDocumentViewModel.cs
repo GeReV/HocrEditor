@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows.Data;
+using System.Windows.Input;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
@@ -16,6 +17,10 @@ namespace HocrEditor.ViewModels;
 public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
 {
     public UndoRedoManager UndoRedoManager { get; } = new();
+
+    public static readonly RoutedCommand OcrRegionCommand = new();
+
+    public static readonly RoutedCommand MergeCommand = new();
 
     public string? Filename { get; set; }
 

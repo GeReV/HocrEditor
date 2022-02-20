@@ -5,7 +5,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Threading;
 using HocrEditor.Behaviors;
 using HocrEditor.Controls;
 using HocrEditor.Core;
@@ -20,13 +19,11 @@ namespace HocrEditor
     /// </summary>
     public partial class MainWindow
     {
-        public static readonly RoutedCommand MergeCommand = new();
-
         public MainWindow()
         {
-            InitializeComponent();
-
             DataContext = new MainWindowViewModel(this);
+
+            InitializeComponent();
 
             Loaded += OnLoaded;
         }
@@ -169,6 +166,11 @@ namespace HocrEditor
             button.IsChecked = !isChecked;
         }
 
+        private void MergeCommandCommandBinding_OnCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.Handled = ViewModel.Document.CurrentPage?.MergeCommand.CanExecute(e.Parameter) ?? false;
+        }
+
         private void MergeCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             // By default, we'll just return the focus to the original item.
@@ -192,5 +194,16 @@ namespace HocrEditor
 
             Keyboard.Focus(focusOwner);
         }
+
+        private void OcrRegionCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            ViewModel.Document.CurrentPage?.OcrRegionCommand.TryExecute(e.Parameter);
+        }
+
+        private void OcrRegionCommandBinding_OnCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = ViewModel.Document.CurrentPage?.OcrRegionCommand.CanExecute(e.Parameter) ?? false;
+        }
+
     }
 }

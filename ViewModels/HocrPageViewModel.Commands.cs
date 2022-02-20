@@ -43,7 +43,6 @@ namespace HocrEditor.ViewModels
             }
         }
 
-
         public IRelayCommand<Rect> OcrRegionCommand { get; }
         public IRelayCommand<ICollection<HocrNodeViewModel>> DeleteCommand { get; }
         public IRelayCommand<ICollection<HocrNodeViewModel>> MergeCommand { get; }

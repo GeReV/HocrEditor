@@ -23,7 +23,7 @@ public class OcrRegionCommand : UndoableCommandBase<Models.Rect>
         this.hocrPageViewModel = hocrPageViewModel;
     }
 
-    public override bool CanExecute(Models.Rect selectionBounds) => !selectionBounds.IsEmpty;
+    public override bool CanExecute(Models.Rect selectionBounds) => selectionBounds.Width > float.Epsilon && selectionBounds.Height > float.Epsilon;
 
     public override void Execute(Models.Rect selectionBounds)
     {

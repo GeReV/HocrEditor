@@ -41,8 +41,8 @@
                 </Border.Resources>
                 <StackPanel Orientation="Horizontal">
                     <Button
-                        Command="{Binding Document.CurrentPage.OcrRegionCommand, FallbackValue={x:Null}}"
-                        CommandParameter="{Binding Document.CurrentPage.SelectionBounds, FallbackValue={x:Static models:Rect.Empty}}"
+                        Command="{x:Static viewModels:HocrDocumentViewModel.OcrRegionCommand}"
+                        CommandParameter="{Binding SelectionBounds, RelativeSource={RelativeSource AncestorType=UserControl}, FallbackValue={x:Static models:Rect.Empty}}"
                         ToolTip="Perform OCR on selection"
                         helpers:IconButton.Source="/Icons/spectacle.png">
                         OCR Region
