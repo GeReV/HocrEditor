@@ -50,8 +50,9 @@ namespace HocrEditor.ViewModels
         public ConvertToImageCommand ConvertToImageCommand { get; set; }
 
         public IRelayCommand<ObservableCollection<HocrNodeViewModel>> ReverseChildNodesCommand { get; set; }
-        public IRelayCommand<NodesEditedEventArgs> EditNodesCommand { get; }
         public IRelayCommand<NodesMovedEventArgs> MoveNodesCommand { get; }
+        public IRelayCommand<NodesEditedEventArgs> EditNodesCommand { get; }
+        public IRelayCommand<HocrNodeType> CreateNodeCommand { get; }
 
         public IRelayCommand<IList<HocrNodeViewModel>> ExclusiveSelectNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> AppendSelectNodesCommand { get; }

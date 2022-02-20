@@ -205,5 +205,12 @@ namespace HocrEditor
             e.CanExecute = ViewModel.Document.CurrentPage?.OcrRegionCommand.CanExecute(e.Parameter) ?? false;
         }
 
+        private void CreateNodeCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (ViewModel.Document.CurrentPage?.CreateNodeCommand.TryExecute(e.Parameter) ?? false)
+            {
+                Keyboard.Focus(e.Source as IInputElement);
+            }
+        }
     }
 }

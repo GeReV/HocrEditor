@@ -32,6 +32,7 @@
             CanExecute="OcrRegionCommandBinding_OnCanExecute"
             Command="{x:Static viewModels:HocrDocumentViewModel.OcrRegionCommand}"
             Executed="OcrRegionCommandBinding_OnExecuted" />
+        <CommandBinding Command="{x:Static viewModels:HocrDocumentViewModel.CreateNodeCommand}" Executed="CreateNodeCommandBinding_OnExecuted" />
     </Window.CommandBindings>
     <Window.InputBindings>
         <!--  Editing keybindings  -->

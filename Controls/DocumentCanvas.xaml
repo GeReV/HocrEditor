@@ -56,7 +56,10 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="viewModels:HocrNodeTypeViewModel">
-                                <Button ToolTip="{Binding ToolTip}">
+                                <Button
+                                    Command="{x:Static viewModels:HocrDocumentViewModel.CreateNodeCommand}"
+                                    CommandParameter="{Binding NodeType}"
+                                    ToolTip="{Binding ToolTip}">
                                     <Canvas Height="16" Width="16">
                                         <Image Source="{Binding IconPath}" />
                                         <Image

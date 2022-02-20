@@ -64,6 +64,7 @@ namespace HocrEditor.ViewModels
             ReverseChildNodesCommand = new ReverseChildNodesCommand(this);
             MoveNodesCommand = new MoveNodesCommand(this);
             EditNodesCommand = new RelayCommand<NodesEditedEventArgs>(EditNodes, CanEditNodes);
+            CreateNodeCommand = new CreateNodeCommand(this);
 
             ExclusiveSelectNodesCommand = new ExclusiveSelectNodesCommand(this);
             AppendSelectNodesCommand = new AppendSelectNodesCommand(this);

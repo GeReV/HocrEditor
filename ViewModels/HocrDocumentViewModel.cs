@@ -22,6 +22,8 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
 
     public static readonly RoutedCommand MergeCommand = new();
 
+    public static readonly RoutedCommand CreateNodeCommand = new();
+
     public string? Filename { get; set; }
 
     public string Title
