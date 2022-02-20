@@ -40,7 +40,7 @@ public class CreateNodeCommand : UndoableCommandBase<HocrNodeType>
 
         foreach (var hocrNodeType in nodeTypeStack)
         {
-            var id = ++hocrPageViewModel.LastId;
+            var id = hocrPageViewModel.NextId();
 
             // TODO: Avoid this horrible bit somehow.
             IHocrNode hocrNode = hocrNodeType switch

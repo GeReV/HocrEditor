@@ -90,8 +90,13 @@ public class OcrRegionCommand : UndoableCommandBase<Models.Rect>
 
                         foreach (var node in sourceRootNode.Children)
                         {
+                            // NOTE: Careful with putting this inside PropertyChangeCommand.FromProperty:
+                            //  Passing it as a function and not as a value by mistake will probably break things.
+                            //  (i.e. `PropertyChangeCommand.FromProperty(node, n => n.Id, hocrPageViewModel.NextId);`, without the execution parentheses).
+                            var id = hocrPageViewModel.NextId();
+
                             commands.Add(
-                                PropertyChangeCommand.FromProperty(node, n => n.Id, ++hocrPageViewModel.LastId)
+                                PropertyChangeCommand.FromProperty(node, n => n.Id, id)
                             );
 
                             commands.Add(PropertyChangeCommand.FromProperty(node, n => n.Parent, pageRootNode));
@@ -100,7 +105,7 @@ public class OcrRegionCommand : UndoableCommandBase<Models.Rect>
 
                             foreach (var descendant in node.Descendants)
                             {
-                                descendant.Id = ++hocrPageViewModel.LastId;
+                                descendant.Id = hocrPageViewModel.NextId();
                             }
                         }
 

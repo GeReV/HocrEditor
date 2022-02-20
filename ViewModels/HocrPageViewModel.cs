@@ -16,7 +16,8 @@ namespace HocrEditor.ViewModels
 {
     public partial class HocrPageViewModel : ViewModelBase
     {
-        public int LastId { get; set; }
+        public int LastId { get; private set; }
+
         public HocrPage? HocrPage { get; private set; }
 
         public RangeObservableCollection<HocrNodeViewModel> Nodes { get; } = new();
@@ -140,6 +141,8 @@ namespace HocrEditor.ViewModels
 
             base.MarkAsUnchanged();
         }
+
+        public int NextId() => ++LastId;
 
         public void Build(HocrPage hocrPage)
         {
