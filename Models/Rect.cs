@@ -17,6 +17,8 @@ namespace HocrEditor.Models
             return new Rect(coordinates[0], coordinates[1], coordinates[2], coordinates[3]);
         }
 
+        public static string ToBboxAttribute(Rect rect) => $"bbox {rect.Left} {rect.Top} {rect.Right} {rect.Bottom}";
+
         public Rect(int left, int top, int right, int bottom) : this()
         {
             Left = left;
@@ -229,6 +231,8 @@ namespace HocrEditor.Models
         /// <returns>A string that represents this <see cref="T:HocrEditor.Models.BoundingBox" />.</returns>
         /// <remarks />
         public readonly override string ToString() => $"{{Left={Left},Top={Top},Width={Width},Height={Height}}}";
+
+        public readonly string ToBboxAttribute() => ToBboxAttribute(this);
 
         /// <param name="location">The rectangle location.</param>
         /// <param name="size">The rectangle size.</param>

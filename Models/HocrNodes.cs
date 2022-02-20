@@ -119,7 +119,10 @@ namespace HocrEditor.Models
                 size = GetAttributeFromTitle("x_fsize");
             }
 
-            FontSize = (int)float.Parse(size);
+            if (!string.IsNullOrEmpty(size))
+            {
+                FontSize = (int)float.Parse(size);
+            }
 
             var baseline = GetAttributeFromTitle("baseline")
                 .Split(" ", StringSplitOptions.RemoveEmptyEntries)
@@ -244,9 +247,13 @@ namespace HocrEditor.Models
         )
         {
             InnerText = HtmlEntity.DeEntitize(innerText.Trim().TrimEnd('\u200f'));
-            Confidence = int.Parse(GetAttributeFromTitle("x_wconf"));
 
-            Language = language;
+            var confidence = GetAttributeFromTitle("x_wconf");
+
+            if (!string.IsNullOrEmpty(confidence))
+            {
+                Confidence = int.Parse(confidence);
+            }
         }
 
         public string InnerText { get; set; }
