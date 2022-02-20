@@ -53,8 +53,8 @@ public class ConvertToImageCommand : UndoableCommandBase<IEnumerable<HocrNodeVie
         foreach (var node in selectedNodes)
         {
             var hocrImage = new HocrImage(
-                node.HocrNode.Id,
-                node.HocrNode.ParentId,
+                node.Id,
+                node.ParentId,
                 node.HocrNode.Title,
                 node.HocrNode.Language,
                 node.HocrNode.Direction
