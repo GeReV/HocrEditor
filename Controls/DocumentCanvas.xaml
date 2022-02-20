@@ -48,7 +48,7 @@
                         OCR Region
                     </Button>
                     <Separator />
-                    <ItemsControl ItemsSource="{x:Static viewModels:HocrNodeTypeViewModel.NodeTypes}">
+                    <ItemsControl ItemsSource="{x:Static viewModels:HocrNodeTypeViewModel.CreatableNodeTypes}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel Orientation="Horizontal" />

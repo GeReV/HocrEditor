@@ -25,6 +25,9 @@ public class HocrNodeTypeViewModel
         .ToList()
         .AsReadOnly();
 
+    public static readonly ReadOnlyCollection<HocrNodeTypeViewModel> CreatableNodeTypes =
+        NodeTypes.Where(n => n.NodeType != HocrNodeType.Page).ToList().AsReadOnly();
+
     private HocrNodeTypeViewModel(HocrNodeType nodeType)
     {
         NodeType = nodeType;
