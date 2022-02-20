@@ -17,18 +17,28 @@ public sealed class UndoRedoManager
 
     public event EventHandler? UndoStackChanged;
 
-    private bool isBatching = false;
+    private int batchNumber;
 
     private List<UndoRedoCommand> batchCommands = new();
 
     public void BeginBatch()
     {
-        isBatching = true;
+        batchNumber++;
     }
 
     public void ExecuteBatch()
     {
-        isBatching = false;
+        if (batchNumber == 0)
+        {
+            throw new InvalidOperationException("No batches stored");
+        }
+
+        batchNumber--;
+
+        if (batchNumber > 0)
+        {
+            return;
+        }
 
         ExecuteCommands(batchCommands);
 
@@ -46,7 +56,7 @@ public sealed class UndoRedoManager
             return;
         }
 
-        if (isBatching)
+        if (batchNumber > 0)
         {
             batchCommands.AddRange(commandList);
 
