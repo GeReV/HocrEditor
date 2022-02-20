@@ -49,6 +49,7 @@ public class PageRemoveNodesCommand : UndoRedoCommand
 
         var document = (HocrPageViewModel)Sender;
 
+        children.Clear();
         children.AddRange(
             nodes
                 .SelectMany(node => node.Descendants)

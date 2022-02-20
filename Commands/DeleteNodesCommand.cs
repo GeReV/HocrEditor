@@ -25,6 +25,8 @@ public class DeleteNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMo
             return;
         }
 
+        nodes = nodes.OrderByDescending(n => n.Id).ToList();
+
         var commands = new List<UndoRedoCommand>
         {
             hocrPageViewModel.SelectedNodes.ToCollectionClearCommand(),
@@ -35,7 +37,7 @@ public class DeleteNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMo
         {
             foreach (var node in nodes)
             {
-                if (node.Parent == null)
+                if (node.Parent == null || nodes.Contains(node.Parent))
                 {
                     continue;
                 }
