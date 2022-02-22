@@ -33,6 +33,8 @@
             Command="{x:Static viewModels:HocrDocumentViewModel.OcrRegionCommand}"
             Executed="OcrRegionCommandBinding_OnExecuted" />
         <CommandBinding Command="{x:Static viewModels:HocrDocumentViewModel.CreateNodeCommand}" Executed="CreateNodeCommandBinding_OnExecuted" />
+        <CommandBinding Command="NextPage" Executed="NextPageCommandBinding_OnExecuted" />
+        <CommandBinding Command="PreviousPage" Executed="PreviousPageCommandBinding_OnExecuted" />
     </Window.CommandBindings>
     <Window.InputBindings>
         <!--  Editing keybindings  -->
@@ -69,14 +71,8 @@
             Modifiers="Control+Shift" />
 
         <!--  Navigation keybindings  -->
-        <KeyBinding
-            Command="{Binding Document.NextPageCommand}"
-            Key="PageDown"
-            Modifiers="Control" />
-        <KeyBinding
-            Command="{Binding Document.PreviousPageCommand}"
-            Key="PageUp"
-            Modifiers="Control" />
+        <KeyBinding Command="NextPage" Key="PageDown" />
+        <KeyBinding Command="PreviousPage" Key="PageUp" />
 
         <!--  Undo-redo keybindings  -->
         <KeyBinding

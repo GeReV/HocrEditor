@@ -212,5 +212,15 @@ namespace HocrEditor
                 Keyboard.Focus(e.Source as IInputElement);
             }
         }
+
+        private void NextPageCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            ViewModel.Document.NextPageCommand.TryExecute(e.Parameter);
+        }
+
+        private void PreviousPageCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            ViewModel.Document.PreviousPageCommand.TryExecute(e.Parameter);
+        }
     }
 }
