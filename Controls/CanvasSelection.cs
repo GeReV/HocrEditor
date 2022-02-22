@@ -37,7 +37,6 @@ internal class CanvasSelection : IDisposable
         StrokeWidth = 1,
     };
 
-    private SKRect initialBounds = SKRect.Empty;
     private SKRect bounds;
     private readonly ResizeHandle[] resizeHandles;
 
@@ -56,6 +55,8 @@ internal class CanvasSelection : IDisposable
             new ResizeHandle(new SKPoint(Bounds.Left, Bounds.MidY), CardinalDirections.West),
         };
     }
+
+    public SKRect InitialBounds { get; private set; } = SKRect.Empty;
 
     public SKRect Bounds
     {
@@ -105,25 +106,28 @@ internal class CanvasSelection : IDisposable
 
     public float Height => bounds.Height;
 
+    public float MidX => bounds.MidX;
+    public float MidY => bounds.MidY;
+
     public SKPoint Center => new(bounds.MidX, bounds.MidY);
 
     public SKPoint ResizeRatio {
         get
         {
-            if (initialBounds.IsEmpty)
+            if (InitialBounds.IsEmpty)
             {
                 throw new InvalidOperationException("BeginResize has not been called.");
             }
 
-            var w = bounds.Width / initialBounds.Width;
-            var h = bounds.Height / initialBounds.Height;
+            var w = bounds.Width / InitialBounds.Width;
+            var h = bounds.Height / InitialBounds.Height;
 
-            if (Math.Abs(initialBounds.Width) < float.Epsilon)
+            if (Math.Abs(InitialBounds.Width) < float.Epsilon)
             {
                 w = 0;
             }
 
-            if (Math.Abs(initialBounds.Height) < float.Epsilon)
+            if (Math.Abs(InitialBounds.Height) < float.Epsilon)
             {
                 h = 0;
             }
@@ -176,12 +180,12 @@ internal class CanvasSelection : IDisposable
 
     public void BeginResize()
     {
-        initialBounds = bounds;
+        InitialBounds = bounds;
     }
 
     public void EndResize()
     {
-        initialBounds = SKRect.Empty;
+        InitialBounds = SKRect.Empty;
 
         // Ensure our final size has positive width and height, if it was flipped during resize.
         bounds = bounds.Standardized;

@@ -669,7 +669,8 @@ public sealed partial class DocumentCanvas
 
                 if (IsSelecting)
                 {
-                    if (canvasSelection.ShouldShowCanvasSelection && canvasSelection.Bounds.Contains(normalizedPosition))
+                    if (canvasSelection.ShouldShowCanvasSelection &&
+                        canvasSelection.Bounds.Contains(normalizedPosition))
                     {
                         mouseMoveState = MouseState.DraggingSelectionRegion;
 
@@ -1557,13 +1558,19 @@ public sealed partial class DocumentCanvas
 
         Debug.Assert(selectedResizeHandle != null, $"{nameof(selectedResizeHandle)} != null");
 
-        var resizePivot = canvasSelection.Center;
+        var resizePivot = new SKPoint(canvasSelection.InitialBounds.MidX, canvasSelection.InitialBounds.MidY);
 
         // If more than one element selected, or exactly one element selected _and_ Ctrl is pressed, resize together with children.
         var resizeWithChildren = SelectedItems?.Count > 1 ||
-                                 (Keyboard.Modifiers & ModifierKeys.Control) != 0;
+                                 Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
 
-        if ((selectedResizeHandle.Direction & CardinalDirections.West) != 0)
+        var resizeSymmetrical = Keyboard.Modifiers.HasFlag(ModifierKeys.Alt);
+
+        // Reset the selection bounds so changing keyboard modifiers works off of the initial bounds.
+        // This achieves a more "Photoshop-like" behavior for the selection.
+        canvasSelection.Bounds = canvasSelection.InitialBounds;
+
+        if (selectedResizeHandle.Direction.HasFlag(CardinalDirections.West))
         {
             canvasSelection.Left = Math.Clamp(
                 newLocation.X,
@@ -1573,10 +1580,19 @@ public sealed partial class DocumentCanvas
                     : resizeLimitInside.Left
             );
 
-            resizePivot.X = canvasSelection.Right;
+            if (resizeSymmetrical)
+            {
+                var deltaX = resizePivot.X - canvasSelection.Left;
+
+                canvasSelection.Right = canvasSelection.Left + 2 * deltaX;
+            }
+            else
+            {
+                resizePivot.X = canvasSelection.InitialBounds.Right;
+            }
         }
 
-        if ((selectedResizeHandle.Direction & CardinalDirections.North) != 0)
+        if (selectedResizeHandle.Direction.HasFlag(CardinalDirections.North))
         {
             canvasSelection.Top = Math.Clamp(
                 newLocation.Y,
@@ -1586,10 +1602,19 @@ public sealed partial class DocumentCanvas
                     : resizeLimitInside.Top
             );
 
-            resizePivot.Y = canvasSelection.Bottom;
+            if (resizeSymmetrical)
+            {
+                var deltaY = resizePivot.Y - canvasSelection.Top;
+
+                canvasSelection.Bottom = canvasSelection.Top + 2 * deltaY;
+            }
+            else
+            {
+                resizePivot.Y = canvasSelection.InitialBounds.Bottom;
+            }
         }
 
-        if ((selectedResizeHandle.Direction & CardinalDirections.East) != 0)
+        if (selectedResizeHandle.Direction.HasFlag(CardinalDirections.East))
         {
             canvasSelection.Right = Math.Clamp(
                 newLocation.X,
@@ -1599,10 +1624,19 @@ public sealed partial class DocumentCanvas
                 resizeLimitOutside.Right
             );
 
-            resizePivot.X = canvasSelection.Left;
+            if (resizeSymmetrical)
+            {
+                var deltaX = canvasSelection.Right - resizePivot.X;
+
+                canvasSelection.Left = canvasSelection.Right - 2 * deltaX;
+            }
+            else
+            {
+                resizePivot.X = canvasSelection.InitialBounds.Left;
+            }
         }
 
-        if ((selectedResizeHandle.Direction & CardinalDirections.South) != 0)
+        if (selectedResizeHandle.Direction.HasFlag(CardinalDirections.South))
         {
             canvasSelection.Bottom = Math.Clamp(
                 newLocation.Y,
@@ -1612,9 +1646,17 @@ public sealed partial class DocumentCanvas
                 resizeLimitOutside.Bottom
             );
 
-            resizePivot.Y = canvasSelection.Top;
-        }
+            if (resizeSymmetrical)
+            {
+                var deltaY = canvasSelection.Bottom - resizePivot.Y;
 
+                canvasSelection.Top = canvasSelection.Bottom - 2*deltaY;
+            }
+            else
+            {
+                resizePivot.Y = canvasSelection.InitialBounds.Top;
+            }
+        }
 
         var ratio = canvasSelection.ResizeRatio;
 
