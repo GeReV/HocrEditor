@@ -4,8 +4,39 @@ using SkiaSharp;
 
 namespace HocrEditor.Controls;
 
-internal class CanvasSelection
+internal class CanvasSelection : IDisposable
 {
+    private static readonly SKPaint HandleFillPaint = new()
+    {
+        IsStroke = false,
+        Color = SKColors.White,
+        StrokeWidth = 1,
+    };
+
+    private static readonly SKPaint HandleStrokePaint = new()
+    {
+        IsStroke = true,
+        Color = SKColors.Gray,
+        StrokeWidth = 1,
+    };
+
+    private const float SELECTION_DASH_LENGTH = 5f;
+
+    private static readonly SKPaint SelectionDashPaint = new()
+    {
+        IsStroke = true,
+        Color = SKColors.Black,
+        StrokeWidth = 1,
+        PathEffect = SKPathEffect.CreateDash(new[] { SELECTION_DASH_LENGTH, SELECTION_DASH_LENGTH }, 0f)
+    };
+
+    private static readonly SKPaint SelectionBackgroundPaint = new()
+    {
+        IsStroke = true,
+        Color = SKColors.White,
+        StrokeWidth = 1,
+    };
+
     private SKRect initialBounds = SKRect.Empty;
     private SKRect bounds;
     private readonly ResizeHandle[] resizeHandles;
@@ -42,6 +73,8 @@ internal class CanvasSelection
         }
     }
 
+    public bool ShouldShowCanvasSelection => Math.Abs(Width) > 0 || Math.Abs(Height) > 0;
+
     public bool IsEmpty => Bounds.IsEmpty;
 
     public float Left
@@ -70,7 +103,7 @@ internal class CanvasSelection
 
     public float Width => bounds.Width;
 
-    public float Height => bounds.Width;
+    public float Height => bounds.Height;
 
     public SKPoint Center => new(bounds.MidX, bounds.MidY);
 
@@ -99,6 +132,48 @@ internal class CanvasSelection
         }
     }
 
+    public void Render(SKCanvas canvas, SKMatrix transformation)
+    {
+        if (!ShouldShowCanvasSelection)
+        {
+            return;
+        }
+
+        var bbox = transformation.MapRect(Bounds);
+
+
+
+        var path = new SKPath();
+
+        path.MoveTo(bbox.Left, bbox.Top);
+        path.LineTo(bbox.Left, bbox.Bottom);
+        path.LineTo(bbox.Right, bbox.Bottom);
+        path.LineTo(bbox.Right, bbox.Top);
+        path.Close();
+
+        canvas.DrawRect(bbox, SelectionBackgroundPaint);
+        canvas.DrawPath(path, SelectionDashPaint);
+
+        foreach (var handle in ResizeHandles)
+        {
+            RenderScalingHandle(canvas, transformation, handle);
+        }
+    }
+
+    private void RenderScalingHandle(SKCanvas canvas, SKMatrix transformation, ResizeHandle handle)
+    {
+        var rect = handle.GetRect(transformation);
+
+        canvas.DrawRect(
+            rect,
+            HandleFillPaint
+        );
+        canvas.DrawRect(
+            rect,
+            HandleStrokePaint
+        );
+    }
+
     public void BeginResize()
     {
         initialBounds = bounds;
@@ -122,5 +197,13 @@ internal class CanvasSelection
         resizeHandles[5].Center = new SKPoint(r.MidX, r.Bottom);
         resizeHandles[6].Center = new SKPoint(r.Left, r.Bottom);
         resizeHandles[7].Center = new SKPoint(r.Left, r.MidY);
+    }
+
+    public void Dispose()
+    {
+        HandleFillPaint.Dispose();
+        HandleStrokePaint.Dispose();
+        SelectionBackgroundPaint.Dispose();
+        SelectionDashPaint.Dispose();
     }
 }

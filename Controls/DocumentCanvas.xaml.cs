@@ -46,20 +46,6 @@ public sealed partial class DocumentCanvas
 {
     private static readonly SKSize CenterPadding = new(-10.0f, -10.0f);
 
-    private static readonly SKPaint HandleFillPaint = new()
-    {
-        IsStroke = false,
-        Color = SKColors.White,
-        StrokeWidth = 1,
-    };
-
-    private static readonly SKPaint HandleStrokePaint = new()
-    {
-        IsStroke = true,
-        Color = SKColors.Gray,
-        StrokeWidth = 1,
-    };
-
     private static SKColor GetNodeColor(HocrNodeViewModel node) => node switch
     {
         // Node colors based on the D3 color category "Paired": https://observablehq.com/@d3/color-schemes
@@ -270,8 +256,9 @@ public sealed partial class DocumentCanvas
 
     private static void OnUnloaded(object sender, RoutedEventArgs e)
     {
-        HandleFillPaint.Dispose();
-        HandleStrokePaint.Dispose();
+        var documentCanvas = (DocumentCanvas)sender;
+
+        documentCanvas.canvasSelection.Dispose();
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
@@ -657,7 +644,7 @@ public sealed partial class DocumentCanvas
 
                 Keyboard.Focus(this);
 
-                if (ShouldShowCanvasSelection)
+                if (canvasSelection.ShouldShowCanvasSelection)
                 {
                     var selectedHandle = canvasSelection.ResizeHandles
                         .FirstOrDefault(handle => handle.GetRect(transformation).Contains(position));
@@ -682,7 +669,7 @@ public sealed partial class DocumentCanvas
 
                 if (IsSelecting)
                 {
-                    if (ShouldShowCanvasSelection && canvasSelection.Bounds.Contains(normalizedPosition))
+                    if (canvasSelection.ShouldShowCanvasSelection && canvasSelection.Bounds.Contains(normalizedPosition))
                     {
                         mouseMoveState = MouseState.DraggingSelectionRegion;
 
@@ -899,7 +886,7 @@ public sealed partial class DocumentCanvas
         {
             case MouseState.None:
             {
-                if (!ShouldShowCanvasSelection)
+                if (!canvasSelection.ShouldShowCanvasSelection)
                 {
                     return;
                 }
@@ -1369,20 +1356,6 @@ public sealed partial class DocumentCanvas
         );
     }
 
-    private void RenderScalingHandle(SKCanvas canvas, ResizeHandle handle)
-    {
-        var rect = handle.GetRect(transformation);
-
-        canvas.DrawRect(
-            rect,
-            HandleFillPaint
-        );
-        canvas.DrawRect(
-            rect,
-            HandleStrokePaint
-        );
-    }
-
     private void Refresh()
     {
         Dispatcher.InvokeAsync(Surface.InvalidateVisual, DispatcherPriority.Render);
@@ -1548,37 +1521,10 @@ public sealed partial class DocumentCanvas
 
         Recurse(rootId, -1);
 
-        RenderCanvasSelection(canvas);
+        canvasSelection.Render(canvas, transformation);
 
         RenderNodeSelection(canvas);
     }
-
-    private void RenderCanvasSelection(SKCanvas canvas)
-    {
-        if (!ShouldShowCanvasSelection)
-        {
-            return;
-        }
-
-        var bbox = transformation.MapRect(canvasSelection.Bounds);
-
-        canvas.DrawRect(
-            bbox,
-            new SKPaint
-            {
-                IsStroke = true,
-                Color = IsFocused ? SKColors.Gray : SKColors.DarkGray,
-                StrokeWidth = 1,
-            }
-        );
-
-        foreach (var handle in canvasSelection.ResizeHandles)
-        {
-            RenderScalingHandle(canvas, handle);
-        }
-    }
-
-    private bool ShouldShowCanvasSelection => canvasSelection.Width > float.Epsilon && canvasSelection.Height > float.Epsilon;
 
     private void RenderNodeSelection(SKCanvas canvas)
     {
@@ -1876,8 +1822,8 @@ public sealed partial class DocumentCanvas
             var word = (HocrWord)editingNode.HocrNode;
             var line = (HocrLine)elements[word.ParentId].Item1.HocrNode;
 
-            Canvas.SetLeft(TextBox, rect.Left);
-            Canvas.SetTop(TextBox, rect.Top);
+            Canvas.SetLeft(TextBox, (int)rect.Left);
+            Canvas.SetTop(TextBox, (int)rect.Top);
             TextBox.Width = rect.Width;
             TextBox.Height = rect.Height;
 
@@ -1897,10 +1843,11 @@ public sealed partial class DocumentCanvas
         {
             var bounds = transformation.MapRect(canvasSelection.Bounds);
 
-            SelectionPopup.Visibility = ShouldShowCanvasSelection && IsSelecting ? Visibility.Visible : Visibility.Collapsed;
+            SelectionPopup.Visibility =
+                canvasSelection.ShouldShowCanvasSelection && IsSelecting ? Visibility.Visible : Visibility.Collapsed;
 
-            Canvas.SetLeft(SelectionPopup, bounds.Left);
-            Canvas.SetTop(SelectionPopup, bounds.Top - SelectionPopup.ActualHeight);
+            Canvas.SetLeft(SelectionPopup, (int)bounds.Left);
+            Canvas.SetTop(SelectionPopup, (int)(bounds.Top - SelectionPopup.ActualHeight));
         },
         DispatcherPriority.Render
     );
