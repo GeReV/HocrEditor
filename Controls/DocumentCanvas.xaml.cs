@@ -1572,7 +1572,7 @@ public sealed partial class DocumentCanvas
 
         if (selectedResizeHandle.Direction.HasFlag(CardinalDirections.West))
         {
-            canvasSelection.Left = Math.Clamp(
+            var nextLeft = Math.Clamp(
                 newLocation.X,
                 resizeLimitOutside.Left,
                 resizeLimitInside.IsEmpty || resizeWithChildren
@@ -1582,19 +1582,31 @@ public sealed partial class DocumentCanvas
 
             if (resizeSymmetrical)
             {
-                var deltaX = resizePivot.X - canvasSelection.Left;
+                var deltaX = resizePivot.X - nextLeft;
 
-                canvasSelection.Right = canvasSelection.Left + 2 * deltaX;
+                canvasSelection.Right = Math.Clamp(
+                    nextLeft + 2 * deltaX,
+                    resizeLimitInside.IsEmpty || resizeWithChildren
+                        ? resizeLimitOutside.Left
+                        : resizeLimitInside.Right,
+                    resizeLimitOutside.Right
+                );
+
+                deltaX = canvasSelection.Right - resizePivot.X;
+
+                nextLeft = resizePivot.X - deltaX;
             }
             else
             {
                 resizePivot.X = canvasSelection.InitialBounds.Right;
             }
+
+            canvasSelection.Left = nextLeft;
         }
 
         if (selectedResizeHandle.Direction.HasFlag(CardinalDirections.North))
         {
-            canvasSelection.Top = Math.Clamp(
+            var nextTop = Math.Clamp(
                 newLocation.Y,
                 resizeLimitOutside.Top,
                 resizeLimitInside.IsEmpty || resizeWithChildren
@@ -1604,41 +1616,65 @@ public sealed partial class DocumentCanvas
 
             if (resizeSymmetrical)
             {
-                var deltaY = resizePivot.Y - canvasSelection.Top;
+                var deltaY = resizePivot.Y - nextTop;
 
-                canvasSelection.Bottom = canvasSelection.Top + 2 * deltaY;
+                canvasSelection.Bottom = Math.Clamp(
+                    nextTop + 2 * deltaY,
+                    resizeLimitInside.IsEmpty || resizeWithChildren
+                        ? resizeLimitOutside.Top
+                        : resizeLimitInside.Bottom,
+                    resizeLimitOutside.Bottom
+                );
+
+                deltaY = canvasSelection.Bottom - resizePivot.Y;
+
+                nextTop = resizePivot.Y - deltaY;
             }
             else
             {
                 resizePivot.Y = canvasSelection.InitialBounds.Bottom;
             }
+
+            canvasSelection.Top = nextTop;
         }
 
         if (selectedResizeHandle.Direction.HasFlag(CardinalDirections.East))
         {
-            canvasSelection.Right = Math.Clamp(
+            var nextRight = Math.Clamp(
                 newLocation.X,
+                resizeLimitOutside.Left,
                 resizeLimitInside.IsEmpty || resizeWithChildren
-                    ? resizeLimitOutside.Left
-                    : resizeLimitInside.Right,
-                resizeLimitOutside.Right
+                    ? resizeLimitOutside.Right
+                    : resizeLimitInside.Left
             );
 
             if (resizeSymmetrical)
             {
-                var deltaX = canvasSelection.Right - resizePivot.X;
+                var deltaX = nextRight - resizePivot.X;
 
-                canvasSelection.Left = canvasSelection.Right - 2 * deltaX;
+                canvasSelection.Left = Math.Clamp(
+                        nextRight - 2 * deltaX,
+                        resizeLimitOutside.Left,
+                        resizeLimitInside.IsEmpty || resizeWithChildren
+                            ? resizeLimitOutside.Right
+                            : resizeLimitInside.Left
+                    );
+
+                deltaX = resizePivot.X - canvasSelection.Left;
+
+                nextRight = resizePivot.X + deltaX;
             }
             else
             {
                 resizePivot.X = canvasSelection.InitialBounds.Left;
             }
+
+            canvasSelection.Right = nextRight;
         }
 
         if (selectedResizeHandle.Direction.HasFlag(CardinalDirections.South))
         {
-            canvasSelection.Bottom = Math.Clamp(
+            var nextBottom = Math.Clamp(
                 newLocation.Y,
                 resizeLimitInside.IsEmpty || resizeWithChildren
                     ? resizeLimitOutside.Top
@@ -1648,14 +1684,26 @@ public sealed partial class DocumentCanvas
 
             if (resizeSymmetrical)
             {
-                var deltaY = canvasSelection.Bottom - resizePivot.Y;
+                var deltaY = nextBottom - resizePivot.Y;
 
-                canvasSelection.Top = canvasSelection.Bottom - 2*deltaY;
+                canvasSelection.Top = Math.Clamp(
+                    nextBottom - 2 * deltaY,
+                    resizeLimitOutside.Top,
+                    resizeLimitInside.IsEmpty || resizeWithChildren
+                        ? resizeLimitOutside.Bottom
+                        : resizeLimitInside.Top
+                );
+
+                deltaY = resizePivot.Y - canvasSelection.Top;
+
+                nextBottom = resizePivot.Y + deltaY;
             }
             else
             {
                 resizePivot.Y = canvasSelection.InitialBounds.Top;
             }
+
+            canvasSelection.Bottom = nextBottom;
         }
 
         var ratio = canvasSelection.ResizeRatio;
