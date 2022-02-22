@@ -25,8 +25,10 @@ public static class HocrNodeTypeHelper
         HocrNodeType.Page => "/Icons/document.png",
         HocrNodeType.ContentArea => "/Icons/layers-group.png",
         HocrNodeType.Paragraph => "/Icons/edit-pilcrow.png",
-        HocrNodeType.Line or HocrNodeType.TextFloat or HocrNodeType.Caption or HocrNodeType.Footer =>
-            "/Icons/edit-lipsum.png",
+        HocrNodeType.Line => "/Icons/edit-lipsum.png",
+        HocrNodeType.TextFloat => "/Icons/edit-indent.png",
+        HocrNodeType.Caption => "/Icons/edit-rule.png",
+        HocrNodeType.Footer => "/Icons/document-hf-select-footer.png",
         HocrNodeType.Header => "/Icons/edit-heading.png",
         HocrNodeType.Image => "/Icons/image.png",
         HocrNodeType.Word => "/Icons/edit-quotation.png",

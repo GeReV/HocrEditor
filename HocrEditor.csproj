@@ -84,6 +84,16 @@
       <None Remove=".github\**" />
       <None Remove="Icons\plus-small.png" />
       <Resource Include="Icons\plus-small.png" />
+      <None Remove="Icons\edit-padding.png" />
+      <Resource Include="Icons\edit-padding.png" />
+      <None Remove="Icons\edit-padding-top.png" />
+      <Resource Include="Icons\edit-padding-top.png" />
+      <None Remove="Icons\edit-indent.png" />
+      <Resource Include="Icons\edit-indent.png" />
+      <None Remove="Icons\edit-rule.png" />
+      <Resource Include="Icons\edit-rule.png" />
+      <None Remove="Icons\document-hf-select-footer.png" />
+      <Resource Include="Icons\document-hf-select-footer.png" />
     </ItemGroup>
 
     <ItemGroup>
