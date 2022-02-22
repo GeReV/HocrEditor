@@ -66,8 +66,8 @@
                                         Width="16">
                                         <Image Source="{Binding IconPath}" />
                                         <Image
-                                            Canvas.Left="8"
-                                            Canvas.Top="8"
+                                            Canvas.Left="5"
+                                            Canvas.Top="5"
                                             Source="/Icons/plus-small.png" />
                                     </Canvas>
                                 </Button>
