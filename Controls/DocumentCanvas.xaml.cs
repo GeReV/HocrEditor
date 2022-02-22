@@ -1572,6 +1572,7 @@ public sealed partial class DocumentCanvas
 
         if (selectedResizeHandle.Direction.HasFlag(CardinalDirections.West))
         {
+            // Calculate next left position for bounds while clamping within the limits.
             var nextLeft = Math.Clamp(
                 newLocation.X,
                 resizeLimitOutside.Left,
@@ -1582,8 +1583,10 @@ public sealed partial class DocumentCanvas
 
             if (resizeSymmetrical)
             {
+                // Calculate the symmetrical offset based on delta from the pivot.
                 var deltaX = resizePivot.X - nextLeft;
 
+                // Calculate next right position from the expected left position, but clamp within the limits.
                 canvasSelection.Right = Math.Clamp(
                     nextLeft + 2 * deltaX,
                     resizeLimitInside.IsEmpty || resizeWithChildren
@@ -1592,8 +1595,10 @@ public sealed partial class DocumentCanvas
                     resizeLimitOutside.Right
                 );
 
+                // Calculate delta to pivot from the opposite side of the symmetry.
                 deltaX = canvasSelection.Right - resizePivot.X;
 
+                // Recalculate left position, to achieve bounds that are clamped by the edge closest to the limits.
                 nextLeft = resizePivot.X - deltaX;
             }
             else
