@@ -138,7 +138,7 @@ namespace HocrEditor
 
         private void NodeVisibilityButton_OnClicked(object sender, RoutedEventArgs e)
         {
-            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.None)
+            if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
             {
                 return;
             }

@@ -1121,7 +1121,7 @@ public sealed partial class DocumentCanvas
             return;
         }
 
-        if ((Keyboard.Modifiers & ModifierKeys.Control) == 0)
+        if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
         {
             ClearSelection();
         }
