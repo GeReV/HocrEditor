@@ -1,23 +1,23 @@
-﻿<UserControl x:Class="HocrEditor.Controls.DocumentTreeView"
+﻿<UserControl d:DataContext="{d:DesignInstance viewModels:HocrPageViewModel}"
+             mc:Ignorable="d"
+             x:Class="HocrEditor.Controls.DocumentTreeView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
-             xmlns:converters="clr-namespace:HocrEditor.Converters"
              xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:behaviors="clr-namespace:HocrEditor.Behaviors"
              xmlns:controls="clr-namespace:HocrEditor.Controls"
+             xmlns:converters="clr-namespace:HocrEditor.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:dd="urn:gong-wpf-dragdrop"
-             mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance viewModels:HocrPageViewModel}">
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid>
-        <TreeView Name="TreeView"
-                  ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                  dd:DragDrop.IsDragSource="True"
-                  dd:DragDrop.IsDropTarget="True"
+        <TreeView ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                  Name="TreeView"
                   dd:DragDrop.DragHandler="{Binding DragHandler, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                  dd:DragDrop.DropHandler="{Binding DropHandler, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                  dd:DragDrop.DropHandler="{Binding DropHandler, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                  dd:DragDrop.IsDragSource="True"
+                  dd:DragDrop.IsDropTarget="True">
             <b:Interaction.Behaviors>
                 <behaviors:TreeViewMultipleSelectionBehavior
                     SelectedItems="{Binding SelectedItems, RelativeSource={RelativeSource AncestorType=UserControl}}" />
@@ -34,29 +34,46 @@
 
                 <Color x:Key="GlyphColor">#FF444444</Color>
 
-                <Style x:Key="ExpandCollapseToggleStyle"
-                       TargetType="ToggleButton">
+                <Style TargetType="ToggleButton"
+                       x:Key="ExpandCollapseToggleStyle">
                     <Setter Property="Focusable"
                             Value="False" />
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="ToggleButton">
-                                <Grid Width="15"
+                                <Grid Background="Transparent"
                                       Height="13"
-                                      Background="Transparent">
+                                      Width="15">
+                                    <Path Data="M 4 0 L 8 4 L 4 8 Z"
+                                          HorizontalAlignment="Left"
+                                          Margin="1,1,1,1"
+                                          VerticalAlignment="Center"
+                                          x:Name="Collapsed">
+                                        <Path.Fill>
+                                            <SolidColorBrush Color="{DynamicResource GlyphColor}" />
+                                        </Path.Fill>
+                                    </Path>
+                                    <Path Data="M 0 4 L 8 4 L 4 8 Z"
+                                          HorizontalAlignment="Left"
+                                          Margin="1,1,1,1"
+                                          VerticalAlignment="Center"
+                                          Visibility="Hidden"
+                                          x:Name="Expanded">
+                                        <Path.Fill>
+                                            <SolidColorBrush Color="{DynamicResource GlyphColor}" />
+                                        </Path.Fill>
+                                    </Path>
                                     <VisualStateManager.VisualStateGroups>
                                         <VisualStateGroup x:Name="CheckStates">
                                             <VisualState x:Name="Checked">
                                                 <Storyboard>
-                                                    <ObjectAnimationUsingKeyFrames
-                                                        Storyboard.TargetProperty="(UIElement.Visibility)"
-                                                        Storyboard.TargetName="Collapsed">
+                                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Collapsed"
+                                                        Storyboard.TargetProperty="(UIElement.Visibility)">
                                                         <DiscreteObjectKeyFrame KeyTime="0"
                                                             Value="{x:Static Visibility.Hidden}" />
                                                     </ObjectAnimationUsingKeyFrames>
-                                                    <ObjectAnimationUsingKeyFrames
-                                                        Storyboard.TargetProperty="(UIElement.Visibility)"
-                                                        Storyboard.TargetName="Expanded">
+                                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Expanded"
+                                                        Storyboard.TargetProperty="(UIElement.Visibility)">
                                                         <DiscreteObjectKeyFrame KeyTime="0"
                                                             Value="{x:Static Visibility.Visible}" />
                                                     </ObjectAnimationUsingKeyFrames>
@@ -66,25 +83,6 @@
                                             <VisualState x:Name="Indeterminate" />
                                         </VisualStateGroup>
                                     </VisualStateManager.VisualStateGroups>
-                                    <Path x:Name="Collapsed"
-                                          HorizontalAlignment="Left"
-                                          VerticalAlignment="Center"
-                                          Margin="1,1,1,1"
-                                          Data="M 4 0 L 8 4 L 4 8 Z">
-                                        <Path.Fill>
-                                            <SolidColorBrush Color="{DynamicResource GlyphColor}" />
-                                        </Path.Fill>
-                                    </Path>
-                                    <Path x:Name="Expanded"
-                                          HorizontalAlignment="Left"
-                                          VerticalAlignment="Center"
-                                          Margin="1,1,1,1"
-                                          Data="M 0 4 L 8 4 L 4 8 Z"
-                                          Visibility="Hidden">
-                                        <Path.Fill>
-                                            <SolidColorBrush Color="{DynamicResource GlyphColor}" />
-                                        </Path.Fill>
-                                    </Path>
                                 </Grid>
                             </ControlTemplate>
                         </Setter.Value>
@@ -100,13 +98,13 @@
 
                     <Setter Property="BorderThickness"
                             Value="1" />
-                    <!-- Clear the default focus rectangle which would span the entire item in full width and with all visible children -->
+                    <!--  Clear the default focus rectangle which would span the entire item in full width and with all visible children  -->
                     <Setter Property="FocusVisualStyle"
                             Value="{x:Null}" />
 
                     <EventSetter Event="PreviewKeyDown"
-                                 Handler="TreeViewItem_OnKeyDown"
-                                 HandledEventsToo="True" />
+                                 HandledEventsToo="True"
+                                 Handler="TreeViewItem_OnKeyDown" />
 
                     <Setter Property="Template">
                         <Setter.Value>
@@ -123,51 +121,51 @@
                                         <RowDefinition />
                                     </Grid.RowDefinitions>
 
-                                    <Border Grid.Row="0"
+                                    <Border BorderBrush="{x:Static SystemColors.ControlDarkBrush}"
                                             Grid.Column="0"
                                             Grid.ColumnSpan="3"
-                                            x:Name="dropTargetCue"
-                                            BorderBrush="{x:Static SystemColors.ControlDarkBrush}"
-                                            SnapsToDevicePixels="True"
-                                            Visibility="Collapsed" />
-
-                                    <ToggleButton Grid.Row="0"
-                                                  Grid.Column="0"
-                                                  x:Name="Expander"
-                                                  Style="{StaticResource ExpandCollapseToggleStyle}"
-                                                  ClickMode="Press"
-                                                  IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}" />
-                                    <Border x:Name="Bd"
                                             Grid.Row="0"
-                                            Grid.Column="1"
                                             SnapsToDevicePixels="True"
-                                            Background="{TemplateBinding Background}"
+                                            Visibility="Collapsed"
+                                            x:Name="dropTargetCue" />
+
+                                    <ToggleButton ClickMode="Press"
+                                                  Grid.Column="0"
+                                                  Grid.Row="0"
+                                                  IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
+                                                  Style="{StaticResource ExpandCollapseToggleStyle}"
+                                                  x:Name="Expander" />
+                                    <Border Background="{TemplateBinding Background}"
                                             BorderBrush="{TemplateBinding BorderBrush}"
                                             BorderThickness="{TemplateBinding BorderThickness}"
-                                            Padding="0">
+                                            Grid.Column="1"
+                                            Grid.Row="0"
+                                            Padding="0"
+                                            SnapsToDevicePixels="True"
+                                            x:Name="Bd">
                                         <Grid>
-                                            <Rectangle x:Name="FocusRectangle"
-                                                       Margin="0"
-                                                       StrokeThickness="1"
-                                                       StrokeDashArray="1 2"
+                                            <Rectangle Margin="0"
                                                        Stroke="Black"
-                                                       Visibility="Hidden" />
-                                            <ContentPresenter x:Name="PART_Header"
-                                                              ContentSource="Header"
-                                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                                                       StrokeDashArray="1 2"
+                                                       StrokeThickness="1"
+                                                       Visibility="Hidden"
+                                                       x:Name="FocusRectangle" />
+                                            <ContentPresenter ContentSource="Header"
+                                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                              x:Name="PART_Header" />
                                         </Grid>
                                     </Border>
-                                    <ItemsPresenter x:Name="ItemsHost"
-                                                    Grid.Row="1"
-                                                    Grid.Column="1"
+                                    <ItemsPresenter Grid.Column="1"
                                                     Grid.ColumnSpan="2"
-                                                    Visibility="Collapsed" />
+                                                    Grid.Row="1"
+                                                    Visibility="Collapsed"
+                                                    x:Name="ItemsHost" />
                                 </Grid>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="HasItems"
                                              Value="false">
-                                        <Setter TargetName="Expander"
-                                                Property="Visibility"
+                                        <Setter Property="Visibility"
+                                                TargetName="Expander"
                                                 Value="Hidden" />
                                     </Trigger>
                                     <MultiTrigger>
@@ -177,8 +175,8 @@
                                             <Condition Property="Width"
                                                        Value="Auto" />
                                         </MultiTrigger.Conditions>
-                                        <Setter TargetName="PART_Header"
-                                                Property="MinWidth"
+                                        <Setter Property="MinWidth"
+                                                TargetName="PART_Header"
                                                 Value="75" />
                                     </MultiTrigger>
                                     <MultiTrigger>
@@ -188,8 +186,8 @@
                                             <Condition Property="Height"
                                                        Value="Auto" />
                                         </MultiTrigger.Conditions>
-                                        <Setter TargetName="PART_Header"
-                                                Property="MinHeight"
+                                        <Setter Property="MinHeight"
+                                                TargetName="PART_Header"
                                                 Value="19" />
                                     </MultiTrigger>
 
@@ -201,7 +199,7 @@
                                                 Value="#26a0da" />
                                     </Trigger>
 
-                                    <!-- Show the border when the item is focused -->
+                                    <!--  Show the border when the item is focused  -->
                                     <Trigger Property="IsFocused"
                                              Value="True">
                                         <Setter Property="Border.Background"
@@ -225,7 +223,7 @@
                                                 Value="#26a0da" />
                                     </MultiTrigger>
 
-                                    <!-- Slightly darker background when the item is selected and focused -->
+                                    <!--  Slightly darker background when the item is selected and focused  -->
                                     <MultiTrigger>
                                         <MultiTrigger.Conditions>
                                             <Condition Property="IsFocused"
@@ -240,7 +238,7 @@
                                                 Value="#66a7e8" />
                                     </MultiTrigger>
 
-                                    <!-- Make all selected items grey when the entire Window is inactive -->
+                                    <!--  Make all selected items grey when the entire Window is inactive  -->
                                     <MultiDataTrigger>
                                         <MultiDataTrigger.Conditions>
                                             <Condition
@@ -251,12 +249,14 @@
                                                 Value="True" />
                                         </MultiDataTrigger.Conditions>
                                         <Setter Property="Border.Background"
-                                                Value="#d9d9d9" /><!-- Windows 8: #f7f7f7 -->
+                                                Value="#d9d9d9" />
+                                        <!--  Windows 8: #f7f7f7  -->
                                         <Setter Property="Border.BorderBrush"
-                                                Value="#d9d9d9" /><!-- Windows 8: #dedede -->
+                                                Value="#d9d9d9" />
+                                        <!--  Windows 8: #dedede  -->
                                     </MultiDataTrigger>
 
-                                    <!-- Make all selected items grey when none of this TreeView's items is focused (i.e. the TreeView is not focused) -->
+                                    <!--  Make all selected items grey when none of this TreeView's items is focused (i.e. the TreeView is not focused)  -->
                                     <MultiDataTrigger>
                                         <MultiDataTrigger.Conditions>
                                             <Condition
@@ -270,13 +270,15 @@
                                                 Value="True" />
                                         </MultiDataTrigger.Conditions>
                                         <Setter Property="Border.Background"
-                                                Value="#d9d9d9" /><!-- Windows 8: #f7f7f7 -->
+                                                Value="#d9d9d9" />
+                                        <!--  Windows 8: #f7f7f7  -->
                                         <Setter Property="Border.BorderBrush"
-                                                Value="#d9d9d9" /><!-- Windows 8: #dedede -->
+                                                Value="#d9d9d9" />
+                                        <!--  Windows 8: #dedede  -->
                                     </MultiDataTrigger>
 
 
-                                    <!-- Collapse the child items host if the node is not expanded -->
+                                    <!--  Collapse the child items host if the node is not expanded  -->
                                     <Trigger Property="IsExpanded"
                                              Value="False">
                                         <Setter Property="UIElement.Visibility"
@@ -291,7 +293,7 @@
                                                 Value="Visible" />
                                     </Trigger>
 
-                                    <!-- Hide the expander button if there are no child nodes -->
+                                    <!--  Hide the expander button if there are no child nodes  -->
                                     <Trigger Property="ItemsControl.HasItems"
                                              Value="False">
                                         <Setter Property="UIElement.Visibility"
@@ -299,14 +301,14 @@
                                                 Value="Hidden" />
                                     </Trigger>
 
-                                    <!-- Use grey text colour when the item is not enabled -->
+                                    <!--  Use grey text colour when the item is not enabled  -->
                                     <Trigger Property="UIElement.IsEnabled"
                                              Value="False">
                                         <Setter Property="TextElement.Foreground"
                                                 Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                                     </Trigger>
 
-                                    <!-- Use a different template and colours in edit mode -->
+                                    <!--  Use a different template and colours in edit mode  -->
                                     <DataTrigger Binding="{Binding IsEditing}"
                                                  Value="True">
                                         <Setter Property="Border.Background"
@@ -326,16 +328,16 @@
                 <HierarchicalDataTemplate DataType="{x:Type viewModels:HocrNodeViewModel}"
                                           ItemsSource="{Binding Children}">
                     <StackPanel Orientation="Horizontal">
-                        <Image ToolTip="{Binding IconTooltip}"
-                               Margin="0,0,5,0"
+                        <Image Margin="0,0,5,0"
                                Opacity="0.5"
-                               Visibility="{Binding IconPath, Converter={StaticResource NullableToVisibilityConverter}}"
-                               Source="{Binding IconPath, Converter={StaticResource NullableBitmapSourceConverter}}" />
-                        <controls:EditableTextBlock x:Name="EditableTextBlock"
-                                                    IsEnabled="{Binding IsEditable}"
-                                                    Text="{Binding DisplayText, UpdateSourceTrigger=Explicit}"
+                               Source="{Binding IconPath, Converter={StaticResource NullableBitmapSourceConverter}}"
+                               ToolTip="{Binding IconTooltip}"
+                               Visibility="{Binding IconPath, Converter={StaticResource NullableToVisibilityConverter}}" />
+                        <controls:EditableTextBlock IsEnabled="{Binding IsEditable}"
                                                     LostFocus="EditableTextBlock_OnLostFocus"
-                                                    TextChanged="EditableTextBlock_OnTextChanged" />
+                                                    Text="{Binding DisplayText, UpdateSourceTrigger=Explicit}"
+                                                    TextChanged="EditableTextBlock_OnTextChanged"
+                                                    x:Name="EditableTextBlock" />
                     </StackPanel>
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>
