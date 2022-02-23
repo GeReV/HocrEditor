@@ -109,6 +109,8 @@ internal class CanvasSelection : IDisposable
     public float MidX => bounds.MidX;
     public float MidY => bounds.MidY;
 
+    public SKSize Size => bounds.Size;
+
     public SKPoint Center => new(bounds.MidX, bounds.MidY);
 
     public SKPoint ResizeRatio {
