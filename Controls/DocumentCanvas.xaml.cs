@@ -1695,12 +1695,12 @@ public sealed partial class DocumentCanvas
                 var deltaX = nextRight - resizePivot.X;
 
                 canvasSelection.Left = Math.Clamp(
-                        nextRight - 2 * deltaX,
-                        resizeLimitOutside.Left,
-                        resizeLimitInside.IsEmpty || resizeWithChildren
-                            ? resizeLimitOutside.Right
-                            : resizeLimitInside.Left
-                    );
+                    nextRight - 2 * deltaX,
+                    resizeLimitOutside.Left,
+                    resizeLimitInside.IsEmpty || resizeWithChildren
+                        ? resizeLimitOutside.Right
+                        : resizeLimitInside.Left
+                );
 
                 deltaX = resizePivot.X - canvasSelection.Left;
 
