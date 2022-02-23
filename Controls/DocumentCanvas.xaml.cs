@@ -265,6 +265,11 @@ public sealed partial class DocumentCanvas
     {
         base.OnKeyDown(e);
 
+        if (!ReferenceEquals(e.OriginalSource, this))
+        {
+            return;
+        }
+
         switch (e.Key)
         {
             case Key.Return:
