@@ -288,18 +288,23 @@ public sealed partial class DocumentCanvas
             {
                 e.Handled = true;
 
-                CenterTransformation();
+                CenterTransformationDocument();
                 Refresh();
 
                 break;
             }
             case Key.F:
             {
-                // e.Handled = true;
+                if (!canvasSelection.ShouldShowCanvasSelection)
+                {
+                    break;
+                }
 
-                // TODO: Center view on selection.
+                e.Handled = true;
 
-                // Refresh();
+                CenterTransformationSelection();
+
+                Refresh();
 
                 break;
             }
@@ -338,7 +343,7 @@ public sealed partial class DocumentCanvas
             {
                 documentCanvas.BuildDocumentElements(newNodes);
 
-                documentCanvas.CenterTransformation();
+                documentCanvas.CenterTransformationDocument();
 
                 documentCanvas.Refresh();
             }
@@ -505,7 +510,7 @@ public sealed partial class DocumentCanvas
 
                     if (isNewDocument)
                     {
-                        CenterTransformation();
+                        CenterTransformationDocument();
                     }
                 }
 
@@ -1333,11 +1338,9 @@ public sealed partial class DocumentCanvas
         inverseScaleTransformation.ScaleY = inverseTransformation.ScaleY;
     }
 
-    private void CenterTransformation()
+    private void CenterTransformationDocument()
     {
-        Debug.Assert(ItemsSource != null, $"{nameof(ItemsSource)} != null");
-
-        var documentBounds = ItemsSource.First(n => n.IsRoot).BBox.ToSKRect();
+        var documentBounds = RootElement.Bounds;
 
         var controlSize = SKRect.Create(RenderSize.ToSKSize());
 
@@ -1350,15 +1353,44 @@ public sealed partial class DocumentCanvas
             fitBounds.Height / documentBounds.Height
         );
 
+        CenterTransformation(documentBounds, resizeFactor);
+    }
+
+    private void CenterTransformationSelection()
+    {
+        var controlSize = SKRect.Create(RenderSize.ToSKSize());
+
+        controlSize.Inflate(CenterPadding);
+
+        var fitBounds = controlSize.AspectFit(canvasSelection.Size);
+
+        var resizeFactor = Math.Min(
+            fitBounds.Width / canvasSelection.Width,
+            fitBounds.Height / canvasSelection.Height
+        );
+
+        resizeFactor = (float)Math.Log(1.0f + resizeFactor) * 0.33f;
+
+        CenterTransformation(canvasSelection.Bounds, resizeFactor);
+    }
+
+    private void CenterTransformation(SKRect rect, float resizeFactor)
+    {
         ResetTransformation();
 
+        var scaleMatrix = SKMatrix.CreateScale(
+            resizeFactor,
+            resizeFactor
+        );
+
+        var controlSize = SKRect.Create(RenderSize.ToSKSize());
+
+        controlSize.Inflate(CenterPadding);
+
+        rect = scaleMatrix.MapRect(rect);
+
         UpdateTransformation(
-            SKMatrix.CreateScaleTranslation(
-                resizeFactor,
-                resizeFactor,
-                fitBounds.Left,
-                fitBounds.Top
-            )
+            SKMatrix.CreateTranslation(controlSize.MidX - rect.MidX, controlSize.MidY - rect.MidY).PreConcat(scaleMatrix)
         );
     }
 
