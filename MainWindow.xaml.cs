@@ -168,7 +168,7 @@ namespace HocrEditor
 
         private void MergeCommandCommandBinding_OnCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.Handled = ViewModel.Document.CurrentPage?.MergeCommand.CanExecute(e.Parameter) ?? false;
+            e.CanExecute = ViewModel.Document.CurrentPage?.MergeCommand.CanExecute(e.Parameter) ?? false;
         }
 
         private void MergeCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
