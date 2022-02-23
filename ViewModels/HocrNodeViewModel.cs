@@ -129,37 +129,7 @@ namespace HocrEditor.ViewModels
         public ObservableCollection<HocrNodeViewModel> Children { get; } = new();
 
         [DoNotSetChanged]
-        public bool IsExpanded { get; set; }
-
-
-        private bool isSelected;
-
-        [DoNotSetChanged]
-        public bool IsSelected
-        {
-            get => isSelected;
-            set
-            {
-                isSelected = value;
-
-                if (value)
-                {
-                    // TODO: Is this a correct usage?
-                    Dispatcher.CurrentDispatcher.BeginInvoke(
-                        () =>
-                        {
-                            // TODO: Would filtering them first be quicker?
-                            foreach (var node in Ascendants)
-                            {
-                                // Close on deselect?
-                                node.IsExpanded = true;
-                            }
-                        },
-                        DispatcherPriority.ContextIdle
-                    );
-                }
-            }
-        }
+        public bool IsSelected { get; set; }
 
         public IEnumerable<HocrNodeViewModel> Descendants => Children.RecursiveSelect(n => n.Children);
 

@@ -21,6 +21,8 @@
             <b:Interaction.Behaviors>
                 <behaviors:TreeViewMultipleSelectionBehavior
                     SelectedItems="{Binding SelectedItems, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                <behaviors:BringTreeViewItemIntoViewBehavior
+                    SelectedItems="{Binding SelectedItems, RelativeSource={RelativeSource AncestorType=UserControl}}" />
             </b:Interaction.Behaviors>
 
             <TreeView.Resources>
@@ -93,8 +95,6 @@
             <TreeView.ItemContainerStyle>
                 <Style TargetType="{x:Type TreeViewItem}"
                        d:DataContext="{d:DesignInstance viewModels:HocrNodeViewModel}">
-                    <Setter Property="IsExpanded"
-                            Value="{Binding IsExpanded, Mode=TwoWay}" />
                     <Setter Property="behaviors:TreeViewMultipleSelectionBehavior.IsItemSelected"
                             Value="{Binding IsSelected, Mode=TwoWay}" />
 

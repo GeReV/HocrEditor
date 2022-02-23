@@ -1,5 +1,6 @@
 ﻿// Adapted from source of CodeMaid (https://github.com/codecadwallader/codemaid)
 // https://github.com/codecadwallader/codemaid/blob/83c554d586425b4cdd3906d4d9b71a8f376a4e34/CodeMaidShared/UI/TreeViewMultipleSelectionBehavior.cs
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
