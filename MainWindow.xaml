@@ -228,13 +228,6 @@
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                         ToolTip="Select identical nodes"
                         helpers:IconButton.Source="/Icons/selection-select-input.png" />
-                <Separator />
-                <ToggleButton IsChecked="{Binding Document.ShowText}"
-                              ToolTip="Show text"
-                              helpers:IconButton.Source="/Icons/edit.png" />
-                <ToggleButton IsChecked="{Binding Document.ShowNumbering}"
-                              ToolTip="Show node numbering"
-                              helpers:IconButton.Source="/Icons/edit-number.png" />
             </ToolBar>
             <ToolBar>
                 <Button Command="{Binding Document.CurrentPage.ConvertToImageCommand, FallbackValue={x:Null}}"
@@ -250,19 +243,34 @@
                     Reverse children
                 </Button>
             </ToolBar>
-            <ToolBar ItemsSource="{Binding Document.NodeVisibility}">
-                <ToolBar.Resources>
-                    <Style BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}"
-                           TargetType="ToggleButton" />
-                </ToolBar.Resources>
-                <ToolBar.ItemTemplate>
-                    <DataTemplate>
-                        <ToggleButton Click="NodeVisibilityButton_OnClicked"
-                                      IsChecked="{Binding Visible}"
-                                      ToolTip="{Binding NodeTypeViewModel.ToolTip}"
-                                      helpers:IconButton.Source="{Binding NodeTypeViewModel.IconPath}" />
-                    </DataTemplate>
-                </ToolBar.ItemTemplate>
+            <ToolBar>
+                <ItemsControl ItemsSource="{Binding Document.NodeVisibility}">
+                    <ItemsControl.Resources>
+                        <Style BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" TargetType="Button" />
+                        <Style BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}" TargetType="ToggleButton" />
+                        <Style BasedOn="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" TargetType="Separator" />
+                    </ItemsControl.Resources>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <ToggleButton Click="NodeVisibilityButton_OnClicked"
+                                          IsChecked="{Binding Visible}"
+                                          ToolTip="{Binding NodeTypeViewModel.ToolTip}"
+                                          helpers:IconButton.Source="{Binding NodeTypeViewModel.IconPath}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Separator />
+                <ToggleButton IsChecked="{Binding Document.ShowText}"
+                              ToolTip="Show text"
+                              helpers:IconButton.Source="/Icons/edit.png" />
+                <ToggleButton IsChecked="{Binding Document.ShowNumbering}"
+                              ToolTip="Show node numbering"
+                              helpers:IconButton.Source="/Icons/edit-number.png" />
             </ToolBar>
         </ToolBarTray>
         <Grid>
