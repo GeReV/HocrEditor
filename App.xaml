@@ -6,7 +6,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <!--  Style for translucent icons on a disabled button  -->
-            <Style x:Key="DisabledButtonIcon">
+            <Style x:Key="DisabledButtonIcon" TargetType="ButtonBase">
                 <Style.Resources>
                     <Style TargetType="Image">
                         <Style.Triggers>
@@ -18,6 +18,11 @@
                         </Style.Triggers>
                     </Style>
                 </Style.Resources>
+                <Style.Triggers>
+                    <Trigger Property="Command" Value="{x:Null}">
+                        <Setter Property="IsEnabled" Value="False" />
+                    </Trigger>
+                </Style.Triggers>
             </Style>
 
             <!--  Applying disabled icon button style on toolbar buttons  -->
