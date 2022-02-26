@@ -1,285 +1,261 @@
-﻿<core:WindowBase
-    Height="1080"
-    Title="{Binding WindowTitle}"
-    Width="1920"
-    d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}"
-    mc:Ignorable="d"
-    x:Class="HocrEditor.MainWindow"
-    x:TypeArguments="viewModels:MainWindowViewModel"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:controls="clr-namespace:HocrEditor.Controls"
-    xmlns:converters="clr-namespace:HocrEditor.Converters"
-    xmlns:core="clr-namespace:HocrEditor.Core"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:helpers="clr-namespace:HocrEditor.Helpers"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:models="clr-namespace:HocrEditor.Models"
-    xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:commands="clr-namespace:HocrEditor.Commands">
+﻿<core:WindowBase Height="1080"
+                 Title="{Binding WindowTitle}"
+                 Width="1920"
+                 d:DataContext="{d:DesignInstance viewModels:MainWindowViewModel}"
+                 mc:Ignorable="d"
+                 x:Class="HocrEditor.MainWindow"
+                 x:TypeArguments="viewModels:MainWindowViewModel"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:controls="clr-namespace:HocrEditor.Controls"
+                 xmlns:converters="clr-namespace:HocrEditor.Converters"
+                 xmlns:core="clr-namespace:HocrEditor.Core"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:helpers="clr-namespace:HocrEditor.Helpers"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 xmlns:models="clr-namespace:HocrEditor.Models"
+                 xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:commands="clr-namespace:HocrEditor.Commands">
     <Window.Resources>
         <converters:RadioButtonCheckedConverter x:Key="RadioButtonCheckedConverter" />
     </Window.Resources>
     <Window.CommandBindings>
-        <CommandBinding Command="Close" Executed="CloseCommandBinding_OnExecuted" />
-        <CommandBinding Command="Save" Executed="SaveCommandBinding_OnExecuted" />
-        <CommandBinding Command="SaveAs" Executed="SaveCommandBinding_OnExecuted" />
-        <CommandBinding Command="Open" Executed="OpenCommandBinding_OnExecuted" />
-        <CommandBinding
-            CanExecute="MergeCommandCommandBinding_OnCanExecute"
-            Command="{x:Static commands:RoutedCommands.MergeCommand}"
-            Executed="MergeCommandBinding_OnExecuted" />
-        <CommandBinding
-            CanExecute="OcrRegionCommandBinding_OnCanExecute"
-            Command="{x:Static commands:RoutedCommands.OcrRegionCommand}"
-            Executed="OcrRegionCommandBinding_OnExecuted" />
-        <CommandBinding Command="{x:Static commands:RoutedCommands.CreateNodeCommand}" Executed="CreateNodeCommandBinding_OnExecuted" />
-        <CommandBinding Command="NextPage" Executed="NextPageCommandBinding_OnExecuted" />
-        <CommandBinding Command="PreviousPage" Executed="PreviousPageCommandBinding_OnExecuted" />
+        <CommandBinding Command="Close"
+                        Executed="CloseCommandBinding_OnExecuted" />
+        <CommandBinding Command="Save"
+                        Executed="SaveCommandBinding_OnExecuted" />
+        <CommandBinding Command="SaveAs"
+                        Executed="SaveCommandBinding_OnExecuted" />
+        <CommandBinding Command="Open"
+                        Executed="OpenCommandBinding_OnExecuted" />
+        <CommandBinding CanExecute="MergeCommandCommandBinding_OnCanExecute"
+                        Command="{x:Static commands:RoutedCommands.MergeCommand}"
+                        Executed="MergeCommandBinding_OnExecuted" />
+        <CommandBinding CanExecute="OcrRegionCommandBinding_OnCanExecute"
+                        Command="{x:Static commands:RoutedCommands.OcrRegionCommand}"
+                        Executed="OcrRegionCommandBinding_OnExecuted" />
+        <CommandBinding Command="{x:Static commands:RoutedCommands.CreateNodeCommand}"
+                        Executed="CreateNodeCommandBinding_OnExecuted" />
+        <CommandBinding Command="NextPage"
+                        Executed="NextPageCommandBinding_OnExecuted" />
+        <CommandBinding Command="PreviousPage"
+                        Executed="PreviousPageCommandBinding_OnExecuted" />
     </Window.CommandBindings>
     <Window.InputBindings>
         <!--  Editing keybindings  -->
-        <KeyBinding Command="{Binding Document.CurrentPage.CycleSelectionCommand, FallbackValue={x:Null}}" Key="Tab" />
-        <KeyBinding
-            Command="{Binding Document.CurrentPage.CycleSelectionCommand, FallbackValue={x:Null}}"
-            Key="Tab"
-            Modifiers="Shift" />
-        <KeyBinding
-            Command="{Binding Document.CurrentPage.DeleteCommand, FallbackValue={x:Null}}"
-            CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-            Key="Delete" />
-        <KeyBinding
-            Command="{x:Static commands:RoutedCommands.MergeCommand}"
-            CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-            Key="M"
-            Modifiers="Control" />
-        <KeyBinding
-            Command="{Binding SelectionToolCommand}"
-            Key="S" />
+        <KeyBinding Command="{Binding Document.CurrentPage.CycleSelectionCommand, FallbackValue={x:Null}}"
+                    Key="Tab" />
+        <KeyBinding Command="{Binding Document.CurrentPage.CycleSelectionCommand, FallbackValue={x:Null}}"
+                    Key="Tab"
+                    Modifiers="Shift" />
+        <KeyBinding Command="{Binding Document.CurrentPage.DeleteCommand, FallbackValue={x:Null}}"
+                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                    Key="Delete" />
+        <KeyBinding Command="{x:Static commands:RoutedCommands.MergeCommand}"
+                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                    Key="M"
+                    Modifiers="Control" />
+        <KeyBinding Command="{Binding SelectToolCommand}"
+                    CommandParameter="{x:Static controls:DocumentCanvasTool.SelectionTool}"
+                    Key="S" />
 
         <!--  Selection keybindings  -->
-        <KeyBinding
-            Command="{Binding Document.CurrentPage.ExclusiveSelectNodesCommand, FallbackValue={x:Null}}"
-            CommandParameter="{Binding Document.CurrentPage.SelectableNodes, FallbackValue={x:Null}}"
-            Key="A"
-            Modifiers="Control" />
-        <KeyBinding
-            Command="{Binding Document.CurrentPage.DeselectNodesCommand, FallbackValue={x:Null}}"
-            CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-            Key="D"
-            Modifiers="Control" />
-        <KeyBinding
-            Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand, FallbackValue={x:Null}}"
-            CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-            Key="A"
-            Modifiers="Control+Shift" />
+        <KeyBinding Command="{Binding Document.CurrentPage.ExclusiveSelectNodesCommand, FallbackValue={x:Null}}"
+                    CommandParameter="{Binding Document.CurrentPage.SelectableNodes, FallbackValue={x:Null}}"
+                    Key="A"
+                    Modifiers="Control" />
+        <KeyBinding Command="{Binding Document.CurrentPage.DeselectNodesCommand, FallbackValue={x:Null}}"
+                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                    Key="D"
+                    Modifiers="Control" />
+        <KeyBinding Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand, FallbackValue={x:Null}}"
+                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                    Key="A"
+                    Modifiers="Control+Shift" />
 
         <!--  Navigation keybindings  -->
-        <KeyBinding Command="NextPage" Key="PageDown" />
-        <KeyBinding Command="PreviousPage" Key="PageUp" />
+        <KeyBinding Command="NextPage"
+                    Key="PageDown" />
+        <KeyBinding Command="PreviousPage"
+                    Key="PageUp" />
 
         <!--  Undo-redo keybindings  -->
-        <KeyBinding
-            Command="{Binding Document.CurrentPage.UndoCommand, FallbackValue={x:Null}}"
-            Key="Z"
-            Modifiers="Control" />
-        <KeyBinding
-            Command="{Binding Document.CurrentPage.RedoCommand, FallbackValue={x:Null}}"
-            Key="Y"
-            Modifiers="Control" />
-        <KeyBinding
-            Command="{Binding Document.CurrentPage.RedoCommand, FallbackValue={x:Null}}"
-            Key="Z"
-            Modifiers="Control+Shift" />
+        <KeyBinding Command="{Binding Document.CurrentPage.UndoCommand, FallbackValue={x:Null}}"
+                    Key="Z"
+                    Modifiers="Control" />
+        <KeyBinding Command="{Binding Document.CurrentPage.RedoCommand, FallbackValue={x:Null}}"
+                    Key="Y"
+                    Modifiers="Control" />
+        <KeyBinding Command="{Binding Document.CurrentPage.RedoCommand, FallbackValue={x:Null}}"
+                    Key="Z"
+                    Modifiers="Control+Shift" />
     </Window.InputBindings>
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
-                <MenuItem Command="Open" Header="_Open..." />
-                <MenuItem Command="Save" Header="_Save" />
-                <MenuItem Command="SaveAs" Header="Save _as..." />
+                <MenuItem Command="Open"
+                          Header="_Open..." />
+                <MenuItem Command="Save"
+                          Header="_Save" />
+                <MenuItem Command="SaveAs"
+                          Header="Save _as..." />
                 <Separator />
-                <MenuItem Command="{Binding ImportCommand}" Header="_Import..." />
+                <MenuItem Command="{Binding ImportCommand}"
+                          Header="_Import..." />
                 <Separator />
-                <MenuItem Command="Close" Header="E_xit" />
+                <MenuItem Command="Close"
+                          Header="E_xit" />
             </MenuItem>
             <MenuItem Header="_Edit">
-                <MenuItem
-                    Command="{Binding Document.CurrentPage.UndoCommand, FallbackValue={x:Null}}"
-                    Header="_Undo"
-                    InputGestureText="Ctrl+Z" />
-                <MenuItem
-                    Command="{Binding Document.CurrentPage.RedoCommand, FallbackValue={x:Null}}"
-                    Header="_Redo"
-                    InputGestureText="Ctrl+Y, Ctrl+Shift+Z" />
+                <MenuItem Command="{Binding Document.CurrentPage.UndoCommand, FallbackValue={x:Null}}"
+                          Header="_Undo"
+                          InputGestureText="Ctrl+Z" />
+                <MenuItem Command="{Binding Document.CurrentPage.RedoCommand, FallbackValue={x:Null}}"
+                          Header="_Redo"
+                          InputGestureText="Ctrl+Y, Ctrl+Shift+Z" />
                 <Separator />
-                <MenuItem
-                    Command="{Binding Document.CurrentPage.DeleteCommand, FallbackValue={x:Null}}"
-                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    Header="_Delete"
-                    InputGestureText="Del" />
-                <MenuItem
-                    Command="{x:Static commands:RoutedCommands.MergeCommand}"
-                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    Header="_Merge"
-                    InputGestureText="Ctrl+M" />
-                <MenuItem
-                    Command="{Binding Document.CurrentPage.CropCommand, FallbackValue={x:Null}}"
-                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    Header="_Crop" />
+                <MenuItem Command="{Binding Document.CurrentPage.DeleteCommand, FallbackValue={x:Null}}"
+                          CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                          Header="_Delete"
+                          InputGestureText="Del" />
+                <MenuItem Command="{x:Static commands:RoutedCommands.MergeCommand}"
+                          CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                          Header="_Merge"
+                          InputGestureText="Ctrl+M" />
+                <MenuItem Command="{Binding Document.CurrentPage.CropCommand, FallbackValue={x:Null}}"
+                          CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                          Header="_Crop" />
             </MenuItem>
             <MenuItem Header="_Select">
-                <MenuItem
-                    Header="_Region"
-                    IsCheckable="True"
-                    IsChecked="{Binding IsSelecting}" />
-                <MenuItem
-                    Command="{Binding Document.CurrentPage.ExclusiveSelectNodesCommand, FallbackValue={x:Null}}"
-                    CommandParameter="{Binding Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
-                    Header="_All"
-                    InputGestureText="Ctrl+A" />
-                <MenuItem
-                    Command="{Binding Document.CurrentPage.DeselectNodesCommand, FallbackValue={x:Null}}"
-                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    Header="Deselect A_ll"
-                    InputGestureText="Ctrl+D" />
-                <MenuItem Header="Inve_rse" InputGestureText="Ctrl+I" />
-                <MenuItem
-                    Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand, FallbackValue={x:Null}}"
-                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    Header="_Identical Nodes"
-                    InputGestureText="Ctrl+Shift+A" />
+                <MenuItem Header="_Region"
+                          IsCheckable="True"
+                          IsChecked="{Binding IsSelecting}" />
+                <MenuItem Command="{Binding Document.CurrentPage.ExclusiveSelectNodesCommand, FallbackValue={x:Null}}"
+                          CommandParameter="{Binding Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
+                          Header="_All"
+                          InputGestureText="Ctrl+A" />
+                <MenuItem Command="{Binding Document.CurrentPage.DeselectNodesCommand, FallbackValue={x:Null}}"
+                          CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                          Header="Deselect A_ll"
+                          InputGestureText="Ctrl+D" />
+                <MenuItem Header="Inve_rse"
+                          InputGestureText="Ctrl+I" />
+                <MenuItem Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand, FallbackValue={x:Null}}"
+                          CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                          Header="_Identical Nodes"
+                          InputGestureText="Ctrl+Shift+A" />
             </MenuItem>
             <MenuItem Header="Tools">
-                <MenuItem
-                    Command="{Binding Document.CurrentPage.ConvertToImageCommand, FallbackValue={x:Null}}"
-                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    Header="C_onvert Nodes to Image" />
-                <MenuItem
-                    Command="{Binding Document.CurrentPage.ReverseChildNodesCommand, FallbackValue={x:Null}}"
-                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    Header="_Reverse children" />
+                <MenuItem Command="{Binding Document.CurrentPage.ConvertToImageCommand, FallbackValue={x:Null}}"
+                          CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                          Header="C_onvert Nodes to Image" />
+                <MenuItem Command="{Binding Document.CurrentPage.ReverseChildNodesCommand, FallbackValue={x:Null}}"
+                          CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                          Header="_Reverse children" />
             </MenuItem>
         </Menu>
         <ToolBarTray DockPanel.Dock="Top">
             <ToolBar>
-                <Button
-                    Command="{Binding ImportCommand}"
-                    ToolTip="Import"
-                    helpers:IconButton.Source="/Icons/document--plus.png" />
-                <Button
-                    Command="Open"
-                    ToolTip="Open"
-                    helpers:IconButton.Source="/Icons/folder-open-document.png" />
-                <Button
-                    Command="Save"
-                    ToolTip="Save"
-                    helpers:IconButton.Source="/Icons/disk-black.png" />
+                <Button Command="{Binding ImportCommand}"
+                        ToolTip="Import"
+                        helpers:IconButton.Source="/Icons/document--plus.png" />
+                <Button Command="Open"
+                        ToolTip="Open"
+                        helpers:IconButton.Source="/Icons/folder-open-document.png" />
+                <Button Command="Save"
+                        ToolTip="Save"
+                        helpers:IconButton.Source="/Icons/disk-black.png" />
                 <Separator />
                 <controls:LanguagesButton ItemsSource="{Binding TesseractLanguages}" />
             </ToolBar>
             <ToolBar>
-                <Button
-                    Command="{Binding Document.CurrentPage.UndoCommand, FallbackValue={x:Null}}"
-                    ToolTip="Undo"
-                    helpers:IconButton.Source="/Icons/arrow-curve-180-left.png" />
+                <Button Command="{Binding Document.CurrentPage.UndoCommand, FallbackValue={x:Null}}"
+                        ToolTip="Undo"
+                        helpers:IconButton.Source="/Icons/arrow-curve-180-left.png" />
 
-                <Button
-                    Command="{Binding Document.CurrentPage.RedoCommand, FallbackValue={x:Null}}"
-                    ToolTip="Redo"
-                    helpers:IconButton.Source="/Icons/arrow-curve.png" />
+                <Button Command="{Binding Document.CurrentPage.RedoCommand, FallbackValue={x:Null}}"
+                        ToolTip="Redo"
+                        helpers:IconButton.Source="/Icons/arrow-curve.png" />
                 <Separator />
-                <Button
-                    Command="{x:Static commands:RoutedCommands.OcrRegionCommand}"
-                    CommandParameter="{Binding Document.CurrentPage.SelectionBounds, FallbackValue={x:Static models:Rect.Empty}}"
-                    ToolTip="Perform OCR on selection"
-                    helpers:IconButton.Source="/Icons/spectacle.png">
+                <Button Command="{x:Static commands:RoutedCommands.OcrRegionCommand}"
+                        CommandParameter="{Binding Document.CurrentPage.SelectionBounds, FallbackValue={x:Static models:Rect.Empty}}"
+                        ToolTip="Perform OCR on selection"
+                        helpers:IconButton.Source="/Icons/spectacle.png">
                     OCR Region
                 </Button>
-                <Button
-                    Command="{Binding Document.CurrentPage.DeleteCommand, FallbackValue={x:Null}}"
-                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    ToolTip="Delete"
-                    helpers:IconButton.Source="/Icons/minus-circle.png">
+                <Button Command="{Binding Document.CurrentPage.DeleteCommand, FallbackValue={x:Null}}"
+                        CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                        ToolTip="Delete"
+                        helpers:IconButton.Source="/Icons/minus-circle.png">
                     Delete
                 </Button>
-                <Button
-                    Command="{x:Static commands:RoutedCommands.MergeCommand}"
-                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    ToolTip="Merge nodes"
-                    helpers:IconButton.Source="/Icons/sql-join-outer.png">
+                <Button Command="{x:Static commands:RoutedCommands.MergeCommand}"
+                        CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                        ToolTip="Merge nodes"
+                        helpers:IconButton.Source="/Icons/sql-join-outer.png">
                     Merge
                 </Button>
-                <Button
-                    Command="{Binding Document.CurrentPage.CropCommand, FallbackValue={x:Null}}"
-                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    ToolTip="Crop nodes"
-                    helpers:IconButton.Source="/Icons/ruler-crop.png">
+                <Button Command="{Binding Document.CurrentPage.CropCommand, FallbackValue={x:Null}}"
+                        CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                        ToolTip="Crop nodes"
+                        helpers:IconButton.Source="/Icons/ruler-crop.png">
                     Crop
                 </Button>
-                <ToggleButton
-                    IsChecked="{Binding AutoClean}"
-                    ToolTip="Auto clean"
-                    helpers:IconButton.Source="/Icons/broom.png" />
+                <ToggleButton IsChecked="{Binding AutoClean}"
+                              ToolTip="Auto clean"
+                              helpers:IconButton.Source="/Icons/broom.png" />
                 <Separator />
-                <RadioButton
-                    GroupName="PageDirection"
-                    IsChecked="{Binding Document.CurrentPage.Direction, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static models:Direction.Ltr}, FallbackValue={x:Null}}"
-                    ToolTip="Left to Right"
-                    helpers:IconButton.Source="/Icons/edit-direction.png" />
-                <RadioButton
-                    GroupName="PageDirection"
-                    IsChecked="{Binding Document.CurrentPage.Direction, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static models:Direction.Rtl}, FallbackValue={x:Null}}"
-                    ToolTip="Right to Left"
-                    helpers:IconButton.Source="/Icons/edit-direction-rtl.png" />
+                <RadioButton GroupName="PageDirection"
+                             IsChecked="{Binding Document.CurrentPage.Direction, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static models:Direction.Ltr}, FallbackValue={x:Null}}"
+                             ToolTip="Left to Right"
+                             helpers:IconButton.Source="/Icons/edit-direction.png" />
+                <RadioButton GroupName="PageDirection"
+                             IsChecked="{Binding Document.CurrentPage.Direction, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static models:Direction.Rtl}, FallbackValue={x:Null}}"
+                             ToolTip="Right to Left"
+                             helpers:IconButton.Source="/Icons/edit-direction-rtl.png" />
                 <Separator />
-                <ToggleButton
-                    Command="{Binding SelectionToolCommand}"
-                    IsChecked="{Binding IsSelecting, Mode=OneWay}"
-                    ToolTip="Select region"
-                    helpers:IconButton.Source="/Icons/selection.png" />
-                <Button
-                    Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand, FallbackValue={x:Null}}"
-                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    ToolTip="Select identical nodes"
-                    helpers:IconButton.Source="/Icons/selection-select-input.png" />
+                <ToggleButton Command="{Binding SelectToolCommand}"
+                              CommandParameter="{x:Static controls:DocumentCanvasTool.SelectionTool}"
+                              IsChecked="{Binding CanvasTool, Mode=OneWay, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static controls:DocumentCanvasTool.SelectionTool}}"
+                              ToolTip="Select region"
+                              helpers:IconButton.Source="/Icons/selection.png" />
+                <Button Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand, FallbackValue={x:Null}}"
+                        CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                        ToolTip="Select identical nodes"
+                        helpers:IconButton.Source="/Icons/selection-select-input.png" />
                 <Separator />
-                <ToggleButton
-                    IsChecked="{Binding Document.ShowText}"
-                    ToolTip="Show text"
-                    helpers:IconButton.Source="/Icons/edit.png" />
-                <ToggleButton
-                    IsChecked="{Binding Document.ShowNumbering}"
-                    ToolTip="Show node numbering"
-                    helpers:IconButton.Source="/Icons/edit-number.png" />
+                <ToggleButton IsChecked="{Binding Document.ShowText}"
+                              ToolTip="Show text"
+                              helpers:IconButton.Source="/Icons/edit.png" />
+                <ToggleButton IsChecked="{Binding Document.ShowNumbering}"
+                              ToolTip="Show node numbering"
+                              helpers:IconButton.Source="/Icons/edit-number.png" />
             </ToolBar>
             <ToolBar>
-                <Button
-                    Command="{Binding Document.CurrentPage.ConvertToImageCommand, FallbackValue={x:Null}}"
-                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    ToolTip="Convert selected nodes to images"
-                    helpers:IconButton.Source="/Icons/image-import.png">
+                <Button Command="{Binding Document.CurrentPage.ConvertToImageCommand, FallbackValue={x:Null}}"
+                        CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                        ToolTip="Convert selected nodes to images"
+                        helpers:IconButton.Source="/Icons/image-import.png">
                     Convert to Images
                 </Button>
-                <Button
-                    Command="{Binding Document.CurrentPage.ReverseChildNodesCommand, FallbackValue={x:Null}}"
-                    CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                    ToolTip="Reverse selected node's children"
-                    helpers:IconButton.Source="/Icons/sort-alphabet-descending.png">
+                <Button Command="{Binding Document.CurrentPage.ReverseChildNodesCommand, FallbackValue={x:Null}}"
+                        CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                        ToolTip="Reverse selected node's children"
+                        helpers:IconButton.Source="/Icons/sort-alphabet-descending.png">
                     Reverse children
                 </Button>
             </ToolBar>
             <ToolBar ItemsSource="{Binding Document.NodeVisibility}">
                 <ToolBar.Resources>
-                    <Style BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}" TargetType="ToggleButton" />
+                    <Style BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}"
+                           TargetType="ToggleButton" />
                 </ToolBar.Resources>
                 <ToolBar.ItemTemplate>
                     <DataTemplate>
-                        <ToggleButton
-                            Click="NodeVisibilityButton_OnClicked"
-                            IsChecked="{Binding Visible}"
-                            ToolTip="{Binding NodeTypeViewModel.ToolTip}"
-                            helpers:IconButton.Source="{Binding NodeTypeViewModel.IconPath}" />
+                        <ToggleButton Click="NodeVisibilityButton_OnClicked"
+                                      IsChecked="{Binding Visible}"
+                                      ToolTip="{Binding NodeTypeViewModel.ToolTip}"
+                                      helpers:IconButton.Source="{Binding NodeTypeViewModel.IconPath}" />
                     </DataTemplate>
                 </ToolBar.ItemTemplate>
             </ToolBar>
@@ -290,23 +266,21 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="300" />
             </Grid.ColumnDefinitions>
-            <controls:DocumentPageList
-                DataContext="{Binding Document}"
-                Grid.Column="0"
-                ItemsSource="{Binding PagesCollectionView}" />
-            <controls:DocumentCanvas
-                Grid.Column="1"
-                IsSelecting="{Binding IsSelecting}"
-                IsShowNumbering="{Binding Document.ShowNumbering}"
-                IsShowText="{Binding Document.ShowText}"
-                ItemsSource="{Binding Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
-                Margin="-1,0"
-                NodeVisibility="{Binding Document.NodeVisibility}"
-                NodesChanged="Canvas_OnNodesChanged"
-                NodesEdited="OnNodeEdited"
-                SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                SelectionBounds="{Binding Document.SelectionBounds}"
-                SelectionChanged="Canvas_OnSelectionChanged" />
+            <controls:DocumentPageList DataContext="{Binding Document}"
+                                       Grid.Column="0"
+                                       ItemsSource="{Binding PagesCollectionView}" />
+            <controls:DocumentCanvas Grid.Column="1"
+                                     ActiveTool="{Binding CanvasTool}"
+                                     IsShowNumbering="{Binding Document.ShowNumbering}"
+                                     IsShowText="{Binding Document.ShowText}"
+                                     ItemsSource="{Binding Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
+                                     Margin="-1,0"
+                                     NodeVisibility="{Binding Document.NodeVisibility}"
+                                     NodesChanged="Canvas_OnNodesChanged"
+                                     NodesEdited="OnNodeEdited"
+                                     SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                                     SelectionBounds="{Binding Document.SelectionBounds}"
+                                     SelectionChanged="Canvas_OnSelectionChanged" />
             <controls:DocumentTreeView
                 FlowDirection="{Binding Document.CurrentPage.FlowDirection, FallbackValue={x:Static models:Direction.Ltr}}"
                 Grid.Column="2"

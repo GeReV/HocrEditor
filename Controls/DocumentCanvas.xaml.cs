@@ -114,14 +114,14 @@ public sealed partial class DocumentCanvas
         )
     );
 
-    public static readonly DependencyProperty IsSelectingProperty = DependencyProperty.Register(
-        nameof(IsSelecting),
-        typeof(bool),
+    public static readonly DependencyProperty ActiveToolProperty = DependencyProperty.Register(
+        nameof(ActiveTool),
+        typeof(DocumentCanvasTool),
         typeof(DocumentCanvas),
         new FrameworkPropertyMetadata(
-            default(bool),
+            DocumentCanvasTool.None,
             FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
-            IsSelectingChanged
+            ActiveToolChanged
         )
     );
 
@@ -183,10 +183,10 @@ public sealed partial class DocumentCanvas
         set => SetValue(IsShowNumberingProperty, value);
     }
 
-    public bool IsSelecting
+    public DocumentCanvasTool ActiveTool
     {
-        get => (bool)GetValue(IsSelectingProperty);
-        set => SetValue(IsSelectingProperty, value);
+        get => (DocumentCanvasTool)GetValue(ActiveToolProperty);
+        set => SetValue(ActiveToolProperty, value);
     }
 
     public Rect SelectionBounds
@@ -278,9 +278,9 @@ public sealed partial class DocumentCanvas
 
                 break;
             }
-            case Key.Escape when IsSelecting:
+            case Key.Escape when ActiveTool == DocumentCanvasTool.SelectionTool:
             {
-                IsSelecting = false;
+                ActiveTool = DocumentCanvasTool.None;
 
                 break;
             }
@@ -438,13 +438,13 @@ public sealed partial class DocumentCanvas
         documentCanvas.Refresh();
     }
 
-    private static void IsSelectingChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void ActiveToolChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var documentCanvas = (DocumentCanvas)d;
 
-        var newValue = (bool)e.NewValue;
+        var newValue = (DocumentCanvasTool)e.NewValue;
 
-        if (newValue)
+        if (newValue == DocumentCanvasTool.SelectionTool)
         {
             documentCanvas.Cursor = documentCanvas.currentCursor = Cursors.Cross;
         }
@@ -677,7 +677,7 @@ public sealed partial class DocumentCanvas
 
                 var normalizedPosition = inverseTransformation.MapPoint(position);
 
-                if (IsSelecting)
+                if (ActiveTool == DocumentCanvasTool.SelectionTool)
                 {
                     if (canvasSelection.ShouldShowCanvasSelection &&
                         canvasSelection.Bounds.Contains(normalizedPosition))
@@ -1981,7 +1981,7 @@ public sealed partial class DocumentCanvas
             var bounds = transformation.MapRect(canvasSelection.Bounds);
 
             SelectionPopup.Visibility =
-                canvasSelection.ShouldShowCanvasSelection && IsSelecting ? Visibility.Visible : Visibility.Collapsed;
+                canvasSelection.ShouldShowCanvasSelection && ActiveTool == DocumentCanvasTool.SelectionTool ? Visibility.Visible : Visibility.Collapsed;
 
             Canvas.SetLeft(SelectionPopup, (int)bounds.Left);
             Canvas.SetTop(SelectionPopup, (int)(bounds.Top - SelectionPopup.ActualHeight));

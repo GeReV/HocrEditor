@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using HocrEditor.Controls;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
@@ -35,9 +36,11 @@ namespace HocrEditor.ViewModels
             SaveCommand = new RelayCommand<bool>(Save);
             OpenCommand = new RelayCommand(Open);
 
-            SelectionToolCommand = new RelayCommand(
-                () => IsSelecting = !IsSelecting,
-                () => Document.CurrentPage != null
+            SelectToolCommand = new RelayCommand<DocumentCanvasTool>(
+                tool => CanvasTool = CanvasTool != tool
+                    ? tool
+                    : DocumentCanvasTool.None,
+                _ => Document.CurrentPage != null
             );
         }
 
@@ -53,7 +56,7 @@ namespace HocrEditor.ViewModels
             set => Settings.AutoClean = value;
         }
 
-        public bool IsSelecting { get; set; }
+        public DocumentCanvasTool CanvasTool { get; set; }
 
         public string WindowTitle
         {
@@ -81,7 +84,7 @@ namespace HocrEditor.ViewModels
         public IRelayCommand OpenCommand { get; }
         public IRelayCommand ImportCommand { get; }
 
-        public IRelayCommand SelectionToolCommand { get; }
+        public IRelayCommand<DocumentCanvasTool> SelectToolCommand { get; }
 
         [UsedImplicitly]
         private void OnDocumentChanged(HocrDocumentViewModel oldValue, HocrDocumentViewModel newValue)
@@ -103,7 +106,7 @@ namespace HocrEditor.ViewModels
                 }
                 case nameof(Document.CurrentPage):
                 {
-                    SelectionToolCommand.NotifyCanExecuteChanged();
+                    SelectToolCommand.NotifyCanExecuteChanged();
                     break;
                 }
             }
