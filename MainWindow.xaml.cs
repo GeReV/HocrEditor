@@ -197,7 +197,10 @@ namespace HocrEditor
 
         private void OcrRegionCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            ViewModel.Document.CurrentPage?.OcrRegionCommand.TryExecute(e.Parameter);
+            if (ViewModel.Document.CurrentPage?.OcrRegionCommand.TryExecute(e.Parameter) ?? false)
+            {
+                ViewModel.IsSelecting = false;
+            }
         }
 
         private void OcrRegionCommandBinding_OnCanExecute(object sender, CanExecuteRoutedEventArgs e)
