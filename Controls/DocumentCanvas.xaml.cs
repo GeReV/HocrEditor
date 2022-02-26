@@ -1266,6 +1266,11 @@ public sealed partial class DocumentCanvas
 
     private void ClearCanvasSelection()
     {
+        if (rootId < 0)
+        {
+            return;
+        }
+
         dragLimit = SKRect.Empty;
         canvasSelection.Bounds = SKRect.Empty;
 
