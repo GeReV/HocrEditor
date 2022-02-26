@@ -12,7 +12,8 @@
     xmlns:models="clr-namespace:HocrEditor.Models"
     xmlns:skia="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
     xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:commands="clr-namespace:HocrEditor.Commands">
     <Grid>
         <Border BorderBrush="{x:Static SystemColors.ControlDarkBrush}" BorderThickness="1">
             <skia:SKElement Name="Surface" PaintSurface="Canvas_OnPaintSurface" />
@@ -41,7 +42,7 @@
                 </Border.Resources>
                 <StackPanel Orientation="Horizontal">
                     <Button
-                        Command="{x:Static viewModels:HocrDocumentViewModel.OcrRegionCommand}"
+                        Command="{x:Static  commands:RoutedCommands.OcrRegionCommand}"
                         CommandParameter="{Binding SelectionBounds, RelativeSource={RelativeSource AncestorType=UserControl}, FallbackValue={x:Static models:Rect.Empty}}"
                         ToolTip="Perform OCR on selection"
                         helpers:IconButton.Source="/Icons/spectacle.png">
@@ -57,7 +58,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="viewModels:HocrNodeTypeViewModel">
                                 <Button
-                                    Command="{x:Static viewModels:HocrDocumentViewModel.CreateNodeCommand}"
+                                    Command="{x:Static commands:RoutedCommands.CreateNodeCommand}"
                                     CommandParameter="{Binding NodeType}"
                                     ToolTip="{Binding ToolTip}">
                                     <Canvas

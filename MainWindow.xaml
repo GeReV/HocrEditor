@@ -15,7 +15,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:HocrEditor.Models"
     xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:commands="clr-namespace:HocrEditor.Commands">
     <Window.Resources>
         <converters:RadioButtonCheckedConverter x:Key="RadioButtonCheckedConverter" />
     </Window.Resources>
@@ -26,13 +27,13 @@
         <CommandBinding Command="Open" Executed="OpenCommandBinding_OnExecuted" />
         <CommandBinding
             CanExecute="MergeCommandCommandBinding_OnCanExecute"
-            Command="{x:Static viewModels:HocrDocumentViewModel.MergeCommand}"
+            Command="{x:Static commands:RoutedCommands.MergeCommand}"
             Executed="MergeCommandBinding_OnExecuted" />
         <CommandBinding
             CanExecute="OcrRegionCommandBinding_OnCanExecute"
-            Command="{x:Static viewModels:HocrDocumentViewModel.OcrRegionCommand}"
+            Command="{x:Static commands:RoutedCommands.OcrRegionCommand}"
             Executed="OcrRegionCommandBinding_OnExecuted" />
-        <CommandBinding Command="{x:Static viewModels:HocrDocumentViewModel.CreateNodeCommand}" Executed="CreateNodeCommandBinding_OnExecuted" />
+        <CommandBinding Command="{x:Static commands:RoutedCommands.CreateNodeCommand}" Executed="CreateNodeCommandBinding_OnExecuted" />
         <CommandBinding Command="NextPage" Executed="NextPageCommandBinding_OnExecuted" />
         <CommandBinding Command="PreviousPage" Executed="PreviousPageCommandBinding_OnExecuted" />
     </Window.CommandBindings>
@@ -48,7 +49,7 @@
             CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
             Key="Delete" />
         <KeyBinding
-            Command="{x:Static viewModels:HocrDocumentViewModel.MergeCommand}"
+            Command="{x:Static commands:RoutedCommands.MergeCommand}"
             CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
             Key="M"
             Modifiers="Control" />
@@ -115,7 +116,7 @@
                     Header="_Delete"
                     InputGestureText="Del" />
                 <MenuItem
-                    Command="{x:Static viewModels:HocrDocumentViewModel.MergeCommand}"
+                    Command="{x:Static commands:RoutedCommands.MergeCommand}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                     Header="_Merge"
                     InputGestureText="Ctrl+M" />
@@ -186,7 +187,7 @@
                     helpers:IconButton.Source="/Icons/arrow-curve.png" />
                 <Separator />
                 <Button
-                    Command="{x:Static viewModels:HocrDocumentViewModel.OcrRegionCommand}"
+                    Command="{x:Static commands:RoutedCommands.OcrRegionCommand}"
                     CommandParameter="{Binding Document.CurrentPage.SelectionBounds, FallbackValue={x:Static models:Rect.Empty}}"
                     ToolTip="Perform OCR on selection"
                     helpers:IconButton.Source="/Icons/spectacle.png">
@@ -200,7 +201,7 @@
                     Delete
                 </Button>
                 <Button
-                    Command="{x:Static viewModels:HocrDocumentViewModel.MergeCommand}"
+                    Command="{x:Static commands:RoutedCommands.MergeCommand}"
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                     ToolTip="Merge nodes"
                     helpers:IconButton.Source="/Icons/sql-join-outer.png">

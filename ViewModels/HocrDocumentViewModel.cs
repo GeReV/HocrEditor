@@ -18,12 +18,6 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
 {
     public UndoRedoManager UndoRedoManager { get; } = new();
 
-    public static readonly RoutedCommand OcrRegionCommand = new();
-
-    public static readonly RoutedCommand MergeCommand = new();
-
-    public static readonly RoutedCommand CreateNodeCommand = new();
-
     public string? Filename { get; set; }
 
     public string Title
