@@ -34,6 +34,7 @@ internal enum MouseState
     SelectingNodes,
     SelectingRegion,
     DraggingSelectionRegion,
+    DraggingWordSplitter,
 }
 
 public class Element
@@ -238,6 +239,11 @@ public sealed partial class DocumentCanvas
 
     private SKRect nodeSelection = SKRect.Empty;
 
+    private SKPoint wordSplitterPosition = SKPoint.Empty;
+    private string wordSplitterValue = string.Empty;
+    private int wordSplitterValueSplitStart;
+    private int wordSplitterValueSplitLength;
+
     private Cursor? currentCursor;
     private readonly CanvasSelection canvasSelection = new();
     private ResizeHandle? selectedResizeHandle;
@@ -272,13 +278,31 @@ public sealed partial class DocumentCanvas
 
         switch (e.Key)
         {
+            case Key.Return when ActiveTool == DocumentCanvasTool.WordSplitTool:
+            {
+                var first = wordSplitterValue;
+                var second = first;
+
+                if (wordSplitterValueSplitStart > 0 && wordSplitterValueSplitStart + wordSplitterValueSplitLength < wordSplitterValue.Length)
+                {
+                    var firstEnd = wordSplitterValueSplitStart;
+                    first = wordSplitterValue[..firstEnd];
+
+                    var secondStart = (wordSplitterValueSplitStart + wordSplitterValueSplitLength);
+                    second = wordSplitterValue[secondStart..];
+                }
+
+                ActiveTool = DocumentCanvasTool.None;
+
+                break;
+            }
             case Key.Return:
             {
                 BeginEditing();
 
                 break;
             }
-            case Key.Escape when ActiveTool == DocumentCanvasTool.SelectionTool:
+            case Key.Escape:
             {
                 ActiveTool = DocumentCanvasTool.None;
 
@@ -444,15 +468,44 @@ public sealed partial class DocumentCanvas
 
         var newValue = (DocumentCanvasTool)e.NewValue;
 
-        if (newValue == DocumentCanvasTool.SelectionTool)
+        switch (newValue)
         {
-            documentCanvas.Cursor = documentCanvas.currentCursor = Cursors.Cross;
-        }
-        else
-        {
-            documentCanvas.Cursor = documentCanvas.currentCursor = null;
+            case DocumentCanvasTool.None:
+            {
+                documentCanvas.Cursor = documentCanvas.currentCursor = null;
 
-            documentCanvas.ClearCanvasSelection();
+                documentCanvas.ClearCanvasSelection();
+
+                documentCanvas.wordSplitterPosition = SKPoint.Empty;
+                documentCanvas.wordSplitterValue = string.Empty;
+                documentCanvas.wordSplitterValueSplitStart = 0;
+                documentCanvas.wordSplitterValueSplitLength = 0;
+
+                break;
+            }
+            case DocumentCanvasTool.SelectionTool:
+            {
+                documentCanvas.Cursor = documentCanvas.currentCursor = Cursors.Cross;
+
+                break;
+            }
+            case DocumentCanvasTool.WordSplitTool:
+            {
+                documentCanvas.Cursor = documentCanvas.currentCursor = null;
+
+                if (documentCanvas.IsEditing)
+                {
+                    documentCanvas.wordSplitterValue = documentCanvas.TextBox.Text;
+                    documentCanvas.wordSplitterValueSplitStart = documentCanvas.TextBox.SelectionStart;
+                    documentCanvas.wordSplitterValueSplitLength = documentCanvas.TextBox.SelectionLength;
+
+                    documentCanvas.EndEditing();
+                }
+
+                break;
+            }
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
         documentCanvas.Refresh();
@@ -713,6 +766,31 @@ public sealed partial class DocumentCanvas
                     break;
                 }
 
+                if (ActiveTool == DocumentCanvasTool.WordSplitTool)
+                {
+                    Ensure.IsValid(
+                        nameof(SelectedItems),
+                        SelectedItems?.Count == 1,
+                        "Expected to have exactly one node selected"
+                    );
+                    Ensure.IsValid(
+                        nameof(SelectedItems),
+                        SelectedItems?.First().NodeType == HocrNodeType.Word,
+                        "Expected selected node to be a word"
+                    );
+
+                    var selectedElement = elements[selectedElements.First()].Item2;
+
+                    if (selectedElement.Bounds.Contains(normalizedPosition))
+                    {
+                        mouseMoveState = MouseState.DraggingWordSplitter;
+
+                        wordSplitterPosition = normalizedPosition;
+                    }
+
+                    break;
+                }
+
                 mouseMoveState = MouseState.Dragging;
 
                 EndEditing();
@@ -840,6 +918,11 @@ public sealed partial class DocumentCanvas
 
                         break;
                     }
+                    case MouseState.DraggingWordSplitter:
+                    {
+                        // TODO: Raise event?
+                        break;
+                    }
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -933,7 +1016,7 @@ public sealed partial class DocumentCanvas
                 {
                     hoveringOnSelection = true;
 
-                    Cursor = Cursors.SizeAll;
+                    Cursor = ActiveTool == DocumentCanvasTool.WordSplitTool ? Cursors.SizeWE : Cursors.SizeAll;
                 }
 
                 if (!hoveringOnSelection)
@@ -1048,6 +1131,18 @@ public sealed partial class DocumentCanvas
                 };
 
                 canvasSelection.Bounds = newBounds;
+
+                break;
+            }
+            case MouseState.DraggingWordSplitter:
+            {
+                var newLocation = inverseTransformation.MapPoint(dragStart) + delta;
+
+                var selectedElement = elements[selectedElements.First()].Item2;
+
+                newLocation.Clamp(selectedElement.Bounds);
+
+                wordSplitterPosition = newLocation;
 
                 break;
             }
@@ -1395,7 +1490,8 @@ public sealed partial class DocumentCanvas
         rect = scaleMatrix.MapRect(rect);
 
         UpdateTransformation(
-            SKMatrix.CreateTranslation(controlSize.MidX - rect.MidX, controlSize.MidY - rect.MidY).PreConcat(scaleMatrix)
+            SKMatrix.CreateTranslation(controlSize.MidX - rect.MidX, controlSize.MidY - rect.MidY)
+                .PreConcat(scaleMatrix)
         );
     }
 
@@ -1567,6 +1663,8 @@ public sealed partial class DocumentCanvas
         canvasSelection.Render(canvas, transformation);
 
         RenderNodeSelection(canvas);
+
+        RenderWordSplitter(canvas);
     }
 
     private void RenderNodeSelection(SKCanvas canvas)
@@ -1592,6 +1690,26 @@ public sealed partial class DocumentCanvas
         paint.Color = color;
 
         canvas.DrawRect(bbox, paint);
+    }
+
+    private void RenderWordSplitter(SKCanvas canvas)
+    {
+        if (wordSplitterPosition.IsEmpty)
+        {
+            return;
+        }
+
+        var paint = new SKPaint
+        {
+            Color = new SKColor(0xffcab2d6)
+        };
+
+        var selectedElement = elements[selectedElements.First()].Item2;
+
+        var bounds = transformation.MapRect(selectedElement.Bounds);
+        var point = transformation.MapPoint(wordSplitterPosition);
+
+        canvas.DrawLine(point.X, bounds.Top, point.X, bounds.Bottom, paint);
     }
 
     private void PerformResize(SKPoint delta)
@@ -1981,7 +2099,9 @@ public sealed partial class DocumentCanvas
             var bounds = transformation.MapRect(canvasSelection.Bounds);
 
             SelectionPopup.Visibility =
-                canvasSelection.ShouldShowCanvasSelection && ActiveTool == DocumentCanvasTool.SelectionTool ? Visibility.Visible : Visibility.Collapsed;
+                canvasSelection.ShouldShowCanvasSelection && ActiveTool == DocumentCanvasTool.SelectionTool
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
 
             Canvas.SetLeft(SelectionPopup, (int)bounds.Left);
             Canvas.SetTop(SelectionPopup, (int)(bounds.Top - SelectionPopup.ActualHeight));

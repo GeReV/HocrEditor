@@ -219,6 +219,11 @@
                               IsChecked="{Binding CanvasTool, Mode=OneWay, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static controls:DocumentCanvasTool.SelectionTool}}"
                               ToolTip="Select region"
                               helpers:IconButton.Source="/Icons/selection.png" />
+                <ToggleButton Command="{Binding SelectToolCommand}"
+                              CommandParameter="{x:Static controls:DocumentCanvasTool.WordSplitTool}"
+                              IsChecked="{Binding CanvasTool, Mode=OneWay, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static controls:DocumentCanvasTool.WordSplitTool}}"
+                              ToolTip="Split word tool"
+                              helpers:IconButton.Source="/Icons/ui-splitter.png" />
                 <Button Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand, FallbackValue={x:Null}}"
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                         ToolTip="Select identical nodes"

@@ -94,6 +94,8 @@
       <Resource Include="Icons\edit-rule.png" />
       <None Remove="Icons\document-hf-select-footer.png" />
       <Resource Include="Icons\document-hf-select-footer.png" />
+      <None Remove="Icons\ui-splitter.png" />
+      <Resource Include="Icons\ui-splitter.png" />
     </ItemGroup>
 
     <ItemGroup>
