@@ -53,6 +53,9 @@
             CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
             Key="M"
             Modifiers="Control" />
+        <KeyBinding
+            Command="{Binding SelectionToolCommand}"
+            Key="S" />
 
         <!--  Selection keybindings  -->
         <KeyBinding
@@ -231,7 +234,8 @@
                     helpers:IconButton.Source="/Icons/edit-direction-rtl.png" />
                 <Separator />
                 <ToggleButton
-                    IsChecked="{Binding IsSelecting}"
+                    Command="{Binding SelectionToolCommand}"
+                    IsChecked="{Binding IsSelecting, Mode=OneWay}"
                     ToolTip="Select region"
                     helpers:IconButton.Source="/Icons/selection.png" />
                 <Button

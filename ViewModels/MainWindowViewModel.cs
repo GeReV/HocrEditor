@@ -34,6 +34,11 @@ namespace HocrEditor.ViewModels
 
             SaveCommand = new RelayCommand<bool>(Save);
             OpenCommand = new RelayCommand(Open);
+
+            SelectionToolCommand = new RelayCommand(
+                () => IsSelecting = !IsSelecting,
+                () => Document.CurrentPage != null
+            );
         }
 
         private void TesseractLanguagesChanged(object? sender, EventArgs e)
@@ -76,6 +81,8 @@ namespace HocrEditor.ViewModels
         public IRelayCommand OpenCommand { get; }
         public IRelayCommand ImportCommand { get; }
 
+        public IRelayCommand SelectionToolCommand { get; }
+
         [UsedImplicitly]
         private void OnDocumentChanged(HocrDocumentViewModel oldValue, HocrDocumentViewModel newValue)
         {
@@ -92,6 +99,11 @@ namespace HocrEditor.ViewModels
                 case nameof(IsChanged):
                 {
                     OnPropertyChanged(nameof(WindowTitle));
+                    break;
+                }
+                case nameof(Document.CurrentPage):
+                {
+                    SelectionToolCommand.NotifyCanExecuteChanged();
                     break;
                 }
             }
