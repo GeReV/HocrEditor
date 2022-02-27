@@ -47,6 +47,9 @@ public sealed partial class DocumentCanvas
 {
     private static readonly SKSize CenterPadding = new(-10.0f, -10.0f);
 
+    private static readonly SKColor HighlightColor = new(0xffffff99);
+    private static readonly SKColor NodeSelectionColor = new(0xff1f78b4);
+
     private static SKColor GetNodeColor(HocrNodeViewModel node) => node switch
     {
         // Node colors based on the D3 color category "Paired": https://observablehq.com/@d3/color-schemes
@@ -1672,7 +1675,7 @@ public sealed partial class DocumentCanvas
 
         Recurse(rootId, -1);
 
-        canvasSelection.Render(canvas, transformation);
+        canvasSelection.Render(canvas, transformation, ActiveTool == DocumentCanvasTool.WordSplitTool ? HighlightColor : null);
 
         RenderNodeSelection(canvas);
 
@@ -1688,18 +1691,16 @@ public sealed partial class DocumentCanvas
 
         var bbox = transformation.MapRect(nodeSelection);
 
-        var color = new SKColor(0xff1f78b4);
-
         var paint = new SKPaint
         {
             IsStroke = false,
-            Color = color.WithAlpha(64),
+            Color = NodeSelectionColor.WithAlpha(64),
         };
 
         canvas.DrawRect(bbox, paint);
 
         paint.IsStroke = true;
-        paint.Color = color;
+        paint.Color = NodeSelectionColor;
 
         canvas.DrawRect(bbox, paint);
     }
@@ -1713,7 +1714,7 @@ public sealed partial class DocumentCanvas
 
         var paint = new SKPaint
         {
-            Color = new SKColor(0xffcab2d6)
+            Color = HighlightColor
         };
 
         var selectedElement = elements[selectedElements.First()].Item2;

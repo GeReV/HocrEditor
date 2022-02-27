@@ -138,7 +138,7 @@ internal class CanvasSelection : IDisposable
         }
     }
 
-    public void Render(SKCanvas canvas, SKMatrix transformation)
+    public void Render(SKCanvas canvas, SKMatrix transformation, SKColor? color = null)
     {
         if (!ShouldShowCanvasSelection)
         {
@@ -147,18 +147,30 @@ internal class CanvasSelection : IDisposable
 
         var bbox = transformation.MapRect(Bounds);
 
+        if (color == null)
+        {
+            var path = new SKPath();
 
+            path.MoveTo(bbox.Left, bbox.Top);
+            path.LineTo(bbox.Left, bbox.Bottom);
+            path.LineTo(bbox.Right, bbox.Bottom);
+            path.LineTo(bbox.Right, bbox.Top);
+            path.Close();
 
-        var path = new SKPath();
-
-        path.MoveTo(bbox.Left, bbox.Top);
-        path.LineTo(bbox.Left, bbox.Bottom);
-        path.LineTo(bbox.Right, bbox.Bottom);
-        path.LineTo(bbox.Right, bbox.Top);
-        path.Close();
-
-        canvas.DrawRect(bbox, SelectionBackgroundPaint);
-        canvas.DrawPath(path, SelectionDashPaint);
+            canvas.DrawRect(bbox, SelectionBackgroundPaint);
+            canvas.DrawPath(path, SelectionDashPaint);
+        }
+        else
+        {
+            canvas.DrawRect(
+                bbox,
+                new SKPaint
+                {
+                    IsStroke = true,
+                    Color = color.Value
+                }
+            );
+        }
 
         foreach (var handle in ResizeHandles)
         {
