@@ -48,7 +48,8 @@ public sealed partial class DocumentCanvas
     private static readonly SKSize CenterPadding = new(-10.0f, -10.0f);
 
     private static readonly SKColor HighlightColor = new(0xffffff99);
-    private static readonly SKColor NodeSelectionColor = new(0xff1f78b4);
+    private static readonly SKColor NodeSelectorColor = new(0xff1f78b4);
+    private static readonly SKColor NodeSelectionColor = new(0xffa6cee3);
 
     private static SKColor GetNodeColor(HocrNodeViewModel node) => node switch
     {
@@ -1708,7 +1709,12 @@ public sealed partial class DocumentCanvas
         canvasSelection.Render(
             canvas,
             transformation,
-            ActiveTool == DocumentCanvasTool.WordSplitTool ? HighlightColor : null
+            ActiveTool switch {
+                DocumentCanvasTool.None => NodeSelectionColor,
+                DocumentCanvasTool.SelectionTool => null,
+                DocumentCanvasTool.WordSplitTool => HighlightColor,
+                _ => throw new ArgumentOutOfRangeException()
+            }
         );
 
         RenderNodeSelection(canvas);
@@ -1728,13 +1734,13 @@ public sealed partial class DocumentCanvas
         var paint = new SKPaint
         {
             IsStroke = false,
-            Color = NodeSelectionColor.WithAlpha(64),
+            Color = NodeSelectorColor.WithAlpha(64),
         };
 
         canvas.DrawRect(bbox, paint);
 
         paint.IsStroke = true;
-        paint.Color = NodeSelectionColor;
+        paint.Color = NodeSelectorColor;
 
         canvas.DrawRect(bbox, paint);
     }
