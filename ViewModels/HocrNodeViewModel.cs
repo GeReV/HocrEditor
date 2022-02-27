@@ -130,8 +130,7 @@ namespace HocrEditor.ViewModels
 
         public ObservableCollection<HocrNodeViewModel> Children { get; } = new();
 
-        [DoNotSetChanged]
-        public bool IsSelected { get; set; }
+        [DoNotSetChanged] public bool IsSelected { get; set; }
 
         public IEnumerable<HocrNodeViewModel> Descendants => Children.RecursiveSelect(n => n.Children);
 
@@ -160,8 +159,7 @@ namespace HocrEditor.ViewModels
 
         public bool IsEditable => NodeType == HocrNodeType.Word;
 
-        [DoNotSetChanged]
-        public bool IsEditing { get; set; }
+        [DoNotSetChanged] public bool IsEditing { get; set; }
 
         private void ChildrenOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
