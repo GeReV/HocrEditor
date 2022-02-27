@@ -30,7 +30,11 @@ namespace HocrEditor.ViewModels
 
         public string Image { get; set; }
 
-        public Direction Direction { get; set; }
+        public Direction Direction
+        {
+            get => HocrPage?.Direction ?? Direction.Ltr;
+            set => HocrPage!.Direction = value;
+        }
 
         public FlowDirection FlowDirection =>
             Direction == Direction.Ltr ? FlowDirection.LeftToRight : FlowDirection.RightToLeft;
