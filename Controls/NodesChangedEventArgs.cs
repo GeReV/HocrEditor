@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using HocrEditor.Models;
+using System.Windows;
 using HocrEditor.ViewModels;
+using Rect = HocrEditor.Models.Rect;
 
 namespace HocrEditor.Controls;
 
-public class NodesChangedEventArgs : EventArgs
+public class NodesChangedEventArgs : RoutedEventArgs
 {
     public IList<NodeChange> Changes { get; }
 
@@ -16,7 +17,7 @@ public class NodesChangedEventArgs : EventArgs
         public readonly Rect OldBounds = OldBounds;
     }
 
-    public NodesChangedEventArgs(IList<NodeChange> changes)
+    public NodesChangedEventArgs(RoutedEvent routedEvent, object source, IList<NodeChange> changes) : base(routedEvent, source)
     {
         Changes = changes;
     }

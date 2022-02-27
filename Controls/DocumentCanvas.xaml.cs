@@ -137,6 +137,13 @@ public sealed partial class DocumentCanvas
         )
     );
 
+    public static readonly RoutedEvent NodesChangedEvent = EventManager.RegisterRoutedEvent(
+        nameof(NodesChanged),
+        RoutingStrategy.Bubble,
+        typeof(EventHandler<NodesChangedEventArgs>),
+        typeof(DocumentCanvas)
+    );
+
     public static readonly RoutedEvent NodesEditedEvent = EventManager.RegisterRoutedEvent(
         nameof(NodesEdited),
         RoutingStrategy.Bubble,
@@ -196,7 +203,11 @@ public sealed partial class DocumentCanvas
         set => SetValue(SelectionBoundsProperty, value);
     }
 
-    public event EventHandler<NodesChangedEventArgs>? NodesChanged;
+    public event EventHandler<NodesChangedEventArgs> NodesChanged
+    {
+        add => AddHandler(NodesChangedEvent, value);
+        remove => RemoveHandler(NodesChangedEvent, value);
+    }
 
     public event EventHandler<NodesEditedEventArgs> NodesEdited
     {
@@ -249,6 +260,7 @@ public sealed partial class DocumentCanvas
     private ResizeHandle? selectedResizeHandle;
 
     private Window? parentWindow;
+
     private Window ParentWindow => parentWindow ??= Window.GetWindow(this) ?? throw new InvalidOperationException();
 
     public DocumentCanvas()
@@ -943,7 +955,7 @@ public sealed partial class DocumentCanvas
                         changes.Add(new NodesChangedEventArgs.NodeChange(node, (Rect)element.Bounds, node.BBox));
                     }
 
-                    OnNodesChanged(new NodesChangedEventArgs(changes));
+                    OnNodesChanged(changes);
 
                     dragLimit = CalculateDragLimitBounds(selectedItems);
                 }
@@ -1541,7 +1553,7 @@ public sealed partial class DocumentCanvas
         using var shaper = new SKShaper(SKTypeface.Default);
         using var paint = new SKPaint(new SKFont(SKTypeface.Default))
         {
-            StrokeWidth = 1,
+            StrokeWidth = 1 
         };
 
         const float counterFontSize = 9.0f;
@@ -1988,9 +2000,15 @@ public sealed partial class DocumentCanvas
         Refresh();
     }
 
-    private void OnNodesChanged(NodesChangedEventArgs e)
+    private void OnNodesChanged(IList<NodesChangedEventArgs.NodeChange> changes)
     {
-        NodesChanged?.Invoke(this, e);
+        RaiseEvent(
+            new NodesChangedEventArgs(
+                NodesChangedEvent,
+                this,
+                changes
+            )
+        );
     }
 
     private void OnNodeEdited(string value)
