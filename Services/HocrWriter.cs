@@ -245,7 +245,7 @@ public class HocrWriter
         return node;
     }
 
-    private string BuildTitle(IHocrNode hocrNode, int pageIndex)
+    private string BuildTitle(HocrNode hocrNode, int pageIndex)
     {
         var sb = new StringBuilder();
 

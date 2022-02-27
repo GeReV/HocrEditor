@@ -63,7 +63,7 @@ namespace HocrEditor.Services
             return hocrDocument;
         }
 
-        private IHocrNode Parse(HtmlNode node, int parentId, string language, Direction direction)
+        private HocrNode Parse(HtmlNode node, int parentId, string language, Direction direction)
         {
             var nodeId = idCounter++;
 
