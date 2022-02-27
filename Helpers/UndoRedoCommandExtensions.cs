@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using HocrEditor.Commands.UndoRedo;
 
 namespace HocrEditor.Helpers;
@@ -18,6 +19,17 @@ public static class UndoRedoCommandExtensions
         ICollection<T> items
     ) where T : notnull =>
         new(obj, items);
+
+    #endregion
+
+    #region CollectionInsertCommand
+
+    public static CollectionInsertCommand ToCollectionInsertCommand<T>(
+        this ICollection obj,
+        int index,
+        T item
+    ) where T : notnull =>
+        new(obj, item, index);
 
     #endregion
 
