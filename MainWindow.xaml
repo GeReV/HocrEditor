@@ -129,7 +129,8 @@
             <MenuItem Header="_Select">
                 <MenuItem Header="_Region"
                           IsCheckable="True"
-                          IsChecked="{Binding Document.CanvasTool, Mode=OneWay, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static controls:DocumentCanvasTool.SelectionTool}}" />
+                          IsChecked="{Binding Document.CanvasTool, Mode=OneWay, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static controls:DocumentCanvasTool.SelectionTool}}"
+                          InputGestureText="S" />
                 <MenuItem Command="{Binding Document.CurrentPage.ExclusiveSelectNodesCommand, FallbackValue={x:Null}}"
                           CommandParameter="{Binding Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
                           Header="_All"
@@ -217,7 +218,7 @@
                 <ToggleButton Command="{Binding Document.SelectToolCommand}"
                               CommandParameter="{x:Static controls:DocumentCanvasTool.SelectionTool}"
                               IsChecked="{Binding Document.CanvasTool, Mode=OneWay, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static controls:DocumentCanvasTool.SelectionTool}}"
-                              ToolTip="Select region"
+                              ToolTip="Select region (S)"
                               helpers:IconButton.Source="/Icons/selection.png" />
                 <ToggleButton Command="{Binding  Document.SelectToolCommand}"
                               CommandParameter="{x:Static controls:DocumentCanvasTool.WordSplitTool}"
