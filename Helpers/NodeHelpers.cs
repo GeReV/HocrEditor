@@ -30,7 +30,7 @@ public static class NodeHelpers
             );
     }
 
-    public static HocrNodeViewModel? FindParent<T>(this HocrNodeViewModel node) where T : IHocrNode
+    public static HocrNodeViewModel? FindParent<T>(this HocrNodeViewModel node) where T : HocrNode
     {
         var parent = node.Parent;
 

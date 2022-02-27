@@ -157,7 +157,7 @@ namespace HocrEditor.ViewModels
             Nodes.AddRange(nodeCache.Values);
         }
 
-        private Dictionary<int, HocrNodeViewModel> BuildNodeCache(IEnumerable<IHocrNode> nodes)
+        private Dictionary<int, HocrNodeViewModel> BuildNodeCache(IEnumerable<HocrNode> nodes)
         {
             var dictionary = new Dictionary<int, HocrNodeViewModel>();
 

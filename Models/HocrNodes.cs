@@ -19,7 +19,7 @@ namespace HocrEditor.Models
             string title,
             string language,
             Direction direction,
-            IEnumerable<IHocrNode> children
+            IEnumerable<HocrNode> children
         ) : base(
             HocrNodeType.Page,
             id,
@@ -47,7 +47,7 @@ namespace HocrEditor.Models
 
         public string Image { get; set; }
 
-        public IEnumerable<IHocrNode> Descendants => ChildNodes.RecursiveSelect(n => n.ChildNodes);
+        public IEnumerable<HocrNode> Descendants => ChildNodes.RecursiveSelect(n => n.ChildNodes);
     }
 
     public record HocrContentArea : HocrNode
@@ -58,7 +58,7 @@ namespace HocrEditor.Models
             string title,
             string language,
             Direction direction,
-            IEnumerable<IHocrNode> children
+            IEnumerable<HocrNode> children
         ) : base(
             HocrNodeType.ContentArea,
             id,
@@ -80,7 +80,7 @@ namespace HocrEditor.Models
             string title,
             string language,
             Direction direction,
-            IEnumerable<IHocrNode> children
+            IEnumerable<HocrNode> children
         ) : base(
             HocrNodeType.Paragraph,
             id,
@@ -102,7 +102,7 @@ namespace HocrEditor.Models
             string title,
             string language,
             Direction direction,
-            IEnumerable<IHocrNode> children
+            IEnumerable<HocrNode> children
         ) : base(
             HocrNodeType.Line,
             id,
@@ -147,7 +147,7 @@ namespace HocrEditor.Models
             string title,
             string language,
             Direction direction,
-            IEnumerable<IHocrNode> children
+            IEnumerable<HocrNode> children
         ) : base(
             id,
             parentId,
@@ -169,7 +169,7 @@ namespace HocrEditor.Models
             string title,
             string language,
             Direction direction,
-            IEnumerable<IHocrNode> children
+            IEnumerable<HocrNode> children
         ) : base(
             id,
             parentId,
@@ -191,7 +191,7 @@ namespace HocrEditor.Models
             string title,
             string language,
             Direction direction,
-            IEnumerable<IHocrNode> children
+            IEnumerable<HocrNode> children
         ) : base(
             id,
             parentId,
@@ -213,7 +213,7 @@ namespace HocrEditor.Models
             string title,
             string language,
             Direction direction,
-            IEnumerable<IHocrNode> children
+            IEnumerable<HocrNode> children
         ) : base(
             id,
             parentId,
@@ -243,7 +243,7 @@ namespace HocrEditor.Models
             title,
             language,
             direction,
-            Enumerable.Empty<IHocrNode>()
+            Enumerable.Empty<HocrNode>()
         )
         {
             InnerText = HtmlEntity.DeEntitize(innerText.Trim().TrimEnd('\u200f'));
@@ -269,7 +269,7 @@ namespace HocrEditor.Models
             title,
             language,
             direction,
-            Enumerable.Empty<IHocrNode>()
+            Enumerable.Empty<HocrNode>()
         )
         {
         }

@@ -5,7 +5,7 @@ using HtmlAgilityPack;
 
 namespace HocrEditor.Models
 {
-    public abstract record HocrNode : IHocrNode
+    public abstract record HocrNode
     {
         public static HocrNode FromHtmlNode(
             HtmlNode htmlNode,
@@ -13,7 +13,7 @@ namespace HocrEditor.Models
             int parentId,
             string language,
             Direction direction,
-            IEnumerable<IHocrNode> children
+            IEnumerable<HocrNode> children
         )
         {
             var className = htmlNode.GetClasses().First();
@@ -61,7 +61,7 @@ namespace HocrEditor.Models
             string title,
             string language,
             Direction direction,
-            IEnumerable<IHocrNode> children
+            IEnumerable<HocrNode> children
         )
         {
             NodeType = nodeType;
@@ -79,12 +79,12 @@ namespace HocrEditor.Models
         public int Id { get; set; }
         public int ParentId { get; set; }
 
-        public Direction Direction { get; init; }
+        public Direction Direction { get; set; }
 
         public string Language { get; init; }
 
         public Rect BBox { get; set; }
-        public List<IHocrNode> ChildNodes { get; }
+        public List<HocrNode> ChildNodes { get; }
 
         public bool IsLineElement => NodeType is
             HocrNodeType.Line or

@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Windows.Threading;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 using PropertyChanged;
 
 namespace HocrEditor.ViewModels
 {
-    public class HocrNodeViewModel : ViewModelBase
+    public class HocrNodeViewModel : ViewModelBase, ICloneable
     {
         private const int MAX_INNER_TEXT_LENGTH = 15;
         private const char ELLIPSIS = '…';
@@ -28,11 +27,14 @@ namespace HocrEditor.ViewModels
             _ when NodeType is HocrNodeType.Image => "Image",
             _ when NodeType is HocrNodeType.Word => ((HocrWord)HocrNode).InnerText,
             _ when NodeType is HocrNodeType.Paragraph => JoinInnerText(LineSeparator, Children),
-            _ when NodeType is HocrNodeType.Page or HocrNodeType.ContentArea => JoinInnerText(ParagraphSeparator, Children),
+            _ when NodeType is HocrNodeType.Page or HocrNodeType.ContentArea => JoinInnerText(
+                ParagraphSeparator,
+                Children
+            ),
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        public HocrNodeViewModel(IHocrNode node)
+        public HocrNodeViewModel(HocrNode node)
         {
             HocrNode = node;
 
@@ -40,7 +42,7 @@ namespace HocrEditor.ViewModels
         }
 
         // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- Setter used by PropertyChangedCommand.
-        public IHocrNode HocrNode { get; set; }
+        public HocrNode HocrNode { get; set; }
 
         public int Id
         {
@@ -178,6 +180,14 @@ namespace HocrEditor.ViewModels
         public override void Dispose()
         {
             Children.CollectionChanged -= ChildrenOnCollectionChanged;
+        }
+
+        public object Clone()
+        {
+            return new HocrNodeViewModel(HocrNode with { })
+            {
+                Parent = parent
+            };
         }
     }
 }

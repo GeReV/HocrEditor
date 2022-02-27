@@ -43,7 +43,7 @@ public class CreateNodeCommand : UndoableCommandBase<HocrNodeType>
             var id = hocrPageViewModel.NextId();
 
             // TODO: Avoid this horrible bit somehow.
-            IHocrNode hocrNode = hocrNodeType switch
+            HocrNode hocrNode = hocrNodeType switch
             {
                 HocrNodeType.ContentArea => new HocrContentArea(
                     id,
