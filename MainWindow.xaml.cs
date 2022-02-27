@@ -199,7 +199,7 @@ namespace HocrEditor
         {
             if (ViewModel.Document.CurrentPage?.OcrRegionCommand.TryExecute(e.Parameter) ?? false)
             {
-                ViewModel.CanvasTool = DocumentCanvasTool.None;
+                ViewModel.Document.CanvasTool = DocumentCanvasTool.None;
             }
         }
 

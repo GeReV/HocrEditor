@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows.Data;
-using System.Windows.Input;
+using HocrEditor.Controls;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
@@ -73,6 +74,8 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
         }
     }
 
+    public DocumentCanvasTool CanvasTool { get; set; }
+
     public ReadOnlyObservableCollection<NodeVisibility> NodeVisibility { get; } = new(
         new ObservableCollection<NodeVisibility>(
             HocrNodeTypeViewModel.NodeTypes.Select(k => new NodeVisibility(k))
@@ -80,9 +83,10 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
     );
 
     public IRelayCommand<HocrPageViewModel> DeletePageCommand { get; }
-
     public IRelayCommand NextPageCommand { get; }
     public IRelayCommand PreviousPageCommand { get; }
+
+    public IRelayCommand<DocumentCanvasTool> SelectToolCommand { get; }
 
     public HocrDocumentViewModel() : this(
         new HocrDocument(Enumerable.Empty<HocrPage>()),
@@ -100,6 +104,7 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
         Pages.SubscribeItemPropertyChanged(PagesChanged);
 
         PagesCollectionView = CollectionViewSource.GetDefaultView(Pages);
+        PagesCollectionView.CurrentChanging += PagesCollectionViewOnCurrentChanging;
         PagesCollectionView.CurrentChanged += PagesCollectionViewOnCurrentChanged;
 
         DeletePageCommand = new RelayCommand<HocrPageViewModel>(DeletePage, CanDeletePage);
@@ -111,6 +116,26 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
         PreviousPageCommand = new RelayCommand(
             () => PagesCollectionView.MoveCurrentToPrevious(),
             () => !PagesCollectionView.IsCurrentFirst()
+        );
+
+        SelectToolCommand = new RelayCommand<DocumentCanvasTool>(
+            tool => CanvasTool = CanvasTool != tool
+                ? tool
+                : DocumentCanvasTool.None,
+            tool =>
+            {
+                if (CurrentPage == null)
+                {
+                    return false;
+                }
+
+                return tool switch
+                {
+                    DocumentCanvasTool.WordSplitTool => CurrentPage.SelectedNodes.Count == 1 &&
+                                                        CurrentPage.SelectedNodes.First().NodeType == HocrNodeType.Word,
+                    _ => true
+                };
+            }
         );
     }
 
@@ -162,15 +187,41 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
         return HocrDocument;
     }
 
+    private void PagesCollectionViewOnCurrentChanging(object sender, CurrentChangingEventArgs e)
+    {
+        if (sender is ICollectionView { CurrentItem: HocrPageViewModel page })
+        {
+            page.SelectedNodes.CollectionChanged -= CurrentPageSelectedNodesOnCollectionChanged;
+        }
+    }
+
     private void PagesCollectionViewOnCurrentChanged(object? sender, EventArgs e)
     {
+        if (sender is ICollectionView { CurrentItem: HocrPageViewModel page })
+        {
+            page.SelectedNodes.CollectionChanged += CurrentPageSelectedNodesOnCollectionChanged;
+        }
+
+        SelectToolCommand.NotifyCanExecuteChanged();
+
         OnPropertyChanged(nameof(CurrentPage));
+    }
+
+    private void CurrentPageSelectedNodesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        SelectToolCommand.NotifyCanExecuteChanged();
     }
 
     public override void Dispose()
     {
         Pages.UnsubscribeItemPropertyChanged(PagesChanged);
 
+        if (CurrentPage != null)
+        {
+            CurrentPage.SelectedNodes.CollectionChanged -= CurrentPageSelectedNodesOnCollectionChanged;
+        }
+
+        PagesCollectionView.CurrentChanging -= PagesCollectionViewOnCurrentChanging;
         PagesCollectionView.CurrentChanged -= PagesCollectionViewOnCurrentChanged;
 
         Pages.Dispose();

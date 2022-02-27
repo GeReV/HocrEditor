@@ -55,7 +55,7 @@
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                     Key="M"
                     Modifiers="Control" />
-        <KeyBinding Command="{Binding SelectToolCommand}"
+        <KeyBinding Command="{Binding Document.SelectToolCommand}"
                     CommandParameter="{x:Static controls:DocumentCanvasTool.SelectionTool}"
                     Key="S" />
 
@@ -129,7 +129,7 @@
             <MenuItem Header="_Select">
                 <MenuItem Header="_Region"
                           IsCheckable="True"
-                          IsChecked="{Binding IsSelecting}" />
+                          IsChecked="{Binding Document.CanvasTool, Mode=OneWay, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static controls:DocumentCanvasTool.SelectionTool}}" />
                 <MenuItem Command="{Binding Document.CurrentPage.ExclusiveSelectNodesCommand, FallbackValue={x:Null}}"
                           CommandParameter="{Binding Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
                           Header="_All"
@@ -214,22 +214,24 @@
                              ToolTip="Right to Left"
                              helpers:IconButton.Source="/Icons/edit-direction-rtl.png" />
                 <Separator />
-                <ToggleButton Command="{Binding SelectToolCommand}"
+                <ToggleButton Command="{Binding Document.SelectToolCommand}"
                               CommandParameter="{x:Static controls:DocumentCanvasTool.SelectionTool}"
-                              IsChecked="{Binding CanvasTool, Mode=OneWay, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static controls:DocumentCanvasTool.SelectionTool}}"
+                              IsChecked="{Binding Document.CanvasTool, Mode=OneWay, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static controls:DocumentCanvasTool.SelectionTool}}"
                               ToolTip="Select region"
                               helpers:IconButton.Source="/Icons/selection.png" />
-                <ToggleButton Command="{Binding SelectToolCommand}"
+                <ToggleButton Command="{Binding  Document.SelectToolCommand}"
                               CommandParameter="{x:Static controls:DocumentCanvasTool.WordSplitTool}"
-                              IsChecked="{Binding CanvasTool, Mode=OneWay, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static controls:DocumentCanvasTool.WordSplitTool}}"
+                              IsChecked="{Binding Document.CanvasTool, Mode=OneWay, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static controls:DocumentCanvasTool.WordSplitTool}}"
                               ToolTip="Split word tool"
                               helpers:IconButton.Source="/Icons/ui-splitter.png" />
+            </ToolBar>
+            <ToolBar>
                 <Button Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand, FallbackValue={x:Null}}"
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                         ToolTip="Select identical nodes"
-                        helpers:IconButton.Source="/Icons/selection-select-input.png" />
-            </ToolBar>
-            <ToolBar>
+                        helpers:IconButton.Source="/Icons/selection-select-input.png">
+                    Select Identical
+                </Button>
                 <Button Command="{Binding Document.CurrentPage.ConvertToImageCommand, FallbackValue={x:Null}}"
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                         ToolTip="Convert selected nodes to images"
@@ -246,9 +248,12 @@
             <ToolBar>
                 <ItemsControl ItemsSource="{Binding Document.NodeVisibility}">
                     <ItemsControl.Resources>
-                        <Style BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" TargetType="Button" />
-                        <Style BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}" TargetType="ToggleButton" />
-                        <Style BasedOn="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" TargetType="Separator" />
+                        <Style BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                               TargetType="Button" />
+                        <Style BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}"
+                               TargetType="ToggleButton" />
+                        <Style BasedOn="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"
+                               TargetType="Separator" />
                     </ItemsControl.Resources>
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -283,7 +288,7 @@
                                        Grid.Column="0"
                                        ItemsSource="{Binding PagesCollectionView}" />
             <controls:DocumentCanvas Grid.Column="1"
-                                     ActiveTool="{Binding CanvasTool}"
+                                     ActiveTool="{Binding Document.CanvasTool}"
                                      IsShowNumbering="{Binding Document.ShowNumbering}"
                                      IsShowText="{Binding Document.ShowText}"
                                      ItemsSource="{Binding Document.CurrentPage.Nodes, FallbackValue={x:Null}}"

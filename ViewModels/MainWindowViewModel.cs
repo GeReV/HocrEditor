@@ -35,13 +35,6 @@ namespace HocrEditor.ViewModels
 
             SaveCommand = new RelayCommand<bool>(Save);
             OpenCommand = new RelayCommand(Open);
-
-            SelectToolCommand = new RelayCommand<DocumentCanvasTool>(
-                tool => CanvasTool = CanvasTool != tool
-                    ? tool
-                    : DocumentCanvasTool.None,
-                _ => Document.CurrentPage != null
-            );
         }
 
         private void TesseractLanguagesChanged(object? sender, EventArgs e)
@@ -55,8 +48,6 @@ namespace HocrEditor.ViewModels
             get => Settings.AutoClean;
             set => Settings.AutoClean = value;
         }
-
-        public DocumentCanvasTool CanvasTool { get; set; }
 
         public string WindowTitle
         {
@@ -84,8 +75,6 @@ namespace HocrEditor.ViewModels
         public IRelayCommand OpenCommand { get; }
         public IRelayCommand ImportCommand { get; }
 
-        public IRelayCommand<DocumentCanvasTool> SelectToolCommand { get; }
-
         [UsedImplicitly]
         private void OnDocumentChanged(HocrDocumentViewModel oldValue, HocrDocumentViewModel newValue)
         {
@@ -102,11 +91,6 @@ namespace HocrEditor.ViewModels
                 case nameof(IsChanged):
                 {
                     OnPropertyChanged(nameof(WindowTitle));
-                    break;
-                }
-                case nameof(Document.CurrentPage):
-                {
-                    SelectToolCommand.NotifyCanExecuteChanged();
                     break;
                 }
             }
