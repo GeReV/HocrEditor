@@ -154,6 +154,13 @@ public sealed partial class DocumentCanvas
         typeof(DocumentCanvas)
     );
 
+    public static readonly RoutedEvent WordSplitEvent = EventManager.RegisterRoutedEvent(
+        nameof(WordSplit),
+        RoutingStrategy.Bubble,
+        typeof(EventHandler<WordSplitEventArgs>),
+        typeof(DocumentCanvas)
+    );
+
     public ObservableHashSet<HocrNodeViewModel>? SelectedItems
     {
         get => (ObservableHashSet<HocrNodeViewModel>?)GetValue(SelectedItemsProperty);
@@ -213,6 +220,12 @@ public sealed partial class DocumentCanvas
     }
 
     public event EventHandler<NodesEditedEventArgs> NodesEdited
+    {
+        add => AddHandler(NodesEditedEvent, value);
+        remove => RemoveHandler(NodesEditedEvent, value);
+    }
+
+    public event EventHandler<WordSplitEventArgs> WordSplit
     {
         add => AddHandler(NodesEditedEvent, value);
         remove => RemoveHandler(NodesEditedEvent, value);
@@ -298,7 +311,8 @@ public sealed partial class DocumentCanvas
                 var first = wordSplitterValue;
                 var second = first;
 
-                if (wordSplitterValueSplitStart > 0 && wordSplitterValueSplitStart + wordSplitterValueSplitLength < wordSplitterValue.Length)
+                if (wordSplitterValueSplitStart > 0 &&
+                    wordSplitterValueSplitStart + wordSplitterValueSplitLength < wordSplitterValue.Length)
                 {
                     var firstEnd = wordSplitterValueSplitStart;
                     first = wordSplitterValue[..firstEnd];
@@ -307,7 +321,19 @@ public sealed partial class DocumentCanvas
                     second = wordSplitterValue[secondStart..];
                 }
 
+                ArgumentNullException.ThrowIfNull(SelectedItems);
+
+                var node = SelectedItems.First();
+
+                Ensure.IsValid(nameof(node), node.NodeType == HocrNodeType.Word, "Expected node to be a word");
+
+                var splitPosition = (int)wordSplitterPosition.X;
+
+                // Reset tool, which will clear selection.
                 ActiveTool = DocumentCanvasTool.None;
+
+                // Split the word, which selects a node, so order with previous statement matters.
+                OnWordSplit(node, splitPosition, (first, second));
 
                 break;
             }
@@ -515,6 +541,10 @@ public sealed partial class DocumentCanvas
                     documentCanvas.wordSplitterValueSplitLength = documentCanvas.TextBox.SelectionLength;
 
                     documentCanvas.EndEditing();
+                }
+                else
+                {
+                    documentCanvas.wordSplitterValue = documentCanvas.SelectedItems?.First().InnerText ?? string.Empty;
                 }
 
                 break;
@@ -1556,7 +1586,7 @@ public sealed partial class DocumentCanvas
         using var shaper = new SKShaper(SKTypeface.Default);
         using var paint = new SKPaint(new SKFont(SKTypeface.Default))
         {
-            StrokeWidth = 1 
+            StrokeWidth = 1
         };
 
         const float counterFontSize = 9.0f;
@@ -1675,7 +1705,11 @@ public sealed partial class DocumentCanvas
 
         Recurse(rootId, -1);
 
-        canvasSelection.Render(canvas, transformation, ActiveTool == DocumentCanvasTool.WordSplitTool ? HighlightColor : null);
+        canvasSelection.Render(
+            canvas,
+            transformation,
+            ActiveTool == DocumentCanvasTool.WordSplitTool ? HighlightColor : null
+        );
 
         RenderNodeSelection(canvas);
 
@@ -2020,6 +2054,19 @@ public sealed partial class DocumentCanvas
                 this,
                 SelectionHelper.SelectAllEditable(SelectedItems ?? Enumerable.Empty<HocrNodeViewModel>()),
                 value
+            )
+        );
+    }
+
+    private void OnWordSplit(HocrNodeViewModel node, int splitPosition, (string, string) words)
+    {
+        RaiseEvent(
+            new WordSplitEventArgs(
+                WordSplitEvent,
+                this,
+                node,
+                splitPosition,
+                words
             )
         );
     }

@@ -52,6 +52,7 @@ namespace HocrEditor.ViewModels
         public IRelayCommand<ObservableCollection<HocrNodeViewModel>> ReverseChildNodesCommand { get; set; }
         public IRelayCommand<NodesMovedEventArgs> MoveNodesCommand { get; }
         public IRelayCommand<NodesEditedEventArgs> EditNodesCommand { get; }
+        public IRelayCommand<WordSplitEventArgs> WordSplitCommand { get; }
         public IRelayCommand<HocrNodeType> CreateNodeCommand { get; }
 
         public IRelayCommand<IList<HocrNodeViewModel>> ExclusiveSelectNodesCommand { get; }

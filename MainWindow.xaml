@@ -295,7 +295,8 @@
                                      Margin="-1,0"
                                      NodeVisibility="{Binding Document.NodeVisibility}"
                                      NodesChanged="Canvas_OnNodesChanged"
-                                     NodesEdited="OnNodeEdited"
+                                     NodesEdited="Canvas_OnNodeEdited"
+                                     WordSplit="Canvas_OnWordSplit"
                                      SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                                      SelectionBounds="{Binding Document.SelectionBounds}"
                                      SelectionChanged="Canvas_OnSelectionChanged" />
@@ -303,7 +304,7 @@
                 FlowDirection="{Binding Document.CurrentPage.FlowDirection, FallbackValue={x:Static models:Direction.Ltr}}"
                 Grid.Column="2"
                 ItemsSource="{Binding Document.CurrentPage.Nodes[0].Children, FallbackValue={x:Null}}"
-                NodesEdited="OnNodeEdited"
+                NodesEdited="Canvas_OnNodeEdited"
                 NodesMoved="DocumentTreeView_OnNodesMoved"
                 SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
         </Grid>

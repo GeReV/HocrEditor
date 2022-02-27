@@ -111,9 +111,14 @@ namespace HocrEditor
             }
         }
 
-        private void OnNodeEdited(object? sender, NodesEditedEventArgs e)
+        private void Canvas_OnNodeEdited(object? sender, NodesEditedEventArgs e)
         {
             ViewModel.Document.CurrentPage?.EditNodesCommand.Execute(e);
+        }
+
+        private void Canvas_OnWordSplit(object? sender, WordSplitEventArgs e)
+        {
+            ViewModel.Document.CurrentPage?.WordSplitCommand.Execute(e);
         }
 
         private void DocumentTreeView_OnNodesMoved(object? sender, NodesMovedEventArgs e)
