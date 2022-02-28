@@ -12,12 +12,12 @@ using PropertyChanged;
 namespace HocrEditor.Core;
 
 /// <summary>
-///     A hash set that implements the interfaces required for Entity Framework to use notification based change tracking
-///     for a collection navigation property.
+/// A hash set that implements the interfaces required for Entity Framework to use notification based change tracking
+/// for a collection navigation property.
 /// </summary>
 /// <remarks>
-///     See <see href="https://aka.ms/efcore-docs-local-views">Local views of tracked entities in EF Core</see> for more information and
-///     examples.
+/// See <see href="https://aka.ms/efcore-docs-local-views">Local views of tracked entities in EF Core</see> for more information and
+/// examples.
 /// </remarks>
 /// <typeparam name="T">The type of elements in the hash set.</typeparam>
 [DoNotNotify]
@@ -477,7 +477,9 @@ public class ObservableHashSet<T>
         => OnCollectionChanged(new NotifyCollectionChangedEventArgs(action, item));
 
     private void OnCollectionChanged(IList newItems, IList oldItems)
-        => OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, oldItems));
+        => OnCollectionChanged(
+            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems, oldItems)
+        );
 
     /// <summary>
     ///     Raises the <see cref="CollectionChanged" /> event.
