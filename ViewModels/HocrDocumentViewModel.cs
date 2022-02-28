@@ -85,7 +85,6 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
     public IRelayCommand<HocrPageViewModel> DeletePageCommand { get; }
     public IRelayCommand NextPageCommand { get; }
     public IRelayCommand PreviousPageCommand { get; }
-
     public IRelayCommand<DocumentCanvasTool> SelectToolCommand { get; }
 
     public HocrDocumentViewModel() : this(

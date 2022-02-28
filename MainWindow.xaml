@@ -15,21 +15,35 @@
                  xmlns:models="clr-namespace:HocrEditor.Models"
                  xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                 xmlns:commands="clr-namespace:HocrEditor.Commands">
+                 xmlns:commands="clr-namespace:HocrEditor.Commands"
+                 xmlns:system="clr-namespace:System;assembly=System.Runtime">
     <Window.Resources>
         <converters:RadioButtonCheckedConverter x:Key="RadioButtonCheckedConverter" />
         <converters:NullableToBooleanConverter x:Key="NullableToBooleanConverter" />
     </Window.Resources>
     <core:ForwardingCommand.Bindings>
         <core:ForwardingCommandBinding SourceCommand="Save"
-                                       TargetCommand="{Binding SaveCommand}" />
+                                       TargetCommand="{Binding SaveCommand}">
+            <core:ForwardingCommandBinding.TargetCommandParameter>
+                <system:Boolean>False</system:Boolean>
+            </core:ForwardingCommandBinding.TargetCommandParameter>
+        </core:ForwardingCommandBinding>
         <core:ForwardingCommandBinding SourceCommand="SaveAs"
-                                       TargetCommand="{Binding SaveCommand}"
-                                       TargetCommandParameter="True" />
+                                       TargetCommand="{Binding SaveCommand}">
+            <core:ForwardingCommandBinding.TargetCommandParameter>
+                <system:Boolean>True</system:Boolean>
+            </core:ForwardingCommandBinding.TargetCommandParameter>
+        </core:ForwardingCommandBinding>
         <core:ForwardingCommandBinding SourceCommand="Open"
                                        TargetCommand="{Binding OpenCommand}" />
         <core:ForwardingCommandBinding SourceCommand="Delete"
                                        TargetCommand="{Binding Document.CurrentPage.DeleteCommand, FallbackValue={x:Null}}" />
+
+        <core:ForwardingCommandBinding SourceCommand="Copy"
+                                       TargetCommand="{Binding Document.CurrentPage.CopyCommand, FallbackValue={x:Null}}" />
+        <core:ForwardingCommandBinding SourceCommand="Paste"
+                                       TargetCommand="{Binding Document.CurrentPage.PasteCommand, FallbackValue={x:Null}}" />
+
         <core:ForwardingCommandBinding SourceCommand="{x:Static commands:RoutedCommands.MergeCommand}"
                                        TargetCommand="{Binding Document.CurrentPage.MergeCommand, FallbackValue={x:Null}}"
                                        Executed="MergeCommandBinding_OnExecuted" />
@@ -59,6 +73,8 @@
     </Window.CommandBindings>
     <Window.InputBindings>
         <!--  Editing keybindings  -->
+        <KeyBinding Command="Delete"
+                    Key="Delete" />
         <KeyBinding Command="{Binding Document.CurrentPage.CycleSelectionCommand, FallbackValue={x:Null}}"
                     Key="Tab" />
         <KeyBinding Command="{Binding Document.CurrentPage.CycleSelectionCommand, FallbackValue={x:Null}}"
@@ -117,6 +133,13 @@
                           Header="_Redo"
                           InputGestureText="Ctrl+Y, Ctrl+Shift+Z" />
                 <Separator />
+                <MenuItem Command="Copy"
+                          Header="_Copy"
+                          InputGestureText="Ctrl+C" />
+                <MenuItem Command="Paste"
+                          Header="_Paste"
+                          InputGestureText="Ctrl+V" />
+                <Separator />
                 <MenuItem Command="Delete"
                           CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                           Header="_Delete"
@@ -173,6 +196,13 @@
                 <controls:LanguagesButton ItemsSource="{Binding TesseractLanguages}" />
             </ToolBar>
             <ToolBar>
+                <Button Command="Copy"
+                        ToolTip="Copy"
+                        helpers:IconButton.Source="/Icons/document-copy.png" />
+                <Button Command="Paste"
+                        ToolTip="Paste"
+                        helpers:IconButton.Source="/Icons/clipboard-paste.png" />
+                <Separator />
                 <Button Command="Undo"
                         ToolTip="Undo"
                         helpers:IconButton.Source="/Icons/arrow-curve-180-left.png" />

@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using HocrEditor.Controls;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
@@ -33,7 +32,7 @@ namespace HocrEditor.ViewModels
 
             ImportCommand = new RelayCommand(Import);
 
-            SaveCommand = new RelayCommand<bool>(Save);
+            SaveCommand = new RelayCommand<bool>(Save, CanSave);
             OpenCommand = new RelayCommand(Open);
         }
 
@@ -91,10 +90,15 @@ namespace HocrEditor.ViewModels
                 case nameof(IsChanged):
                 {
                     OnPropertyChanged(nameof(WindowTitle));
+
+                    SaveCommand.NotifyCanExecuteChanged();
+
                     break;
                 }
             }
         }
+
+        private bool CanSave(bool _) => Document.IsChanged && Document.Pages.Any();
 
         private void Save(bool forceSaveAs)
         {

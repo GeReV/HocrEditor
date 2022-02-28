@@ -52,6 +52,8 @@ namespace HocrEditor.ViewModels
             }
         }
 
+        public ClipboardViewModel Clipboard { get; } = new();
+
         public HocrPageViewModel(HocrPage page) : this(page.Image)
         {
             Build(page);
@@ -63,6 +65,8 @@ namespace HocrEditor.ViewModels
 
             OcrRegionCommand = new OcrRegionCommand(this);
             DeleteCommand = new DeleteNodesCommand(this);
+            CopyCommand = new RelayCommand(Copy);
+            PasteCommand = new PasteCommand(this);
             MergeCommand = new MergeNodesCommand(this);
             CropCommand = new CropNodesCommand(this);
             ConvertToImageCommand = new ConvertToImageCommand(this);
@@ -109,6 +113,7 @@ namespace HocrEditor.ViewModels
                             SelectedNodes.Remove(node);
                         }
                     }
+
                     break;
                 case NotifyCollectionChangedAction.Reset:
                     SelectedNodes.Clear();

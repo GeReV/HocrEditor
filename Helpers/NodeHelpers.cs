@@ -53,4 +53,39 @@ public static class NodeHelpers
 
         return parent;
     }
+
+    public static IList<HocrNodeViewModel> CloneNodeCollection(IEnumerable<HocrNodeViewModel> nodes)
+    {
+        var result = new List<HocrNodeViewModel>();
+
+        // Clone each node and all of its descendants to get a snapshot of the selection in its current state.
+        foreach (var node in nodes)
+        {
+            var dictionary = new SortedDictionary<int, HocrNodeViewModel>();
+
+            foreach (var descendant in node.Descendants.Prepend(node))
+            {
+                var clone = (HocrNodeViewModel)descendant.Clone();
+
+                // If the dictionary contains the parent, the parent was a part of the selection.
+                // When pasting, we only insert the nodes with a non-clone parent, as they bring their entire cloned
+                // sub-tree with them.
+                // Those inserted nodes are added to their original parent nodes.
+                if (dictionary.ContainsKey(clone.ParentId))
+                {
+                    clone.Parent = dictionary[descendant.ParentId];
+                    clone.Parent.Children.Add(clone);
+                }
+
+                dictionary.TryAdd(descendant.Id, clone);
+
+                if (descendant == node)
+                {
+                    result.Add(clone);
+                }
+            }
+        }
+
+        return result;
+    }
 }

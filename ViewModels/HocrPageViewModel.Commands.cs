@@ -45,6 +45,8 @@ namespace HocrEditor.ViewModels
 
         public IRelayCommand<Rect> OcrRegionCommand { get; }
         public IRelayCommand<ICollection<HocrNodeViewModel>> DeleteCommand { get; }
+        public IRelayCommand CopyCommand { get; }
+        public IRelayCommand PasteCommand { get; }
         public IRelayCommand<ICollection<HocrNodeViewModel>> MergeCommand { get; }
         public IRelayCommand<ICollection<HocrNodeViewModel>> CropCommand { get; }
         public ConvertToImageCommand ConvertToImageCommand { get; set; }
@@ -83,6 +85,11 @@ namespace HocrEditor.ViewModels
         private bool CanRedo() => UndoRedoManager.CanRedo;
 
         private bool CanUndo() => UndoRedoManager.CanUndo;
+
+        private void Copy()
+        {
+            Clipboard.SetData(SelectedNodes);
+        }
 
         private static bool CanUpdateNodes(List<NodesChangedEventArgs.NodeChange>? nodeChanges) =>
             nodeChanges is { Count: > 0 };

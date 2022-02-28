@@ -96,6 +96,10 @@
       <Resource Include="Icons\document-hf-select-footer.png" />
       <None Remove="Icons\ui-splitter.png" />
       <Resource Include="Icons\ui-splitter.png" />
+      <None Remove="Icons\clipboard-paste.png" />
+      <Resource Include="Icons\clipboard-paste.png" />
+      <None Remove="Icons\document-copy.png" />
+      <Resource Include="Icons\document-copy.png" />
     </ItemGroup>
 
     <ItemGroup>
