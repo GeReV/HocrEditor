@@ -121,7 +121,7 @@ public class BringTreeViewItemIntoViewBehavior : Behavior<TreeView>
                                 // This can be tricky, because Binding an ObservableDictionary to the treeview will
                                 // require that we need an array of KeyValuePairs<K,T>[] here :-(
 #if DEBUG
-                                throw new InvalidOperationException($"Node '{parent}' cannot be fount in container");
+                                throw new InvalidOperationException($"Node '{parent}' cannot be found in container");
 #else
                         // Use your favourite logger here since the exception will otherwise kill the application
                         System.Console.WriteLine("Node '" + node + "' cannot be fount in container");
