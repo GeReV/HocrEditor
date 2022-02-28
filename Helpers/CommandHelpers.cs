@@ -1,10 +1,11 @@
-﻿using Microsoft.Toolkit.Mvvm.Input;
+﻿using System.Windows.Input;
+using Microsoft.Toolkit.Mvvm.Input;
 
 namespace HocrEditor.Helpers;
 
 public static class CommandHelpers
 {
-    public static bool TryExecute(this IRelayCommand command, object? parameter = null)
+    public static bool TryExecute(this ICommand command, object? parameter = null)
     {
         if (!command.CanExecute(parameter))
         {

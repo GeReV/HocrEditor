@@ -131,16 +131,6 @@ namespace HocrEditor
             Close();
         }
 
-        private void SaveCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
-        {
-            ViewModel.SaveCommand.TryExecute(e.Command == ApplicationCommands.SaveAs);
-        }
-
-        private void OpenCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
-        {
-            ViewModel.OpenCommand.TryExecute();
-        }
-
         private void NodeVisibilityButton_OnClicked(object sender, RoutedEventArgs e)
         {
             if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
@@ -171,11 +161,6 @@ namespace HocrEditor
             button.IsChecked = !isChecked;
         }
 
-        private void MergeCommandCommandBinding_OnCanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
-            e.CanExecute = ViewModel.Document.CurrentPage?.MergeCommand.CanExecute(e.Parameter) ?? false;
-        }
-
         private void MergeCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             // By default, we'll just return the focus to the original item.
@@ -186,8 +171,6 @@ namespace HocrEditor
                 // If we're focused on a TreeViewItem, keep the owner TreeView since the item may be detached from it.
                 focusOwner = treeViewItem.FindVisualAncestor<TreeView>();
             }
-
-            ViewModel.Document.CurrentPage?.MergeCommand.TryExecute(e.Parameter);
 
             if (focusOwner is TreeView treeView)
             {
@@ -202,33 +185,12 @@ namespace HocrEditor
 
         private void OcrRegionCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            if (ViewModel.Document.CurrentPage?.OcrRegionCommand.TryExecute(e.Parameter) ?? false)
-            {
-                ViewModel.Document.CanvasTool = DocumentCanvasTool.None;
-            }
-        }
-
-        private void OcrRegionCommandBinding_OnCanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
-            e.CanExecute = ViewModel.Document.CurrentPage?.OcrRegionCommand.CanExecute(e.Parameter) ?? false;
+            ViewModel.Document.CanvasTool = DocumentCanvasTool.None;
         }
 
         private void CreateNodeCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            if (ViewModel.Document.CurrentPage?.CreateNodeCommand.TryExecute(e.Parameter) ?? false)
-            {
-                Keyboard.Focus(e.Source as IInputElement);
-            }
-        }
-
-        private void NextPageCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
-        {
-            ViewModel.Document.NextPageCommand.TryExecute(e.Parameter);
-        }
-
-        private void PreviousPageCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
-        {
-            ViewModel.Document.PreviousPageCommand.TryExecute(e.Parameter);
+            Keyboard.Focus(e.Source as IInputElement);
         }
     }
 }

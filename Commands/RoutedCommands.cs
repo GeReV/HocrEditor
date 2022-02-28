@@ -6,5 +6,6 @@ public class RoutedCommands
 {
     public static readonly RoutedCommand OcrRegionCommand = new();
     public static readonly RoutedCommand MergeCommand = new();
+    public static readonly RoutedCommand CropCommand = new();
     public static readonly RoutedCommand CreateNodeCommand = new();
 }
