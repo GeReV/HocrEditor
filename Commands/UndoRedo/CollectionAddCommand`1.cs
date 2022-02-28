@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 
 namespace HocrEditor.Commands.UndoRedo;
 
@@ -35,7 +36,6 @@ public class CollectionAddCommand<T> : UndoRedoCommand
                 list.Remove(child);
             }
         }
-
     }
 
     public override void Redo()
@@ -46,15 +46,34 @@ public class CollectionAddCommand<T> : UndoRedoCommand
             {
                 set.Add(child);
             }
-        }
-        else
-        {
-            var list = (IList<T>)Sender;
 
-            foreach (var child in children)
-            {
-                list.Add(child);
-            }
+            return;
         }
+
+        var list = (IList<T>)Sender;
+
+        if (children.Count > 1 && TryAddRange(list, children))
+        {
+            return;
+        }
+
+        foreach (var child in children)
+        {
+            list.Add(child);
+        }
+    }
+
+    private static bool TryAddRange(IList<T> list, ICollection<T> collection)
+    {
+        var addRangeMethod = list.GetType().GetMethod("AddRange", BindingFlags.Public | BindingFlags.Instance);
+
+        if (addRangeMethod == null)
+        {
+            return false;
+        }
+
+        addRangeMethod.Invoke(list, new object?[] { collection });
+
+        return true;
     }
 }
