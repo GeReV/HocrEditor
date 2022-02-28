@@ -58,10 +58,12 @@ public static class NodeHelpers
     {
         var result = new List<HocrNodeViewModel>();
 
+        var dictionary = new SortedDictionary<int, HocrNodeViewModel>();
+
         // Clone each node and all of its descendants to get a snapshot of the selection in its current state.
         foreach (var node in nodes)
         {
-            var dictionary = new SortedDictionary<int, HocrNodeViewModel>();
+            dictionary.Clear();
 
             foreach (var descendant in node.Descendants.Prepend(node))
             {
