@@ -70,6 +70,10 @@
     <Window.CommandBindings>
         <CommandBinding Command="Close"
                         Executed="CloseCommandBinding_OnExecuted" />
+        <CommandBinding Command="{x:Static commands:RoutedCommands.ToggleTextCommand}"
+                        Executed="ToggleTextCommandBinding_OnExecuted" />
+        <CommandBinding Command="{x:Static commands:RoutedCommands.ToggleNumbersCommand}"
+                        Executed="ToggleNumberingCommandBinding_OnExecuted" />
     </Window.CommandBindings>
     <Window.InputBindings>
         <!--  Editing keybindings  -->
@@ -84,9 +88,15 @@
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                     Key="M"
                     Modifiers="Control" />
-        <KeyBinding Command="{Binding Document.SelectToolCommand}"
-                    CommandParameter="{x:Static controls:DocumentCanvasTool.SelectionTool}"
-                    Key="S" />
+        <!-- <KeyBinding Command="{Binding Document.SelectToolCommand}" -->
+        <!--             CommandParameter="{x:Static controls:DocumentCanvasTool.SelectionTool}" -->
+        <!--             Key="S" /> -->
+        <KeyBinding Command="{x:Static commands:RoutedCommands.ToggleTextCommand}"
+                    Modifiers="Control"
+                    Key="T" />
+        <KeyBinding Command="{x:Static commands:RoutedCommands.ToggleNumbersCommand}"
+                    Modifiers="Control"
+                    Key="Y" />
 
         <!--  Selection keybindings  -->
         <KeyBinding Command="{Binding Document.CurrentPage.DeselectNodesCommand, FallbackValue={x:Null}}"

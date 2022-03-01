@@ -192,5 +192,15 @@ namespace HocrEditor
         {
             Keyboard.Focus(e.Source as IInputElement);
         }
+
+        private void ToggleTextCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            ViewModel.Document.ShowText = !ViewModel.Document.ShowText;
+        }
+
+        private void ToggleNumberingCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            ViewModel.Document.ShowNumbering = !ViewModel.Document.ShowNumbering;
+        }
     }
 }
