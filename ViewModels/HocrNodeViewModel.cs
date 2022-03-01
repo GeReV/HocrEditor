@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 using PropertyChanged;
@@ -90,11 +92,26 @@ namespace HocrEditor.ViewModels
         {
             get
             {
-                var innerText = InnerText;
+                var sb = new StringBuilder();
 
-                var result = innerText.Length > MAX_INNER_TEXT_LENGTH
-                    ? innerText.Remove(MAX_INNER_TEXT_LENGTH).TrimEnd() + ELLIPSIS
-                    : innerText;
+                var i = 0;
+                foreach (var rune in InnerText.EnumerateRunes())
+                {
+                    sb.Append(rune);
+                    i++;
+
+                    if (i > MAX_INNER_TEXT_LENGTH)
+                    {
+                        break;
+                    }
+                }
+
+                var result = sb.ToString();
+
+                if (i > MAX_INNER_TEXT_LENGTH)
+                {
+                    result = result.TrimEnd() + ELLIPSIS;
+                }
 
                 return result.ReplaceLineEndings(" ");
             }
