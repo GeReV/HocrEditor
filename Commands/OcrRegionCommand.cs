@@ -75,6 +75,12 @@ public class OcrRegionCommand : UndoableCommandBase<Models.Rect>
 
                         var descendants = sourceRootNode.Descendants.ToList();
 
+                        // Tesseract might not get any results.
+                        if (descendants.Count == 0)
+                        {
+                            return;
+                        }
+
                         var commands = new List<UndoRedoCommand>();
 
                         foreach (var node in descendants)
