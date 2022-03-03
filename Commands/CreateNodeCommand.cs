@@ -24,19 +24,36 @@ public class CreateNodeCommand : UndoableCommandBase<HocrNodeType>
 
     public override void Execute(HocrNodeType nodeType)
     {
-        var nodeTypeStack = BuildNodeTypeStack(nodeType);
-
         var rootNode = hocrPageViewModel.Nodes.First(n => n.IsRoot);
 
-        var commands = new List<UndoRedoCommand>();
+        var parentNode = rootNode;
 
-        var nodes = new List<HocrNodeViewModel>();
+        var nodeTypeStack = BuildNodeTypeStack(nodeType);
+
+        if (hocrPageViewModel.SelectedNodes.Count == 1)
+        {
+            var selectedNode = hocrPageViewModel.SelectedNodes.First();
+
+            // Use selected node as the parent to the new node, if it can hold the requested type as a descendant.
+            // Otherwise, just continue to add it to the root node.
+            if (selectedNode.NodeType != nodeType && nodeTypeStack.Contains(selectedNode.NodeType))
+            {
+                parentNode = selectedNode;
+
+                nodeTypeStack = nodeTypeStack
+                    .SkipWhile(nt => nt != parentNode.NodeType)
+                    .Skip(1)
+                    .ToArray();
+            }
+        }
 
         var selectionBounds = hocrPageViewModel.SelectionBounds;
 
         var title = selectionBounds.ToBboxAttribute();
 
-        var parentNode = rootNode;
+        var nodes = new List<HocrNodeViewModel>();
+
+        var commands = new List<UndoRedoCommand>();
 
         foreach (var hocrNodeType in nodeTypeStack)
         {
@@ -142,21 +159,6 @@ public class CreateNodeCommand : UndoableCommandBase<HocrNodeType>
         UndoRedoManager.ExecuteBatch();
     }
 
-    private static IEnumerable<HocrNodeType> BuildNodeTypeStack(HocrNodeType nodeType)
-    {
-        var nodeTypeStack = new Stack<HocrNodeType>();
-
-        nodeTypeStack.Push(nodeType);
-
-        var parentNodeType = HocrNodeTypeHelper.GetParentNodeType(nodeType);
-
-        while (parentNodeType != null && parentNodeType != HocrNodeType.Page)
-        {
-            nodeTypeStack.Push(parentNodeType.Value);
-
-            parentNodeType = HocrNodeTypeHelper.GetParentNodeType(parentNodeType.Value);
-        }
-
-        return nodeTypeStack;
-    }
+    private static HocrNodeType[] BuildNodeTypeStack(HocrNodeType nodeType) =>
+        new Stack<HocrNodeType>(HocrNodeTypeHelper.GetParentNodeTypes(nodeType)).ToArray();
 }

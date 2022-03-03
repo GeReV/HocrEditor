@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using HocrEditor.Models;
 
 namespace HocrEditor.Helpers;
@@ -19,6 +21,18 @@ public static class HocrNodeTypeHelper
         HocrNodeType.Image => HocrNodeType.Page,
         _ => throw new ArgumentOutOfRangeException(nameof(nodeType), nodeType, null)
     };
+
+    public static IEnumerable<HocrNodeType> GetParentNodeTypes(HocrNodeType nodeType)
+    {
+        HocrNodeType? iter = nodeType;
+
+        while (iter != HocrNodeType.Page)
+        {
+            yield return iter!.Value;
+
+            iter = GetParentNodeType(iter.Value);
+        }
+    }
 
     public static string GetIcon(HocrNodeType nodeType) => nodeType switch
     {
