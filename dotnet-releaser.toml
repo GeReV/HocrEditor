@@ -1,0 +1,20 @@
+# configuration file for dotnet-releaser
+profile = "custom"
+
+[msbuild]
+project = "./HocrEditor.csproj"
+[github]
+user = "GeReV"
+repo = "HocrEditor"
+[nuget]
+publish = false
+[brew]
+publish = false
+
+[changelog]
+publish = false
+
+[[pack]]
+publish = false
+rid = ["win-x64"]
+kinds = ["zip"]
