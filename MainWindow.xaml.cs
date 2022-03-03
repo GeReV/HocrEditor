@@ -185,8 +185,7 @@ namespace HocrEditor
 
         private void OcrRegionCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            // TODO: Add back once we can handle async commands.
-            // ViewModel.Document.CanvasTool = DocumentCanvasTool.None;
+            ViewModel.Document.CanvasTool = DocumentCanvasTool.None;
         }
 
         private void CreateNodeCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)

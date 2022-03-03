@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using HocrEditor.Commands.UndoRedo;
@@ -11,10 +12,11 @@ using HocrEditor.Helpers;
 using HocrEditor.Services;
 using HocrEditor.ViewModels;
 using HtmlAgilityPack;
+using Rect = HocrEditor.Models.Rect;
 
 namespace HocrEditor.Commands;
 
-public class OcrRegionCommand : UndoableCommandBase<Models.Rect>
+public class OcrRegionCommand : UndoableAsyncCommandBase<Rect>
 {
     private readonly HocrPageViewModel hocrPageViewModel;
 
@@ -23,15 +25,17 @@ public class OcrRegionCommand : UndoableCommandBase<Models.Rect>
         this.hocrPageViewModel = hocrPageViewModel;
     }
 
-    public override bool CanExecute(Models.Rect selectionBounds) => selectionBounds.Width > float.Epsilon && selectionBounds.Height > float.Epsilon;
+    protected override bool IsCancelable => true;
 
-    public override void Execute(Models.Rect selectionBounds)
+    protected override bool CanExecuteImpl(Rect selectionBounds) => selectionBounds.Width > 0 && selectionBounds.Height > 0;
+
+    protected override Task ExecuteAsyncImpl(Rect selectionBounds, CancellationToken? cancellationToken)
     {
         var tesseractPath = Settings.TesseractPath;
 
         if (tesseractPath == null)
         {
-            return;
+            return Task.CompletedTask;
         }
 
         var region = new Rectangle(
@@ -41,7 +45,7 @@ public class OcrRegionCommand : UndoableCommandBase<Models.Rect>
             selectionBounds.Height
         );
 
-        Task.Run(
+        return Task.Run(
                 async () =>
                 {
                     var service = new TesseractService(tesseractPath);
@@ -63,6 +67,11 @@ public class OcrRegionCommand : UndoableCommandBase<Models.Rect>
                 {
                     try
                     {
+                        if (cancellationToken is { IsCancellationRequested: true })
+                        {
+                            return;
+                        }
+
                         var hocrDocument = await hocrDocumentTask;
 
                         Debug.Assert(hocrDocument.Pages.Count == 1);
@@ -119,10 +128,16 @@ public class OcrRegionCommand : UndoableCommandBase<Models.Rect>
 
                         commands.Add(hocrPageViewModel.SelectedNodes.ToCollectionAddCommand(sourceRootNode.Children));
 
+                        if (cancellationToken is { IsCancellationRequested: true })
+                        {
+                            return;
+                        }
+
                         UndoRedoManager.ExecuteCommands(commands);
                     }
                     catch (Exception ex)
                     {
+                        // TODO: Improve error handling.
                         MessageBox.Show($"{ex.Message}\n{ex.Source}\n\n{ex.StackTrace}");
                     }
                 },

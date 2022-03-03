@@ -1,7 +1,9 @@
 ﻿// Adapted from: https://gist.github.com/SlyZ/ca7b03931412115cc5fb1416180ad1b4
 
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Microsoft.Toolkit.Mvvm.Input;
 
 namespace HocrEditor.Core;
 
@@ -63,7 +65,7 @@ public sealed class ForwardingCommandBinding : Freezable
     /// that will be added to the <see cref="System.Windows.UIElement.CommandBindings"/> collection to enable
     /// listening to routed commands.
     /// </summary>
-    public CommandBinding CommandBinding { get; private set; }
+    public CommandBinding CommandBinding { get; }
 
     /// <summary>
     /// Gets or sets the source command for the binding.
@@ -122,7 +124,19 @@ public sealed class ForwardingCommandBinding : Freezable
             return;
         }
 
-        targetCommand.Execute(TargetCommandParameter ?? e.Parameter);
+        var parameter = TargetCommandParameter ?? e.Parameter;
+
+        if (targetCommand is IAsyncRelayCommand asyncCommand)
+        {
+            e.Handled = true;
+
+            asyncCommand.ExecuteAsync(parameter)
+                .ContinueWith(_ => OnExecuted(e), TaskScheduler.FromCurrentSynchronizationContext());
+
+            return;
+        }
+
+        targetCommand.Execute(parameter);
         e.Handled = true;
 
         OnExecuted(e);
