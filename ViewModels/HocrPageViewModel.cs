@@ -4,6 +4,9 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using HocrEditor.Commands;
 using HocrEditor.Controls;
 using HocrEditor.Core;
@@ -16,7 +19,7 @@ namespace HocrEditor.ViewModels
 {
     public partial class HocrPageViewModel : ViewModelBase
     {
-        public int LastId { get; private set; }
+        private int lastId;
 
         public HocrPage? HocrPage { get; private set; }
 
@@ -28,7 +31,30 @@ namespace HocrEditor.ViewModels
 
         public bool IsProcessing => HocrPage == null;
 
-        public string Image { get; set; }
+        private string image;
+        public string Image
+        {
+            get => image;
+            private set
+            {
+                if (image == value)
+                {
+                    return;
+                }
+
+                image = value;
+
+                Dispatcher.CurrentDispatcher.BeginInvoke(
+                    () => ImageSource = new BitmapImage(new Uri(image, UriKind.RelativeOrAbsolute))
+                    {
+                        DecodePixelWidth = 200
+                    },
+                    DispatcherPriority.Background
+                );
+            }
+        }
+
+        public ImageSource? ImageSource { get; set; }
 
         public Direction Direction
         {
@@ -40,7 +66,6 @@ namespace HocrEditor.ViewModels
             Direction == Direction.Ltr ? FlowDirection.LeftToRight : FlowDirection.RightToLeft;
 
         private Rect selectionBounds;
-
         public Rect SelectionBounds
         {
             get => selectionBounds;
@@ -61,7 +86,7 @@ namespace HocrEditor.ViewModels
 
         public HocrPageViewModel(string image)
         {
-            Image = image;
+            this.image = image;
 
             OcrRegionCommand = new OcrRegionCommand(this);
             DeleteCommand = new DeleteNodesCommand(this);
@@ -152,7 +177,7 @@ namespace HocrEditor.ViewModels
             base.MarkAsUnchanged();
         }
 
-        public int NextId() => ++LastId;
+        public int NextId() => ++lastId;
 
         public void Build(HocrPage hocrPage)
         {
@@ -177,9 +202,9 @@ namespace HocrEditor.ViewModels
 
                 dictionary.Add(hocrNodeViewModel.Id, hocrNodeViewModel);
 
-                if (node.Id > LastId)
+                if (node.Id > lastId)
                 {
-                    LastId = node.Id;
+                    lastId = node.Id;
                 }
 
                 if (node.ParentId < 0)
