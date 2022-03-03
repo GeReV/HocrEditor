@@ -5,115 +5,126 @@
         <TargetFramework>net6.0-windows</TargetFramework>
         <Nullable>enable</Nullable>
         <UseWPF>true</UseWPF>
+        <Version>0.2.0</Version>
         <AssemblyVersion>0.2</AssemblyVersion>
         <FileVersion>0.2.0</FileVersion>
+        <Description>hOCR Editor is an editor for generating and editing hOCR files from scanned documents.</Description>
+        <Copyright>Amir Grozki</Copyright>
+        <NeutralLanguage>en-US</NeutralLanguage>
+        <Authors>Amir Grozki</Authors>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <!--  <PackageReleaseNotes>https://github.com/xoofx/$(AssemblyName)/blob/master/changelog.md</PackageReleaseNotes>  -->
+        <!--  <PackageIcon>$(AssemblyName).png</PackageIcon>  -->
+        <PackageProjectUrl>https://github.com/gerev/$(AssemblyName)</PackageProjectUrl>
+        <PackageLicenseExpression>lgpl-3.0</PackageLicenseExpression>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="gong-wpf-dragdrop" Version="3.0.0" />
-      <PackageReference Include="HtmlAgilityPack" Version="1.11.39" />
-      <PackageReference Include="Iso639" Version="1.0.0" />
-      <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
-      <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="6.0.1" />
-      <PackageReference Include="Microsoft.Toolkit.Mvvm" Version="7.1.2" />
-      <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
-      <PackageReference Include="PropertyChanged.Fody" Version="3.4.0" PrivateAssets="All" />
-      <PackageReference Include="SkiaSharp" Version="2.80.3" />
-      <PackageReference Include="SkiaSharp.Elements" Version="1.0.2" />
-      <PackageReference Include="SkiaSharp.HarfBuzz" Version="2.80.3" />
-      <PackageReference Include="SkiaSharp.Views.WPF" Version="2.80.3" />
-      <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
+        <PackageReference Include="gong-wpf-dragdrop" Version="3.0.0" />
+        <PackageReference Include="HtmlAgilityPack" Version="1.11.39" />
+        <PackageReference Include="Iso639" Version="1.0.0" />
+        <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
+        <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="6.0.1" />
+        <PackageReference Include="Microsoft.Toolkit.Mvvm" Version="7.1.2" />
+        <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
+        <PackageReference Include="PropertyChanged.Fody" Version="3.4.0" PrivateAssets="All" />
+        <PackageReference Include="SkiaSharp" Version="2.80.3" />
+        <PackageReference Include="SkiaSharp.Elements" Version="1.0.2" />
+        <PackageReference Include="SkiaSharp.HarfBuzz" Version="2.80.3" />
+        <PackageReference Include="SkiaSharp.Views.WPF" Version="2.80.3" />
+        <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <None Include="Icons\image.png" />
-      <Resource Include="Icons\image.png" />
-      <None Remove="Resources\iso15924.txt" />
-      <Resource Include="Resources\iso15924.txt" />
-      <None Remove="Icons\edit-heading.png" />
-      <Resource Include="Icons\edit-heading.png" />
-      <None Remove="Icons\edit-pilcrow.png" />
-      <Resource Include="Icons\edit-pilcrow.png" />
-      <None Remove="Icons\edit-direction.png" />
-      <Resource Include="Icons\edit-direction.png" />
-      <None Remove="Icons\edit-lipsum.png" />
-      <Resource Include="Icons\edit-lipsum.png" />
-      <None Remove="Icons\edit-direction-rtl.png" />
-      <Resource Include="Icons\edit-direction-rtl.png" />
-      <None Remove="Icons\edit-quotation.png" />
-      <Resource Include="Icons\edit-quotation.png" />
-      <None Remove="Icons\ruler-crop.png" />
-      <Resource Include="Icons\ruler-crop.png" />
-      <None Remove="Icons\layers-group.png" />
-      <Resource Include="Icons\layers-group.png" />
-      <None Remove="Icons\edit.png" />
-      <Resource Include="Icons\edit.png" />
-      <None Remove="Icons\document.png" />
-      <Resource Include="Icons\document.png" />
-      <None Remove="Icons\document-text.png" />
-      <Resource Include="Icons\document-text.png" />
-      <None Remove="Icons\selection.png" />
-      <Resource Include="Icons\selection.png" />
-      <None Remove="Icons\selection-input.png" />
-      <None Remove="Icons\sql-join-outer.png" />
-      <Resource Include="Icons\sql-join-outer.png" />
-      <None Remove="Icons\arrow-curve.png" />
-      <Resource Include="Icons\arrow-curve.png" />
-      <None Remove="Icons\arrow-curve-180-left.png" />
-      <Resource Include="Icons\arrow-curve-180-left.png" />
-      <None Remove="Icons\broom.png" />
-      <Resource Include="Icons\broom.png" />
-      <None Remove="Icons\minus-circle.png" />
-      <Resource Include="Icons\minus-circle.png" />
-      <None Remove="Icons\edit-language.png" />
-      <Resource Include="Icons\edit-language.png" />
-      <None Remove="Icons\spectacle.png" />
-      <Resource Include="Icons\spectacle.png" />
-      <None Remove="Icons\folder-open-document.png" />
-      <Resource Include="Icons\folder-open-document.png" />
-      <None Remove="Icons\disk-black.png" />
-      <Resource Include="Icons\disk-black.png" />
-      <None Remove="Icons\document--plus.png" />
-      <Resource Include="Icons\document--plus.png" />
-      <None Remove="Icons\selection-select-input.png" />
-      <Resource Include="Icons\selection-select-input.png" />
-      <None Remove="Icons\edit-number.png" />
-      <Resource Include="Icons\edit-number.png" />
-      <None Remove="Icons\image-import.png" />
-      <Resource Include="Icons\image-import.png" />
-      <None Remove="Icons\sort-alphabet-descending.png" />
-      <Resource Include="Icons\sort-alphabet-descending.png" />
-      <None Remove=".github\**" />
-      <None Remove="Icons\plus-small.png" />
-      <Resource Include="Icons\plus-small.png" />
-      <None Remove="Icons\edit-padding.png" />
-      <Resource Include="Icons\edit-padding.png" />
-      <None Remove="Icons\edit-padding-top.png" />
-      <Resource Include="Icons\edit-padding-top.png" />
-      <None Remove="Icons\edit-indent.png" />
-      <Resource Include="Icons\edit-indent.png" />
-      <None Remove="Icons\edit-rule.png" />
-      <Resource Include="Icons\edit-rule.png" />
-      <None Remove="Icons\document-hf-select-footer.png" />
-      <Resource Include="Icons\document-hf-select-footer.png" />
-      <None Remove="Icons\ui-splitter.png" />
-      <Resource Include="Icons\ui-splitter.png" />
-      <None Remove="Icons\clipboard-paste.png" />
-      <Resource Include="Icons\clipboard-paste.png" />
-      <None Remove="Icons\document-copy.png" />
-      <Resource Include="Icons\document-copy.png" />
+        <None Include="Icons\image.png" />
+        <Resource Include="Icons\image.png" />
+        <None Remove="Resources\iso15924.txt" />
+        <Resource Include="Resources\iso15924.txt" />
+        <None Remove="Icons\edit-heading.png" />
+        <Resource Include="Icons\edit-heading.png" />
+        <None Remove="Icons\edit-pilcrow.png" />
+        <Resource Include="Icons\edit-pilcrow.png" />
+        <None Remove="Icons\edit-direction.png" />
+        <Resource Include="Icons\edit-direction.png" />
+        <None Remove="Icons\edit-lipsum.png" />
+        <Resource Include="Icons\edit-lipsum.png" />
+        <None Remove="Icons\edit-direction-rtl.png" />
+        <Resource Include="Icons\edit-direction-rtl.png" />
+        <None Remove="Icons\edit-quotation.png" />
+        <Resource Include="Icons\edit-quotation.png" />
+        <None Remove="Icons\ruler-crop.png" />
+        <Resource Include="Icons\ruler-crop.png" />
+        <None Remove="Icons\layers-group.png" />
+        <Resource Include="Icons\layers-group.png" />
+        <None Remove="Icons\edit.png" />
+        <Resource Include="Icons\edit.png" />
+        <None Remove="Icons\document.png" />
+        <Resource Include="Icons\document.png" />
+        <None Remove="Icons\document-text.png" />
+        <Resource Include="Icons\document-text.png" />
+        <None Remove="Icons\selection.png" />
+        <Resource Include="Icons\selection.png" />
+        <None Remove="Icons\selection-input.png" />
+        <None Remove="Icons\sql-join-outer.png" />
+        <Resource Include="Icons\sql-join-outer.png" />
+        <None Remove="Icons\arrow-curve.png" />
+        <Resource Include="Icons\arrow-curve.png" />
+        <None Remove="Icons\arrow-curve-180-left.png" />
+        <Resource Include="Icons\arrow-curve-180-left.png" />
+        <None Remove="Icons\broom.png" />
+        <Resource Include="Icons\broom.png" />
+        <None Remove="Icons\minus-circle.png" />
+        <Resource Include="Icons\minus-circle.png" />
+        <None Remove="Icons\edit-language.png" />
+        <Resource Include="Icons\edit-language.png" />
+        <None Remove="Icons\spectacle.png" />
+        <Resource Include="Icons\spectacle.png" />
+        <None Remove="Icons\folder-open-document.png" />
+        <Resource Include="Icons\folder-open-document.png" />
+        <None Remove="Icons\disk-black.png" />
+        <Resource Include="Icons\disk-black.png" />
+        <None Remove="Icons\document--plus.png" />
+        <Resource Include="Icons\document--plus.png" />
+        <None Remove="Icons\selection-select-input.png" />
+        <Resource Include="Icons\selection-select-input.png" />
+        <None Remove="Icons\edit-number.png" />
+        <Resource Include="Icons\edit-number.png" />
+        <None Remove="Icons\image-import.png" />
+        <Resource Include="Icons\image-import.png" />
+        <None Remove="Icons\sort-alphabet-descending.png" />
+        <Resource Include="Icons\sort-alphabet-descending.png" />
+        <None Remove=".github\**" />
+        <None Remove="Icons\plus-small.png" />
+        <Resource Include="Icons\plus-small.png" />
+        <None Remove="Icons\edit-padding.png" />
+        <Resource Include="Icons\edit-padding.png" />
+        <None Remove="Icons\edit-padding-top.png" />
+        <Resource Include="Icons\edit-padding-top.png" />
+        <None Remove="Icons\edit-indent.png" />
+        <Resource Include="Icons\edit-indent.png" />
+        <None Remove="Icons\edit-rule.png" />
+        <Resource Include="Icons\edit-rule.png" />
+        <None Remove="Icons\document-hf-select-footer.png" />
+        <Resource Include="Icons\document-hf-select-footer.png" />
+        <None Remove="Icons\ui-splitter.png" />
+        <Resource Include="Icons\ui-splitter.png" />
+        <None Remove="Icons\clipboard-paste.png" />
+        <Resource Include="Icons\clipboard-paste.png" />
+        <None Remove="Icons\document-copy.png" />
+        <Resource Include="Icons\document-copy.png" />
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove=".github\**" />
+        <Compile Remove=".github\**" />
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Remove=".github\**" />
+        <EmbeddedResource Remove=".github\**" />
     </ItemGroup>
 
     <ItemGroup>
-      <Page Remove=".github\**" />
+        <Page Remove=".github\**" />
     </ItemGroup>
 
 </Project>
