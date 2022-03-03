@@ -529,6 +529,12 @@ public sealed partial class DocumentCanvas
             {
                 documentCanvas.Cursor = documentCanvas.currentCursor = Cursors.Cross;
 
+                // Transfer the current selection when we turn on the tool.
+                if (!documentCanvas.canvasSelection.IsEmpty)
+                {
+                    documentCanvas.SelectionBounds = Rect.FromSKRect(documentCanvas.canvasSelection.Bounds);
+                }
+
                 break;
             }
             case DocumentCanvasTool.WordSplitTool:
@@ -944,23 +950,13 @@ public sealed partial class DocumentCanvas
                     {
                         canvasSelection.Bounds = canvasSelection.Bounds.Standardized;
 
-                        SelectionBounds = new Rect(
-                            (int)canvasSelection.Left,
-                            (int)canvasSelection.Top,
-                            (int)canvasSelection.Right,
-                            (int)canvasSelection.Bottom
-                        );
+                        SelectionBounds = Rect.FromSKRect(canvasSelection.Bounds);
 
                         break;
                     }
                     case MouseState.DraggingSelectionRegion:
                     {
-                        SelectionBounds = new Rect(
-                            (int)canvasSelection.Left,
-                            (int)canvasSelection.Top,
-                            (int)canvasSelection.Right,
-                            (int)canvasSelection.Bottom
-                        );
+                        SelectionBounds = Rect.FromSKRect(canvasSelection.Bounds);
 
                         break;
                     }

@@ -8,6 +8,13 @@ namespace HocrEditor.Models
 {
     public struct Rect : IEquatable<Rect>
     {
+        public static Rect FromSKRect(SKRect rect) => new(
+            (int)rect.Left,
+            (int)rect.Top,
+            (int)rect.Right,
+            (int)rect.Bottom
+        );
+
         public static Rect FromBboxAttribute(string values)
         {
             var coordinates = values.Split(' ', StringSplitOptions.TrimEntries).Select(int.Parse).ToArray();
