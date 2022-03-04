@@ -89,9 +89,14 @@
                     CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                     Key="M"
                     Modifiers="Control" />
-        <!-- <KeyBinding Command="{Binding Document.SelectToolCommand}" -->
-        <!--             CommandParameter="{x:Static controls:DocumentCanvasTool.SelectionTool}" -->
-        <!--             Key="S" /> -->
+        <KeyBinding Command="{Binding Document.SelectToolCommand}"
+                    CommandParameter="{x:Static controls:DocumentCanvasTool.SelectionTool}"
+                    Key="M"
+                    Modifiers="Control" />
+        <KeyBinding Command="{Binding  Document.SelectToolCommand}"
+                    CommandParameter="{x:Static controls:DocumentCanvasTool.WordSplitTool}"
+                    Key="L"
+                    Modifiers="Control" />
         <KeyBinding Command="{x:Static commands:RoutedCommands.ToggleTextCommand}"
                     Modifiers="Control"
                     Key="T" />
@@ -164,10 +169,10 @@
                           Header="_Crop" />
             </MenuItem>
             <MenuItem Header="_Select">
-                <MenuItem Header="_Region"
+                <MenuItem Header="_Marquee"
                           IsCheckable="True"
                           IsChecked="{Binding Document.CanvasTool, Mode=OneWay, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static controls:DocumentCanvasTool.SelectionTool}}"
-                          InputGestureText="S" />
+                          InputGestureText="Ctrl+M" />
                 <MenuItem Command="{Binding Document.CurrentPage.ExclusiveSelectNodesCommand, FallbackValue={x:Null}}"
                           CommandParameter="{Binding Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
                           Header="_All"
@@ -265,13 +270,13 @@
                               CommandParameter="{x:Static controls:DocumentCanvasTool.SelectionTool}"
                               IsChecked="{Binding Document.CanvasTool, Mode=OneWay, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static controls:DocumentCanvasTool.SelectionTool}}"
                               IsEnabled="{Binding Document.CurrentPage, Converter={StaticResource NullableToBooleanConverter}}"
-                              ToolTip="Select region (S)"
+                              ToolTip="Marquee selection tool (Ctrl+M)"
                               helpers:IconButton.Source="/Icons/selection.png" />
                 <ToggleButton Command="{Binding  Document.SelectToolCommand}"
                               CommandParameter="{x:Static controls:DocumentCanvasTool.WordSplitTool}"
                               IsChecked="{Binding Document.CanvasTool, Mode=OneWay, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static controls:DocumentCanvasTool.WordSplitTool}}"
                               IsEnabled="{Binding Document.CurrentPage, Converter={StaticResource NullableToBooleanConverter}}"
-                              ToolTip="Split word tool"
+                              ToolTip="Split word tool (Ctrl+L)"
                               helpers:IconButton.Source="/Icons/ui-splitter.png" />
             </ToolBar>
             <ToolBar>
