@@ -43,7 +43,7 @@ public class DocumentTreeViewDropHandler : DefaultDropHandler
 
             if (isDroppingInto)
             {
-                return hocrNodeType == targetItem.NodeType || targetItem.NodeType == HocrNodeTypeHelper.GetParentNodeType(hocrNodeType);
+                return hocrNodeType == targetItem.NodeType || HocrNodeTypeHelper.CanNodeTypeBeChildOf(hocrNodeType, targetItem.NodeType);
             }
 
             if (dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.BeforeTargetItem) ||

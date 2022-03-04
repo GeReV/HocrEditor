@@ -34,6 +34,21 @@ public static class HocrNodeTypeHelper
         }
     }
 
+    public static bool CanNodeTypeBeChildOf(HocrNodeType childType, HocrNodeType parentType) => (child: childType, parent: parentType) switch
+    {
+        (HocrNodeType.ContentArea, HocrNodeType.Page) => true,
+        (HocrNodeType.Paragraph, HocrNodeType.ContentArea) => true,
+        (HocrNodeType.Line, HocrNodeType.Paragraph) => true,
+        (HocrNodeType.Header, HocrNodeType.Paragraph) => true,
+        (HocrNodeType.Footer, HocrNodeType.Paragraph) => true,
+        (HocrNodeType.TextFloat, HocrNodeType.ContentArea) => true,
+        (HocrNodeType.Caption, HocrNodeType.ContentArea) => true,
+        (HocrNodeType.Word, HocrNodeType.Line) => true,
+        (HocrNodeType.Word, HocrNodeType.TextFloat) => true,
+        (HocrNodeType.Image, HocrNodeType.Page) => true,
+        _ => false
+    };
+
     public static string GetIcon(HocrNodeType nodeType) => nodeType switch
     {
         HocrNodeType.Page => "/Icons/document.png",
