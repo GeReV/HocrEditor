@@ -392,6 +392,8 @@ public sealed partial class DocumentCanvas
 
         documentCanvas.elements.Clear();
 
+        documentCanvas.ClearCanvasSelection();
+
         if (e.OldValue is ObservableCollection<HocrNodeViewModel> oldNodes && oldNodes.Any())
         {
             oldNodes.UnsubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
