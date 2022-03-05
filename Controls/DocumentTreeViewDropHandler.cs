@@ -49,7 +49,7 @@ public class DocumentTreeViewDropHandler : DefaultDropHandler
             if (dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.BeforeTargetItem) ||
                 dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.AfterTargetItem))
             {
-                return targetItem.Parent?.NodeType == HocrNodeTypeHelper.GetParentNodeType(hocrNodeType);
+                return HocrNodeTypeHelper.CanNodeTypeBeChildOf(hocrNodeType, targetItem.Parent!.NodeType);
             }
         }
 

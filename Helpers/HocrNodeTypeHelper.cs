@@ -45,6 +45,9 @@ public static class HocrNodeTypeHelper
         (HocrNodeType.Caption, HocrNodeType.ContentArea) => true,
         (HocrNodeType.Word, HocrNodeType.Line) => true,
         (HocrNodeType.Word, HocrNodeType.TextFloat) => true,
+        (HocrNodeType.Word, HocrNodeType.Caption) => true,
+        (HocrNodeType.Word, HocrNodeType.Header) => true,
+        (HocrNodeType.Word, HocrNodeType.Footer) => true,
         (HocrNodeType.Image, HocrNodeType.Page) => true,
         _ => false
     };
