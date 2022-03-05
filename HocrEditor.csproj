@@ -18,6 +18,7 @@
         <PackageProjectUrl>https://github.com/gerev/$(AssemblyName)</PackageProjectUrl>
         <PackageLicenseExpression>lgpl-3.0</PackageLicenseExpression>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <Product>hOCR Editor</Product>
     </PropertyGroup>
 
     <ItemGroup>

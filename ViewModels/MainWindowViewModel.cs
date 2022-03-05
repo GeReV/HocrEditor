@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -32,7 +33,7 @@ namespace HocrEditor.ViewModels
 
             ImportCommand = new RelayCommand(Import);
 
-            SaveCommand = new RelayCommand<bool>(Save, CanSave);
+            SaveCommand = new RelayCommand<bool>(forceSaveAs => Save(forceSaveAs), CanSave);
             OpenCommand = new RelayCommand(Open);
         }
 
@@ -48,6 +49,9 @@ namespace HocrEditor.ViewModels
             set => Settings.AutoClean = value;
         }
 
+        private static string? ApplicationName =>
+            Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyProductAttribute>()?.Product;
+
         public string WindowTitle
         {
             get
@@ -60,7 +64,7 @@ namespace HocrEditor.ViewModels
                     sb.Append(" - ");
                 }
 
-                sb.Append("hOCR Editor");
+                sb.Append(ApplicationName);
 
                 return sb.ToString();
             }
@@ -98,9 +102,32 @@ namespace HocrEditor.ViewModels
             }
         }
 
+        public bool AskSaveOnExit()
+        {
+            var result = MessageBox.Show(
+                $"Do you want to save changes to {Document.Name}?",
+                ApplicationName,
+                MessageBoxButton.YesNoCancel,
+                MessageBoxImage.Question
+            );
+
+            switch (result)
+            {
+                case MessageBoxResult.Cancel:
+                    return false;
+                case MessageBoxResult.Yes:
+                    return Save(forceSaveAs: false);
+                case MessageBoxResult.No:
+                    // Ignore.
+                    return true;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
         private bool CanSave(bool _) => Document.IsChanged && Document.Pages.Any();
 
-        private void Save(bool forceSaveAs)
+        private bool Save(bool forceSaveAs)
         {
             if (Document.Filename == null || forceSaveAs)
             {
@@ -112,7 +139,7 @@ namespace HocrEditor.ViewModels
 
                 if (dialog.ShowDialog(window) != true)
                 {
-                    return;
+                    return false;
                 }
 
                 Document.Filename = dialog.FileName;
@@ -124,13 +151,15 @@ namespace HocrEditor.ViewModels
             htmlDocument.Save(Document.Filename);
 
             Document.MarkAsUnchanged();
+
+            return true;
         }
 
         private void Open()
         {
-            if (Document.IsChanged)
+            if (Document.IsChanged && !AskSaveOnExit())
             {
-                // TODO: Handle existing document.
+                return;
             }
 
             var tesseractPath = GetTesseractPath();

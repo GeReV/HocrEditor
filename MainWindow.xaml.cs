@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -31,6 +32,16 @@ namespace HocrEditor
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
             await InitializeLanguages();
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            base.OnClosing(e);
+
+            if (ViewModel.Document.IsChanged)
+            {
+                e.Cancel = !ViewModel.AskSaveOnExit();
+            }
         }
 
         private async Task InitializeLanguages()

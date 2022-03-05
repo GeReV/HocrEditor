@@ -21,6 +21,8 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
 
     public string? Filename { get; set; }
 
+    public string Name => Filename ?? "New document";
+
     public string Title
     {
         get
@@ -32,7 +34,7 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
                 sb.Append('*');
             }
 
-            sb.Append(Filename ?? "New document");
+            sb.Append(Name);
 
             return sb.ToString();
         }
@@ -136,6 +138,8 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
                 };
             }
         );
+
+        IsChanged = false;
     }
 
     private void PagesChanged(object? sender, PropertyChangedEventArgs e)
