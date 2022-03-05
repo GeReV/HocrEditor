@@ -9,7 +9,8 @@
              xmlns:dd="urn:gong-wpf-dragdrop"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:HocrEditor.Controls">
     <UserControl.Resources>
         <converters:BooleanNegateConverter x:Key="NegateConverter" />
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
@@ -24,7 +25,9 @@
              dd:DragDrop.DragDropContext="PagesDragDrop"
              dd:DragDrop.IsDragSource="True"
              dd:DragDrop.IsDropTarget="True"
-             dd:DragDrop.SelectDroppedItems="True">
+             dd:DragDrop.SelectDroppedItems="True"
+             VirtualizingPanel.CacheLength="25"
+             VirtualizingPanel.CacheLengthUnit="Item">
         <ListBox.CommandBindings>
             <CommandBinding CanExecute="DeleteCommandBinding_OnCanExecute"
                             Command="Delete"
@@ -41,13 +44,11 @@
             <DataTemplate DataType="viewModels:HocrPageViewModel">
                 <Border Margin="5">
                     <Grid>
-                        <Image Name="PagePreview"
-                               RenderOptions.BitmapScalingMode="HighQuality"
-                               Stretch="Uniform"
-                               StretchDirection="DownOnly"
-                               Source="{Binding ImageSource}">
-
-                        </Image>
+                        <controls:LazyLoadImage Name="PagePreview"
+                                       RenderOptions.BitmapScalingMode="HighQuality"
+                                       Stretch="Uniform"
+                                       StretchDirection="DownOnly"
+                                       UriSource="{Binding Image}" />
                         <ProgressBar IsIndeterminate="True"
                                      VerticalAlignment="Bottom"
                                      Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}" />

@@ -4,9 +4,6 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 using HocrEditor.Commands;
 using HocrEditor.Controls;
 using HocrEditor.Core;
@@ -31,30 +28,11 @@ namespace HocrEditor.ViewModels
 
         public bool IsProcessing => HocrPage == null;
 
-        private string image;
         public string Image
         {
-            get => image;
-            private set
-            {
-                if (image == value)
-                {
-                    return;
-                }
-
-                image = value;
-
-                Dispatcher.CurrentDispatcher.BeginInvoke(
-                    () => ImageSource = new BitmapImage(new Uri(image, UriKind.RelativeOrAbsolute))
-                    {
-                        DecodePixelWidth = 200
-                    },
-                    DispatcherPriority.Background
-                );
-            }
+            get;
+            set;
         }
-
-        public ImageSource? ImageSource { get; set; }
 
         public Direction Direction
         {
@@ -86,7 +64,7 @@ namespace HocrEditor.ViewModels
 
         public HocrPageViewModel(string image)
         {
-            this.image = image;
+            Image = image;
 
             OcrRegionCommand = new OcrRegionCommand(this);
             DeleteCommand = new DeleteNodesCommand(this);
