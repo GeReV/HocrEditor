@@ -163,12 +163,14 @@ public partial class DocumentTreeView
             return;
         }
 
-        ArgumentNullException.ThrowIfNull(editingNode);
 
         OnNodeEdited(editableTextBlock.Text);
 
-        editingNode!.IsEditing = false;
-        editingNode = null;
+        if (editingNode != null)
+        {
+            editingNode!.IsEditing = false;
+            editingNode = null;
+        }
 
         editableTextBlock.IsEditing = false;
 
