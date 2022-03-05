@@ -388,11 +388,11 @@ public sealed partial class DocumentCanvas
             documentCanvas.elementPool.Return(element);
         }
 
-        documentCanvas.rootId = -1;
+        documentCanvas.ClearCanvasSelection();
 
         documentCanvas.elements.Clear();
 
-        documentCanvas.ClearCanvasSelection();
+        documentCanvas.rootId = -1;
 
         if (e.OldValue is ObservableCollection<HocrNodeViewModel> oldNodes && oldNodes.Any())
         {
