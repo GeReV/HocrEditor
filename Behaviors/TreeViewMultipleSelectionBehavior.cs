@@ -339,7 +339,7 @@ public class TreeViewMultipleSelectionBehavior : Behavior<TreeView>
     /// <returns>The list of all items.</returns>
     private IEnumerable<TreeViewItem> DeSelectAll()
     {
-        var items = GetItemsRecursively<TreeViewItem>(AssociatedObject);
+        var items = GetItemsRecursively<TreeViewItem>(AssociatedObject, false);
 
         foreach (var item in items)
         {
@@ -368,8 +368,9 @@ public class TreeViewMultipleSelectionBehavior : Behavior<TreeView>
     /// </summary>
     /// <typeparam name="T">The type of item to retrieve.</typeparam>
     /// <param name="parentItem">The parent item.</param>
+    /// <param name="excludeCollapsedChildren">Whether to exclude children of collapsed TreeView items from results.</param>
     /// <returns>The list of items within the parent item, may be empty.</returns>
-    private static IList<T> GetItemsRecursively<T>(ItemsControl parentItem)
+    private static IList<T> GetItemsRecursively<T>(ItemsControl parentItem, bool excludeCollapsedChildren = true)
         where T : ItemsControl
     {
         ArgumentNullException.ThrowIfNull(parentItem);
@@ -378,12 +379,20 @@ public class TreeViewMultipleSelectionBehavior : Behavior<TreeView>
 
         for (var i = 0; i < parentItem.Items.Count; i++)
         {
-            var item = parentItem.ItemContainerGenerator.ContainerFromIndex(i) as T;
-            if (item != null)
+            if (parentItem.ItemContainerGenerator.ContainerFromIndex(i) is not T item)
             {
-                items.Add(item);
-                items.AddRange(GetItemsRecursively<T>(item));
+                continue;
             }
+
+            items.Add(item);
+
+            if (excludeCollapsedChildren && item is TreeViewItem { IsExpanded: false })
+            {
+                // Don't include TreeViewItem children if it's collapsed.
+                continue;
+            }
+
+            items.AddRange(GetItemsRecursively<T>(item, excludeCollapsedChildren));
         }
 
         return items;
