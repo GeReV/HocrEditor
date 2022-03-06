@@ -1858,10 +1858,10 @@ public sealed partial class DocumentCanvas
         {
             var nextRight = Math.Clamp(
                 newLocation.X,
-                resizeLimitOutside.Left,
                 resizeLimitInside.IsEmpty || resizeWithChildren
-                    ? resizeLimitOutside.Right
-                    : resizeLimitInside.Left
+                    ? resizeLimitOutside.Left
+                    : resizeLimitInside.Right,
+                resizeLimitOutside.Right
             );
 
             if (resizeSymmetrical)
