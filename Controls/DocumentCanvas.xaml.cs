@@ -256,6 +256,10 @@ public sealed partial class DocumentCanvas
 
     private MouseState mouseMoveState;
 
+    // Debounce selection on mouse up by this duration to prevent a bounce
+    // (double sequential selection, on mousedown then on mouseup immediately).
+    private bool selectionChangedLatch;
+
     private SKPoint dragStart;
     private SKPoint offsetStart;
 
@@ -713,6 +717,11 @@ public sealed partial class DocumentCanvas
                 throw new ArgumentOutOfRangeException();
         }
 
+        if (SelectedItems?.Count > 1)
+        {
+            ResetSelectionCycle();
+        }
+
         Refresh();
     }
 
@@ -844,15 +853,21 @@ public sealed partial class DocumentCanvas
                     break;
                 }
 
-                mouseMoveState = MouseState.Dragging;
-
                 EndEditing();
+
+                // Dragging current the selection, no need to select anything else.
+                if (canvasSelection.Bounds.Contains(normalizedPosition))
+                {
+                    mouseMoveState = MouseState.Dragging;
+                    break;
+                }
 
                 SelectNode(normalizedPosition);
 
+                // Dragging the new selection, no need to select anything else.
                 if (canvasSelection.Bounds.Contains(normalizedPosition))
                 {
-                    // Dragging the selection, no need to select anything else.
+                    mouseMoveState = MouseState.Dragging;
                     break;
                 }
 
@@ -926,10 +941,21 @@ public sealed partial class DocumentCanvas
 
                 var position = e.GetPosition(this).ToSKPoint();
 
+                var mouseMoved = position != dragStart;
+
                 switch (mouseMoveState)
                 {
                     case MouseState.None:
                     case MouseState.Dragging:
+                    {
+                        if (!mouseMoved)
+                        {
+                            var normalizedPosition = inverseTransformation.MapPoint(position);
+
+                            SelectNode(normalizedPosition);
+                        }
+                        break;
+                    }
                     case MouseState.Panning:
                     {
                         break;
@@ -970,10 +996,7 @@ public sealed partial class DocumentCanvas
                         throw new ArgumentOutOfRangeException();
                 }
 
-
                 mouseMoveState = MouseState.None;
-
-                var mouseMoved = position != dragStart;
 
                 if (selectedElements.Any() && mouseMoved)
                 {
@@ -990,6 +1013,9 @@ public sealed partial class DocumentCanvas
 
                     dragLimit = CalculateDragLimitBounds(selectedItems);
                 }
+
+                // Reset selection latch when a click cycle (mousedown-mouseup) is complete.
+                selectionChangedLatch = false;
 
                 break;
             }
@@ -1220,9 +1246,19 @@ public sealed partial class DocumentCanvas
         Refresh();
     }
 
+    private void ResetSelectionCycle()
+    {
+        selectedKey = -1;
+        selectedKeyCandidates.Clear();
+    }
+
     private void SelectNode(SKPoint normalizedPosition)
     {
-        // TODO: Should we have a priority for selecting, i.e. the smallest/deepest child first?
+        if (selectionChangedLatch)
+        {
+            return;
+        }
+
         // Get keys for all nodes overlapping at this point.
         var newKeyCandidates = GetVisibleElementKeysAtPoint(normalizedPosition);
 
@@ -1230,32 +1266,27 @@ public sealed partial class DocumentCanvas
         {
             ClearSelection();
 
-            selectedKey = -1;
-            selectedKeyCandidates.Clear();
+            ResetSelectionCycle();
 
             return;
         }
 
         // Keep track of the current list of candidates. If they're the same from one click to another, we cycle through
         //  them. Otherwise, we replace the list and start over.
-        if (!newKeyCandidates.SequenceEqual(selectedKeyCandidates))
+        if (newKeyCandidates.SequenceEqual(selectedKeyCandidates))
+        {
+            var index = selectedKeyCandidates.IndexOf(selectedKey);
+
+            selectedKey = selectedKeyCandidates[(index + 1) % selectedKeyCandidates.Count];
+        }
+        else
         {
             selectedKeyCandidates = newKeyCandidates;
+
+            selectedKey = PickFirstSelectionCandidate(selectedKeyCandidates);
         }
 
-        var index = selectedKeyCandidates.IndexOf(selectedKey);
-
-        // If the current (new or previous) list of candidates contains the current selected key, just cycle to the next
-        //  one.
-        // This handles a case where we get a different set of candidates, but the currently selected candidate is in
-        //  that set as well.
-        selectedKey = selectedKeyCandidates.Contains(selectedKey)
-            ? selectedKeyCandidates[(index + 1) % selectedKeyCandidates.Count]
-            : PickFirstSelectionCandidate(selectedKeyCandidates);
-
         var node = elements[selectedKey].Item1;
-
-        // TODO: Should probably choose node at mouseup, because user intention isn't clear at mouse down
 
         //  i.e. about to drag selection or choose a different item
         var selectedNodes = SelectedItems ??
@@ -1282,6 +1313,8 @@ public sealed partial class DocumentCanvas
         {
             AddSelectedNode(node);
         }
+
+        selectionChangedLatch = true;
 
         UpdateCanvasSelection();
 
