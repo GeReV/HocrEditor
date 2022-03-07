@@ -30,7 +30,7 @@ public class PasteCommand : UndoableCommandBase
             return;
         }
 
-        var nodes = NodeHelpers.CloneNodeCollection(hocrPageViewModel.Clipboard.GetData()).ToHashSet();
+        var topmostNodes = NodeHelpers.CloneNodeCollection(hocrPageViewModel.Clipboard.GetData()).ToHashSet();
 
         var offset = hocrPageViewModel.Direction switch
         {
@@ -40,7 +40,9 @@ public class PasteCommand : UndoableCommandBase
         };
 
         // Update the nodes' individual data.
-        foreach (var node in nodes)
+        var allNodes = topmostNodes.RecursiveSelect(n => n.Children).ToList();
+
+        foreach (var node in allNodes)
         {
             node.Id = hocrPageViewModel.NextId();
 
@@ -56,19 +58,16 @@ public class PasteCommand : UndoableCommandBase
         var commands = new List<UndoRedoCommand>();
 
         // Those inserted nodes are added to their original parent nodes.
-        foreach (var node in nodes)
-        {
-            commands.Add(node.Parent!.Children.ToCollectionAddCommand(node));
-        }
+        commands.AddRange(topmostNodes.Select(n => n.Parent!.Children.ToCollectionAddCommand(n)));
 
         // Add all nodes to the page nodes collection.
-        commands.Add(hocrPageViewModel.Nodes.ToCollectionAddCommand(nodes));
+        commands.Add(hocrPageViewModel.Nodes.ToCollectionAddCommand(allNodes));
 
         UndoRedoManager.BeginBatch();
 
         UndoRedoManager.ExecuteCommands(commands);
 
-        new ExclusiveSelectNodesCommand(hocrPageViewModel).Execute(nodes);
+        new ExclusiveSelectNodesCommand(hocrPageViewModel).Execute(topmostNodes);
 
         UndoRedoManager.ExecuteBatch();
     }
