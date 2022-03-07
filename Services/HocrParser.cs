@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using HocrEditor.Helpers;
 using HocrEditor.Models;
 using HtmlAgilityPack;
 
@@ -34,6 +35,8 @@ namespace HocrEditor.Services
 
             var htmlDirection = html.GetAttributeValue("dir", "ltr") == "rtl" ? Direction.Rtl : Direction.Ltr;
 
+            var htmlLanguage = html.GetAttributeValue("lang", string.Empty);
+
             var pageNodes = document.DocumentNode.SelectNodes("//body/div[@class='ocr_page']");
 
             var pages = new List<HocrPage>();
@@ -42,7 +45,15 @@ namespace HocrEditor.Services
             {
                 idCounter = 0;
 
-                var page = (HocrPage)Parse(pageNode, -1, string.Empty, htmlDirection);
+                var page = (HocrPage)Parse(pageNode, -1, htmlLanguage, htmlDirection);
+
+                // Try to guess page direction based on the direction counts.
+                var pageDirection = page.Descendants
+                    .CountBy(n => n.Direction)
+                    .MaxBy(pair => pair.Value)
+                    .Key;
+
+                page.Direction = pageDirection;
 
                 pages.Add(page);
             }
