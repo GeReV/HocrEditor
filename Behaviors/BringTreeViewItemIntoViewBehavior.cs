@@ -83,6 +83,13 @@ public class BringTreeViewItemIntoViewBehavior : Behavior<TreeView>
             {
                 foreach (var node in e.NewItems.Cast<HocrNodeViewModel>())
                 {
+                    // Since we are running this asynchronously on the dispatcher, at this point, the node may already
+                    // be gone from the collection, so double-check.
+                    if (!collection.Contains(node))
+                    {
+                        continue;
+                    }
+
                     var nodePath = node.Ascendants.Reverse().Append(node).Skip(1);
 
                     ItemsControl currentParent = tree;
