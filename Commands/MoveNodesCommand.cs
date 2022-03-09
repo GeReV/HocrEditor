@@ -30,7 +30,7 @@ public class MoveNodesCommand : UndoableCommandBase<NodesMovedEventArgs>
 
         var insertIndex = e.InsertIndex;
         var destinationList = e.TargetCollection.TryGetList();
-        var data = DefaultDropHandler.ExtractData(e.Data).OfType<object>().ToList();
+        var data = DefaultDropHandler.ExtractData(e.Data).OfType<HocrNodeViewModel>().ToList();
         var isSameCollection = false;
 
         if (data.TrueForAll(item => IsSameNodeType(item, e.TargetOwner)))
@@ -44,29 +44,33 @@ public class MoveNodesCommand : UndoableCommandBase<NodesMovedEventArgs>
 
         var commands = new List<UndoRedoCommand>();
 
-        var sourceList = e.SourceCollection.TryGetList();
-        if (sourceList != null)
+        foreach (var node in data)
         {
-            isSameCollection = sourceList.IsSameObservableCollection(destinationList);
-            if (!isSameCollection)
+            var sourceList = node.Parent?.Children;
+            if (sourceList == null)
             {
-                foreach (var o in data)
-                {
-                    var index = sourceList.IndexOf(o);
-                    if (index == -1)
-                    {
-                        continue;
-                    }
+                continue;
+            }
 
-                    commands.Add(new CollectionRemoveCommand(sourceList, o));
+            isSameCollection = sourceList.IsSameObservableCollection(destinationList);
+            if (isSameCollection)
+            {
+                continue;
+            }
 
-                    // If source is destination too fix the insertion index
-                    if (destinationList != null && ReferenceEquals(sourceList, destinationList) &&
-                        index < insertIndex)
-                    {
-                        --insertIndex;
-                    }
-                }
+            var index = sourceList.IndexOf(node);
+            if (index == -1)
+            {
+                continue;
+            }
+
+            commands.Add(new CollectionRemoveCommand(sourceList, node));
+
+            // If source is destination too fix the insertion index
+            if (destinationList != null && ReferenceEquals(sourceList, destinationList) &&
+                index < insertIndex)
+            {
+                --insertIndex;
             }
         }
 
@@ -75,11 +79,11 @@ public class MoveNodesCommand : UndoableCommandBase<NodesMovedEventArgs>
             return;
         }
 
-        foreach (var o in data)
+        foreach (var node in data)
         {
             if (isSameCollection)
             {
-                var index = destinationList.IndexOf(o);
+                var index = destinationList.IndexOf(node);
                 if (index == -1)
                 {
                     continue;
@@ -90,13 +94,13 @@ public class MoveNodesCommand : UndoableCommandBase<NodesMovedEventArgs>
                     insertIndex--;
                 }
 
-                commands.Add(new CollectionMoveCommand(destinationList, index, insertIndex++));
+                commands.Add(new CollectionMoveCommand(destinationList, node, insertIndex++));
             }
             else
             {
-                commands.Add(new CollectionInsertCommand(destinationList, o, insertIndex++));
+                commands.Add(destinationList.ToCollectionInsertCommand(insertIndex++, node));
 
-                if (o is not HocrNodeViewModel { Parent: { } } node)
+                if (node.Parent == null)
                 {
                     continue;
                 }
