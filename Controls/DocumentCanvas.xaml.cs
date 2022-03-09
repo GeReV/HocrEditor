@@ -858,7 +858,7 @@ public sealed partial class DocumentCanvas
                 // Dragging current the selection, no need to select anything else.
                 if (canvasSelection.Bounds.Contains(normalizedPosition))
                 {
-                    mouseMoveState = MouseState.Dragging;
+                    BeginDrag();
                     break;
                 }
 
@@ -867,7 +867,7 @@ public sealed partial class DocumentCanvas
                 // Dragging the new selection, no need to select anything else.
                 if (canvasSelection.Bounds.Contains(normalizedPosition))
                 {
-                    mouseMoveState = MouseState.Dragging;
+                    BeginDrag();
                     break;
                 }
 
@@ -1317,10 +1317,15 @@ public sealed partial class DocumentCanvas
         selectionChangedLatch = true;
 
         UpdateCanvasSelection();
+    }
+
+    private void BeginDrag()
+    {
+        mouseMoveState = MouseState.Dragging;
 
         offsetStart = transformation.MapPoint(canvasSelection.Bounds.Location);
 
-        dragLimit = CalculateDragLimitBounds(selectedNodes);
+        dragLimit = CalculateDragLimitBounds(SelectedItems ?? throw new InvalidOperationException());
     }
 
     private HashSet<HocrNodeViewModel> SelectNodesWithinRegion(SKRect selection)
