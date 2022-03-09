@@ -97,8 +97,7 @@ public class BringTreeViewItemIntoViewBehavior : Behavior<TreeView>
                     foreach (var parent in nodePath)
                     {
                         // first try the easy way
-                        var newParent = currentParent.ItemContainerGenerator.ContainerFromItem(parent) as TreeViewItem;
-                        if (newParent == null)
+                        if (currentParent.ItemContainerGenerator.ContainerFromItem(parent) is not TreeViewItem newParent)
                         {
                             // if this failed, it's probably because of virtualization, and we will have to do it the hard way.
                             // this code is influenced by TreeViewItem.ExpandRecursive decompiled code, and the MSDN sample at http://code.msdn.microsoft.com/Changing-selection-in-a-6a6242c8/sourcecode?fileId=18862&pathId=753647475
