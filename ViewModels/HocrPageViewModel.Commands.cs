@@ -89,6 +89,11 @@ namespace HocrEditor.ViewModels
         private void Copy()
         {
             Clipboard.SetData(SelectedNodes);
+
+            if (SelectedNodes.Count == 1)
+            {
+                System.Windows.Clipboard.SetText(SelectableNodes.First().InnerText);
+            }
         }
 
         private static bool CanUpdateNodes(List<NodesChangedEventArgs.NodeChange>? nodeChanges) =>
