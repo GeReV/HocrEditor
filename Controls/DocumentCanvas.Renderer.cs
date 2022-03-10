@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using HocrEditor.Helpers;
 using HocrEditor.Models;
 using SkiaSharp;
 using SkiaSharp.HarfBuzz;
@@ -143,7 +144,7 @@ public partial class DocumentCanvas
             ActiveTool switch
             {
                 DocumentCanvasTool.None => NodeSelectionColor,
-                DocumentCanvasTool.SelectionTool => null,
+                DocumentCanvasTool.SelectionTool => SKColor.Empty,
                 DocumentCanvasTool.WordSplitTool => HighlightColor,
                 _ => throw new ArgumentOutOfRangeException()
             }
@@ -184,16 +185,11 @@ public partial class DocumentCanvas
             return;
         }
 
-        var paint = new SKPaint
-        {
-            Color = HighlightColor
-        };
-
         var selectedElement = elements[selectedElements.First()].Item2;
 
         var bounds = transformation.MapRect(selectedElement.Bounds);
         var point = transformation.MapPoint(wordSplitterPosition);
 
-        canvas.DrawLine(point.X, bounds.Top, point.X, bounds.Bottom, paint);
+        canvas.DrawDashedLine(point.X, bounds.Top, point.X, bounds.Bottom, HighlightColor);
     }
 }

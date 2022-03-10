@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using HocrEditor.Helpers;
 using SkiaSharp;
 
 namespace HocrEditor.Controls;
@@ -17,23 +18,6 @@ internal class CanvasSelection : IDisposable
     {
         IsStroke = true,
         Color = SKColors.Gray,
-        StrokeWidth = 1,
-    };
-
-    private const float SELECTION_DASH_LENGTH = 5f;
-
-    private static readonly SKPaint SelectionDashPaint = new()
-    {
-        IsStroke = true,
-        Color = SKColors.Black,
-        StrokeWidth = 1,
-        PathEffect = SKPathEffect.CreateDash(new[] { SELECTION_DASH_LENGTH, SELECTION_DASH_LENGTH }, 0f)
-    };
-
-    private static readonly SKPaint SelectionBackgroundPaint = new()
-    {
-        IsStroke = true,
-        Color = SKColors.White,
         StrokeWidth = 1,
     };
 
@@ -113,7 +97,8 @@ internal class CanvasSelection : IDisposable
 
     public SKPoint Center => new(bounds.MidX, bounds.MidY);
 
-    public SKPoint ResizeRatio {
+    public SKPoint ResizeRatio
+    {
         get
         {
             if (InitialBounds.IsEmpty)
@@ -138,7 +123,7 @@ internal class CanvasSelection : IDisposable
         }
     }
 
-    public void Render(SKCanvas canvas, SKMatrix transformation, SKColor? color = null)
+    public void Render(SKCanvas canvas, SKMatrix transformation, SKColor color = default)
     {
         if (!ShouldShowCanvasSelection)
         {
@@ -147,30 +132,15 @@ internal class CanvasSelection : IDisposable
 
         var bbox = transformation.MapRect(Bounds);
 
-        if (color == null)
-        {
-            var path = new SKPath();
+        var path = new SKPath();
 
-            path.MoveTo(bbox.Left, bbox.Top);
-            path.LineTo(bbox.Left, bbox.Bottom);
-            path.LineTo(bbox.Right, bbox.Bottom);
-            path.LineTo(bbox.Right, bbox.Top);
-            path.Close();
+        path.MoveTo(bbox.Left, bbox.Top);
+        path.LineTo(bbox.Left, bbox.Bottom);
+        path.LineTo(bbox.Right, bbox.Bottom);
+        path.LineTo(bbox.Right, bbox.Top);
+        path.Close();
 
-            canvas.DrawRect(bbox, SelectionBackgroundPaint);
-            canvas.DrawPath(path, SelectionDashPaint);
-        }
-        else
-        {
-            canvas.DrawRect(
-                bbox,
-                new SKPaint
-                {
-                    IsStroke = true,
-                    Color = color.Value
-                }
-            );
-        }
+        canvas.DrawDashedPath(path, color);
 
         foreach (var handle in ResizeHandles)
         {
@@ -178,7 +148,7 @@ internal class CanvasSelection : IDisposable
         }
     }
 
-    private void RenderScalingHandle(SKCanvas canvas, SKMatrix transformation, ResizeHandle handle)
+    private static void RenderScalingHandle(SKCanvas canvas, SKMatrix transformation, ResizeHandle handle)
     {
         var rect = handle.GetRect(transformation);
 
@@ -221,7 +191,5 @@ internal class CanvasSelection : IDisposable
     {
         HandleFillPaint.Dispose();
         HandleStrokePaint.Dispose();
-        SelectionBackgroundPaint.Dispose();
-        SelectionDashPaint.Dispose();
     }
 }
