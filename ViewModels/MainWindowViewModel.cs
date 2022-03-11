@@ -64,6 +64,11 @@ namespace HocrEditor.ViewModels
                     sb.Append(" - ");
                 }
 
+                if (Document.Pages.Count > 0)
+                {
+                    sb.Append($"Page {Document.PagesCollectionView.CurrentPosition + 1}/{Document.Pages.Count} - ");
+                }
+
                 sb.Append(ApplicationName);
 
                 return sb.ToString();
@@ -97,6 +102,11 @@ namespace HocrEditor.ViewModels
 
                     SaveCommand.NotifyCanExecuteChanged();
 
+                    break;
+                }
+                case nameof(Document.CurrentPage):
+                {
+                    OnPropertyChanged(nameof(WindowTitle));
                     break;
                 }
             }
