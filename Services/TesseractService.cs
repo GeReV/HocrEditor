@@ -2,60 +2,77 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
-using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace HocrEditor.Services
 {
-    public class TesseractService
+    public class TesseractService : IDisposable
     {
+        private readonly TesseractApi tesseractApi;
+
         public TesseractService(string tesseractPath)
         {
-            TesseractPath = tesseractPath;
+            tesseractApi = Tesseract.CreateApi(tesseractPath);
         }
 
-        public string TesseractPath { get; private set; }
+        public string GetVersion() => tesseractApi.Version();
 
-        public async Task<List<string>> GetLanguages()
-        {
-            return await Task.Run(
-                async () =>
+        public string[] GetLanguages() => tesseractApi.GetAvailableLanguages();
+
+        public async Task<string> PerformOcr(string filename, IEnumerable<string> languages, Rectangle region = new()) =>
+            await Task.Run(
+                () =>
                 {
-                    var result = await ProcessRunner.Run(TesseractPath, "--list-langs");
+                    tesseractApi.Init(string.Join('+', languages));
+                    tesseractApi.SetVariable("hocr_font_info", "1");
 
-                    return result.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Skip(1).ToList();
+                    using var image = Image.FromFile(filename);
+
+                    if (image is not Bitmap bmp)
+                    {
+                        bmp = new Bitmap(image);
+                    }
+
+                    var bmpData = bmp.LockBits(
+                        new Rectangle(0, 0, bmp.Width, bmp.Height),
+                        ImageLockMode.ReadOnly,
+                        bmp.PixelFormat
+                    );
+                    var bpp = Image.GetPixelFormatSize(bmpData.PixelFormat) / 8;
+                    var size = bmpData.Height * bmpData.Stride;
+                    var bytes = new byte[size];
+
+                    Marshal.Copy(bmpData.Scan0, bytes, 0, size);
+
+                    bmp.UnlockBits(bmpData);
+
+                    if (bmp != image)
+                    {
+                        bmp.Dispose();
+                    }
+
+                    tesseractApi.SetImage(bytes, bmpData.Width, bmpData.Height, bpp, bmpData.Stride);
+
+                    tesseractApi.SetPageSegMode(TesseractPageSegMode.PsmAuto);
+                    tesseractApi.SetSourceResolution((int)image.HorizontalResolution);
+
+                    if (!region.IsEmpty)
+                    {
+                        tesseractApi.SetRectangle(region.X, region.Y, region.Width, region.Height);
+                    }
+
+                    var text = tesseractApi.GetHOCRText();
+
+                    tesseractApi.Clear();
+
+                    return text;
                 }
             );
-        }
 
-        public async Task<string> PerformOcr(string filename, IEnumerable<string> languages)
+        public void Dispose()
         {
-            using var image = Image.FromFile(filename);
-
-            return await ProcessRunner.Run(
-                TesseractPath,
-                $"{filename} stdout --dpi {(int)image.HorizontalResolution} -l {string.Join('+', languages)} --psm 3 -c hocr_font_info=1 hocr"
-            );
-        }
-
-        public async Task<string> PerformOcrRegion(string filename, Rectangle region, IEnumerable<string> languages)
-        {
-            using var image = Image.FromFile(filename);
-
-            using var bitmap = new Bitmap(image);
-
-            using var cropped = bitmap.Clone(region, bitmap.PixelFormat);
-
-            var tempFile = new FileInfo(Path.GetTempFileName());
-
-            cropped.Save(tempFile.FullName, ImageFormat.Bmp);
-
-            var result = await PerformOcr(tempFile.FullName, languages);
-
-            tempFile.Delete();
-
-            return result;
+            tesseractApi.Dispose();
         }
     }
 }

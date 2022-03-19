@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -29,9 +28,9 @@ namespace HocrEditor
             Loaded += OnLoaded;
         }
 
-        private async void OnLoaded(object sender, RoutedEventArgs e)
+        private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            await InitializeLanguages();
+            InitializeLanguages();
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -44,7 +43,7 @@ namespace HocrEditor
             }
         }
 
-        private async Task InitializeLanguages()
+        private void InitializeLanguages()
         {
             var tesseractPath = Settings.TesseractPath;
 
@@ -53,7 +52,9 @@ namespace HocrEditor
                 return;
             }
 
-            var languages = await new TesseractService(tesseractPath).GetLanguages();
+            using var service = new TesseractService(tesseractPath);
+
+            var languages = service.GetLanguages();
 
             if (!languages.Any())
             {
@@ -69,7 +70,8 @@ namespace HocrEditor
                 selectedLanguages.Add(languages.Contains(english) ? english : languages.First());
             }
 
-            languages.Sort(
+            Array.Sort(
+                languages,
                 (a, b) =>
                 {
                     var indexA = selectedLanguages.IndexOf(a);

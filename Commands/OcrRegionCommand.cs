@@ -48,18 +48,22 @@ public class OcrRegionCommand : UndoableAsyncCommandBase<Rect>
         return Task.Run(
                 async () =>
                 {
-                    var service = new TesseractService(tesseractPath);
+                    using var service = new TesseractService(tesseractPath);
 
-                    var body = await service.PerformOcrRegion(
+                    var body = await service.PerformOcr(
                         hocrPageViewModel.Image,
-                        region,
-                        Settings.TesseractSelectedLanguages
+                        Settings.TesseractSelectedLanguages,
+                        region
                     );
 
                     var doc = new HtmlDocument();
                     doc.LoadHtml(body);
 
-                    return new HocrParser().Parse(doc);
+                    var hocrDocument = new HocrParser().Parse(doc, hocrPageViewModel.Image);
+
+                    hocrDocument.OcrSystem = $"Tesseract {service.GetVersion()}";
+
+                    return hocrDocument;
                 }
             )
             .ContinueWith(

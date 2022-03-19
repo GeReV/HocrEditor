@@ -5,6 +5,8 @@
         <TargetFramework>net6.0-windows</TargetFramework>
         <Nullable>enable</Nullable>
         <UseWPF>true</UseWPF>
+        <!-- Used for FolderBrowserDialog -->
+        <UseWindowsForms>true</UseWindowsForms>
         <Version>0.2.1</Version>
         <AssemblyVersion>0.2</AssemblyVersion>
         <FileVersion>0.2.1</FileVersion>

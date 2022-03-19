@@ -19,7 +19,7 @@ namespace HocrEditor.Services
             var doc = new HtmlDocument();
             doc.Load(stream);
 
-            var hocrDocument = Parse(doc);
+            var hocrDocument = Parse(doc, null);
 
             foreach (var page in hocrDocument.Pages)
             {
@@ -29,15 +29,9 @@ namespace HocrEditor.Services
             return hocrDocument;
         }
 
-        public HocrDocument Parse(HtmlDocument document)
+        public HocrDocument Parse(HtmlDocument document, string? imagePath)
         {
-            var html = document.DocumentNode.SelectSingleNode("//html");
-
-            var htmlDirection = html.GetAttributeValue("dir", "ltr") == "rtl" ? Direction.Rtl : Direction.Ltr;
-
-            var htmlLanguage = html.GetAttributeValue("lang", string.Empty);
-
-            var pageNodes = document.DocumentNode.SelectNodes("//body/div[@class='ocr_page']");
+            var pageNodes = document.DocumentNode.SelectNodes("/div[@class='ocr_page']");
 
             var pages = new List<HocrPage>();
 
@@ -45,7 +39,12 @@ namespace HocrEditor.Services
             {
                 idCounter = 0;
 
-                var page = (HocrPage)Parse(pageNode, -1, htmlLanguage, htmlDirection);
+                var page = (HocrPage)Parse(pageNode, -1, string.Empty, Direction.Ltr);
+
+                if (imagePath != null)
+                {
+                    page.Image = imagePath;
+                }
 
                 // Try to guess page direction based on the direction counts.
                 var pageDirection = page.Descendants
@@ -59,17 +58,12 @@ namespace HocrEditor.Services
             }
 
             var hocrDocument = new HocrDocument(pages);
-
-            var ocrSystem = document.DocumentNode.SelectSingleNode("//head/meta[@name='ocr-system']")
-                .GetAttributeValue("content", string.Empty);
-
-            hocrDocument.OcrSystem = ocrSystem;
-
-            var capabilities = document.DocumentNode.SelectSingleNode("//head/meta[@name='ocr-capabilities']")
-                .GetAttributeValue("content", string.Empty)
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-            hocrDocument.Capabilities.AddRange(capabilities);
+            //
+            // var capabilities = document.DocumentNode.SelectSingleNode("//head/meta[@name='ocr-capabilities']")
+            //     .GetAttributeValue("content", string.Empty)
+            //     .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            //
+            // hocrDocument.Capabilities.AddRange(capabilities);
 
             return hocrDocument;
         }

@@ -7,14 +7,17 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Forms;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 using HocrEditor.Services;
-using HtmlAgilityPack;
 using JetBrains.Annotations;
 using Microsoft.Toolkit.Mvvm.Input;
-using Microsoft.Win32;
+using HtmlDocument = HtmlAgilityPack.HtmlDocument;
+using MessageBox = System.Windows.MessageBox;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
+using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
 namespace HocrEditor.ViewModels
 {
@@ -249,8 +252,6 @@ namespace HocrEditor.ViewModels
 
             var pages = imagePaths.Select(image => new HocrPageViewModel(image)).ToList();
 
-            var service = new TesseractService(tesseractPath);
-
             foreach (var page in pages)
             {
                 Document.Pages.Add(page);
@@ -261,12 +262,14 @@ namespace HocrEditor.ViewModels
                             var languages = TesseractLanguages.Where(l => l.IsSelected)
                                 .Select(l => l.Language);
 
+                            using var service = new TesseractService(tesseractPath);
+
                             var body = await service.PerformOcr(page.Image, languages);
 
                             var doc = new HtmlDocument();
                             doc.LoadHtml(body);
 
-                            return new HocrParser().Parse(doc);
+                            return new HocrParser().Parse(doc, page.Image);
                         }
                     )
                     .ContinueWith(
@@ -340,18 +343,18 @@ namespace HocrEditor.ViewModels
                 return tesseractPath;
             }
 
-            var dialog = new OpenFileDialog
+            var dialog = new FolderBrowserDialog
             {
-                Title = "Locate tesseract.exe...",
-                Filter = "Executables (*.exe)|*.exe"
+                Description = "Locate Tesseract OCR...",
+                UseDescriptionForTitle = true
             };
 
-            if (!(dialog.ShowDialog(Window.GetWindow(window)) ?? false))
+            if (dialog.ShowDialog(window.GetIWin32Window()) != DialogResult.OK)
             {
                 return null;
             }
 
-            tesseractPath = dialog.FileName;
+            tesseractPath = dialog.SelectedPath;
 
             Settings.TesseractPath = tesseractPath;
 
