@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using HocrEditor.Helpers;
@@ -19,7 +18,7 @@ namespace HocrEditor.Services
             var doc = new HtmlDocument();
             doc.Load(stream);
 
-            var hocrDocument = Parse(doc, null);
+            var hocrDocument = Parse(doc);
 
             foreach (var page in hocrDocument.Pages)
             {
@@ -29,7 +28,7 @@ namespace HocrEditor.Services
             return hocrDocument;
         }
 
-        public HocrDocument Parse(HtmlDocument document, string? imagePath)
+        public HocrDocument Parse(HtmlDocument document)
         {
             var pageNodes = document.DocumentNode.SelectNodes("/div[@class='ocr_page']");
 
@@ -40,11 +39,6 @@ namespace HocrEditor.Services
                 idCounter = 0;
 
                 var page = (HocrPage)Parse(pageNode, -1, string.Empty, Direction.Ltr);
-
-                if (imagePath != null)
-                {
-                    page.Image = imagePath;
-                }
 
                 // Try to guess page direction based on the direction counts.
                 var pageDirection = page.Descendants

@@ -59,7 +59,7 @@ public class OcrRegionCommand : UndoableAsyncCommandBase<Rect>
                     var doc = new HtmlDocument();
                     doc.LoadHtml(body);
 
-                    var hocrDocument = new HocrParser().Parse(doc, hocrPageViewModel.Image);
+                    var hocrDocument = new HocrParser().Parse(doc);
 
                     hocrDocument.OcrSystem = $"Tesseract {service.GetVersion()}";
 

@@ -52,6 +52,7 @@ namespace HocrEditor.Services
                         bmp.Dispose();
                     }
 
+                    tesseractApi.SetInputName(filename);
                     tesseractApi.SetImage(bytes, bmpData.Width, bmpData.Height, bpp, bmpData.Stride);
 
                     tesseractApi.SetPageSegMode(TesseractPageSegMode.PsmAuto);

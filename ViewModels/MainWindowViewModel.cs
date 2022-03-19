@@ -269,7 +269,7 @@ namespace HocrEditor.ViewModels
                             var doc = new HtmlDocument();
                             doc.LoadHtml(body);
 
-                            return new HocrParser().Parse(doc, page.Image);
+                            return new HocrParser().Parse(doc);
                         }
                     )
                     .ContinueWith(

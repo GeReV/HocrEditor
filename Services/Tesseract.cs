@@ -90,6 +90,8 @@ public static class TesseractDelegates
 
     internal delegate void TessBaseAPISetRectangle(IntPtr handle, int x, int y, int width, int height);
 
+    internal delegate void TessBaseAPISetInputName(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)] string name);
+
     internal delegate void TessBaseAPISetPageSegMode(IntPtr handle, int mode);
 
     internal delegate bool TessBaseAPISetVariable(
@@ -113,6 +115,7 @@ internal class TesseractDllHandle : SafeHandle
     public readonly TesseractDelegates.TessBaseAPIClear TessBaseAPIClear;
     public readonly TesseractDelegates.TessVersion TessVersion;
     public readonly TesseractDelegates.TessBaseAPIInit1 TessBaseAPIInit;
+    public readonly TesseractDelegates.TessBaseAPISetInputName TessBaseAPISetInputName;
     public readonly TesseractDelegates.TessBaseAPISetImage TessBaseAPISetImage;
     public readonly TesseractDelegates.TessBaseAPIGetUTF8Text TessBaseAPIGetUTF8Text;
     public readonly TesseractDelegates.TessBaseAPIGetHOCRText TessBaseAPIGetHOCRText;
@@ -155,6 +158,8 @@ internal class TesseractDllHandle : SafeHandle
         TessBaseApiDelete = GetProc<TesseractDelegates.TessBaseAPIDelete>(nameof(TesseractDelegates.TessBaseAPIDelete));
         TessBaseAPIClear = GetProc<TesseractDelegates.TessBaseAPIClear>(nameof(TesseractDelegates.TessBaseAPIClear));
         TessBaseAPIInit = GetProc<TesseractDelegates.TessBaseAPIInit1>(nameof(TesseractDelegates.TessBaseAPIInit1));
+        TessBaseAPISetInputName =
+            GetProc<TesseractDelegates.TessBaseAPISetInputName>(nameof(TesseractDelegates.TessBaseAPISetInputName));
         TessBaseAPISetImage =
             GetProc<TesseractDelegates.TessBaseAPISetImage>(nameof(TesseractDelegates.TessBaseAPISetImage));
         TessBaseAPIGetUTF8Text =
@@ -217,6 +222,9 @@ public class TesseractApi : IDisposable
 
     public void Init(string language, TesseractOcrEngineMode oem = TesseractOcrEngineMode.OemDefault) =>
         dllHandle.TessBaseAPIInit(apiHandle, dataPath, language, (int)oem, IntPtr.Zero, 0);
+
+    public void SetInputName(string name) =>
+        dllHandle.TessBaseAPISetInputName(apiHandle, name);
 
     public void SetImage(byte[] data, int width, int height, int bytesPerPixel, int bytesPerLine) =>
         dllHandle.TessBaseAPISetImage(apiHandle, data, width, height, bytesPerPixel, bytesPerLine);
