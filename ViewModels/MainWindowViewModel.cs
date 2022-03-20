@@ -363,10 +363,7 @@ namespace HocrEditor.ViewModels
 
         protected override void Dispose(bool disposing)
         {
-            if (!disposing)
-            {
-                return;
-            }
+            base.Dispose(disposing);
 
             TesseractLanguages.CollectionChanged -= TesseractLanguagesChanged;
             TesseractLanguages.UnsubscribeItemPropertyChanged(TesseractLanguagesChanged);

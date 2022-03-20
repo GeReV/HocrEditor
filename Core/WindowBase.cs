@@ -18,7 +18,7 @@ public abstract class WindowBase<T> : Window, IDisposable where T : ViewModelBas
         Dispose();
     }
 
-    protected void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         if (disposing)
         {

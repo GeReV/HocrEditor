@@ -217,10 +217,7 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
 
     protected override void Dispose(bool disposing)
     {
-        if (!disposing)
-        {
-            return;
-        }
+        base.Dispose(disposing);
 
         Pages.UnsubscribeItemPropertyChanged(PagesChanged);
 

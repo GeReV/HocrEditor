@@ -202,10 +202,7 @@ namespace HocrEditor.ViewModels
 
         protected override void Dispose(bool disposing)
         {
-            if (!disposing)
-            {
-                return;
-            }
+            base.Dispose(disposing);
 
             UndoRedoManager.UndoStackChanged -= UpdateUndoRedoCommands;
 
