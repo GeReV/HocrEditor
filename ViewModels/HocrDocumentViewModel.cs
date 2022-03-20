@@ -215,8 +215,13 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
         SelectToolCommand.NotifyCanExecuteChanged();
     }
 
-    public override void Dispose()
+    protected override void Dispose(bool disposing)
     {
+        if (!disposing)
+        {
+            return;
+        }
+
         Pages.UnsubscribeItemPropertyChanged(PagesChanged);
 
         if (CurrentPage != null)

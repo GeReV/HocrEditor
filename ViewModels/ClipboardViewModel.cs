@@ -33,9 +33,4 @@ public class ClipboardViewModel : ViewModelBase
     }
 
     public IList<HocrNodeViewModel> GetData() => data;
-
-    public override void Dispose()
-    {
-        Clear();
-    }
 }

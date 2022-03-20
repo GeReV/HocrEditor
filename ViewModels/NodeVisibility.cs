@@ -14,9 +14,4 @@ namespace HocrEditor.ViewModels;
         public HocrNodeTypeViewModel NodeTypeViewModel { get; }
 
         public bool Visible { get; set; } = true;
-
-        public override void Dispose()
-        {
-            // No-op.
-        }
     }

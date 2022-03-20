@@ -361,8 +361,13 @@ namespace HocrEditor.ViewModels
             return tesseractPath;
         }
 
-        public override void Dispose()
+        protected override void Dispose(bool disposing)
         {
+            if (!disposing)
+            {
+                return;
+            }
+
             TesseractLanguages.CollectionChanged -= TesseractLanguagesChanged;
             TesseractLanguages.UnsubscribeItemPropertyChanged(TesseractLanguagesChanged);
             TesseractLanguages.Dispose();

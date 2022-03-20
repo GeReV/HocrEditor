@@ -33,7 +33,13 @@ namespace HocrEditor.ViewModels
 
         #region Disposables
 
-        public abstract void Dispose();
+        protected virtual void Dispose(bool disposing) {}
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
         #endregion
 
