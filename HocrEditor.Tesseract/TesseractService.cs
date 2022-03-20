@@ -1,9 +1,10 @@
 ﻿using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
-using HocrEditor.Tesseract;
 
-internal sealed class TesseractService : IDisposable
+namespace HocrEditor.Tesseract;
+
+public sealed class TesseractService : IDisposable
 {
     private bool isDisposed;
     private readonly object lck = new();
@@ -18,7 +19,7 @@ internal sealed class TesseractService : IDisposable
 
     public string[] GetLanguages() => tesseractApi.GetAvailableLanguages();
 
-    public async Task<string> PerformOcr(string filename, IEnumerable<string> languages, Rectangle region = new())
+    public async Task<string> Recognize(string filename, IEnumerable<string> languages, Rectangle region = new())
     {
         if (isDisposed)
         {

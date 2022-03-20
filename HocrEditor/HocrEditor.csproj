@@ -130,7 +130,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="HocrEditor.Tesseract\HocrEditor.Tesseract.csproj" />
+      <ProjectReference Include="..\HocrEditor.Tesseract\HocrEditor.Tesseract.csproj" />
     </ItemGroup>
 
 </Project>

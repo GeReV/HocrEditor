@@ -2,7 +2,7 @@
 profile = "custom"
 
 [msbuild]
-project = "./HocrEditor.csproj"
+project = "./HocrEditor/HocrEditor.csproj"
 [github]
 user = "GeReV"
 repo = "HocrEditor"

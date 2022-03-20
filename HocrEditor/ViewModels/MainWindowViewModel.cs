@@ -12,6 +12,7 @@ using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 using HocrEditor.Services;
+using HocrEditor.Tesseract;
 using JetBrains.Annotations;
 using Microsoft.Toolkit.Mvvm.Input;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
@@ -264,7 +265,7 @@ namespace HocrEditor.ViewModels
 
                             using var service = new TesseractService(tesseractPath);
 
-                            var body = await service.PerformOcr(page.Image, languages);
+                            var body = await service.Recognize(page.Image, languages);
 
                             var doc = new HtmlDocument();
                             doc.LoadHtml(body);

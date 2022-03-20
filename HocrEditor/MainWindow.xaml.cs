@@ -9,7 +9,7 @@ using HocrEditor.Behaviors;
 using HocrEditor.Controls;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
-using HocrEditor.Services;
+using HocrEditor.Tesseract;
 using HocrEditor.ViewModels;
 
 namespace HocrEditor

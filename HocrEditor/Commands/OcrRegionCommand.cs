@@ -10,6 +10,7 @@ using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Services;
+using HocrEditor.Tesseract;
 using HocrEditor.ViewModels;
 using HtmlAgilityPack;
 using Rect = HocrEditor.Models.Rect;
@@ -50,7 +51,7 @@ public class OcrRegionCommand : UndoableAsyncCommandBase<Rect>
                 {
                     using var service = new TesseractService(tesseractPath);
 
-                    var body = await service.PerformOcr(
+                    var body = await service.Recognize(
                         hocrPageViewModel.Image,
                         Settings.TesseractSelectedLanguages,
                         region
