@@ -18,8 +18,17 @@ public abstract class WindowBase<T> : Window, IDisposable where T : ViewModelBas
         Dispose();
     }
 
-    public virtual void Dispose()
+    protected void Dispose(bool disposing)
     {
-        ViewModel.Dispose();
+        if (disposing)
+        {
+            ViewModel.Dispose();
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 }

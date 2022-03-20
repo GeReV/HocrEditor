@@ -5,7 +5,7 @@ using SkiaSharp;
 
 namespace HocrEditor.Controls;
 
-internal class CanvasSelection : IDisposable
+internal sealed class CanvasSelection : IDisposable
 {
     private static readonly SKPaint HandleFillPaint = new()
     {

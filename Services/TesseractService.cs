@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace HocrEditor.Services
 {
-    public class TesseractService : IDisposable
+    public sealed class TesseractService : IDisposable
     {
         private readonly TesseractApi tesseractApi;
 

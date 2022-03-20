@@ -200,7 +200,7 @@ internal class TesseractDllHandle : SafeHandle
     public override bool IsInvalid => handle == IntPtr.Zero;
 }
 
-public class TesseractApi : IDisposable
+public sealed class TesseractApi : IDisposable
 {
     private readonly TesseractDllHandle dllHandle;
     private readonly string dataPath;
