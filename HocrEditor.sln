@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HocrEditor", "HocrEditor.csproj", "{B13D9609-0058-47EA-BE3D-D8D2C4BC5DB8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HocrEditor.Tesseract", "HocrEditor.Tesseract\HocrEditor.Tesseract.csproj", "{903AE18A-649C-41CE-A987-3503F6C7A430}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{B13D9609-0058-47EA-BE3D-D8D2C4BC5DB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B13D9609-0058-47EA-BE3D-D8D2C4BC5DB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B13D9609-0058-47EA-BE3D-D8D2C4BC5DB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{903AE18A-649C-41CE-A987-3503F6C7A430}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{903AE18A-649C-41CE-A987-3503F6C7A430}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{903AE18A-649C-41CE-A987-3503F6C7A430}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{903AE18A-649C-41CE-A987-3503F6C7A430}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
