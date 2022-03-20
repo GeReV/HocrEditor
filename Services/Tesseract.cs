@@ -10,7 +10,7 @@ internal enum LoadLibraryFlags : uint
 {
     None = 0,
     DontResolveDllReferences = 0x00000001,
-    LoadIgnoreCodeAuthzLevel = 0x00000010,
+    LoadIgnoreCodeAuthorizationLevel = 0x00000010,
     LoadLibraryAsDatafile = 0x00000002,
     LoadLibraryAsDatafileExclusive = 0x00000040,
     LoadLibraryAsImageResource = 0x00000020,
