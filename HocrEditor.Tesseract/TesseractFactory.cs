@@ -1,6 +1,6 @@
 ﻿namespace HocrEditor.Tesseract;
 
-public static class TesseractFactory
+internal static class TesseractFactory
 {
     public static TesseractApi CreateApi(string tesseractPath)
     {
