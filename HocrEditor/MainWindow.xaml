@@ -251,7 +251,7 @@
                 </Button>
                 <Button Command="{x:Static commands:RoutedCommands.CropCommand}"
                         CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
-                        ToolTip="Crop nodes"
+                        ToolTip="Crop nodes (Ctrl+K)"
                         helpers:IconButton.Source="/Icons/ruler-crop.png">
                     Crop
                 </Button>
