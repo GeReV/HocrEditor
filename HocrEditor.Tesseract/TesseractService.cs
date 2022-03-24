@@ -1,6 +1,5 @@
 ﻿using System.Drawing;
-using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
+using SkiaSharp;
 
 namespace HocrEditor.Tesseract;
 
@@ -19,7 +18,7 @@ public sealed class TesseractService : IDisposable
 
     public string[] GetLanguages() => tesseractApi.GetAvailableLanguages();
 
-    public async Task<string> Recognize(string filename, IEnumerable<string> languages, Rectangle region = new())
+    public async Task<string> Recognize(SKBitmap image, string imageFilename, IEnumerable<string> languages, Rectangle region = new())
     {
         if (isDisposed)
         {
@@ -39,16 +38,13 @@ public sealed class TesseractService : IDisposable
                     tesseractApi.Init(string.Join('+', languages));
                     tesseractApi.SetVariable("hocr_font_info", "1");
 
-                    using var image = Image.FromFile(filename);
+                    var bytes = GetBitmapBytes(image);
 
-                    var (bmpData, bytes) = GetBitmapData(image);
-                    var bpp = Image.GetPixelFormatSize(bmpData.PixelFormat) / 8;
-
-                    tesseractApi.SetInputName(filename);
-                    tesseractApi.SetImage(bytes, bmpData.Width, bmpData.Height, bpp, bmpData.Stride);
+                    tesseractApi.SetInputName(imageFilename);
+                    tesseractApi.SetImage(bytes, image.Width, image.Height, image.BytesPerPixel, image.RowBytes);
 
                     tesseractApi.SetPageSegMode(PageSegmentationMode.SegmentationOcr);
-                    tesseractApi.SetSourceResolution((int)image.HorizontalResolution);
+                    // tesseractApi.SetSourceResolution(300);
 
                     if (!region.IsEmpty)
                     {
@@ -65,32 +61,7 @@ public sealed class TesseractService : IDisposable
         );
     }
 
-    private static (BitmapData bmpData, byte[] bytes) GetBitmapData(Image image)
-    {
-        if (image is not Bitmap bmp)
-        {
-            bmp = new Bitmap(image);
-        }
-
-        var bmpData = bmp.LockBits(
-            new Rectangle(0, 0, bmp.Width, bmp.Height),
-            ImageLockMode.ReadOnly,
-            bmp.PixelFormat
-        );
-        var size = bmpData.Height * bmpData.Stride;
-        var bytes = new byte[size];
-
-        Marshal.Copy(bmpData.Scan0, bytes, 0, size);
-
-        bmp.UnlockBits(bmpData);
-
-        if (bmp != image)
-        {
-            bmp.Dispose();
-        }
-
-        return (bmpData, bytes);
-    }
+    private static byte[] GetBitmapBytes(SKBitmap image) => image.GetPixelSpan().ToArray();
 
     public void Dispose()
     {
