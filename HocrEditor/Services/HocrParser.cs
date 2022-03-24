@@ -30,7 +30,7 @@ namespace HocrEditor.Services
 
         public HocrDocument Parse(HtmlDocument document)
         {
-            var pageNodes = document.DocumentNode.SelectNodes("/div[@class='ocr_page']");
+            var pageNodes = document.DocumentNode.SelectNodes("//div[@class='ocr_page']");
 
             var pages = new List<HocrPage>();
 
