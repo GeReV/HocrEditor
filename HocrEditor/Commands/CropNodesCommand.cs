@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using HocrEditor.Commands.UndoRedo;
+using HocrEditor.Core;
 using HocrEditor.Helpers;
+using HocrEditor.Models;
 using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
@@ -26,15 +28,26 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
 
         // Order nodes from the latest occurrence (deepest) to earliest, so if a chain of parent-children is selected,
         // the deepest child is cropped, then its parent and so on, bottom-up.
-        var selectedNodes = nodes.OrderBy(node => -hocrPageViewModel.Nodes.IndexOf(node));
+        var selectedNodes = nodes
+            .OrderBy(node => -hocrPageViewModel.Nodes.IndexOf(node))
+            .ToList();
 
-        var commands = selectedNodes.Select(
-            node => PropertyChangeCommand.FromProperty(
-                node,
-                n => n.BBox,
-                () => NodeHelpers.CalculateUnionRect(node.Children)
-            )
-        );
+        if (Settings.AutoClean)
+        {
+            selectedNodes = selectedNodes
+                .Concat(selectedNodes.SelectMany(n => n.Ascendants.TakeWhile(a => !a.IsRoot)))
+                .ToList();
+        }
+
+        var commands = selectedNodes
+            .Where(n => n.NodeType != HocrNodeType.Word) // Do not crop words as they have no children.
+            .Select(
+                node => PropertyChangeCommand.FromProperty(
+                    node,
+                    n => n.BBox,
+                    () => NodeHelpers.CalculateUnionRect(node.Children)
+                )
+            );
 
         // ExecuteUndoableCommand(commands);
         UndoRedoManager.ExecuteCommands(commands);
