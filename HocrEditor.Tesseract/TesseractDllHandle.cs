@@ -23,6 +23,8 @@ internal class TesseractDllHandle : SafeHandle
     public readonly TesseractDelegates.TessBaseAPIReadConfigFile TessBaseAPIReadConfigFile;
     public readonly TesseractDelegates.TessBaseAPIGetLoadedLanguagesAsVector TessBaseAPIGetLoadedLanguagesAsVector;
     public readonly TesseractDelegates.TessBaseAPIGetAvailableLanguagesAsVector TessBaseAPIGetAvailableLanguagesAsVector;
+    public readonly TesseractDelegates.TessDeleteText TessDeleteText;
+    public readonly TesseractDelegates.TessDeleteTextArray TessDeleteTextArray;
     // ReSharper enable InconsistentNaming
 
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
@@ -84,6 +86,8 @@ internal class TesseractDllHandle : SafeHandle
             GetProc<TesseractDelegates.TessBaseAPIGetAvailableLanguagesAsVector>(
                 nameof(TesseractDelegates.TessBaseAPIGetAvailableLanguagesAsVector)
             );
+        TessDeleteText = GetProc<TesseractDelegates.TessDeleteText>(nameof(TesseractDelegates.TessDeleteText));
+        TessDeleteTextArray = GetProc<TesseractDelegates.TessDeleteTextArray>(nameof(TesseractDelegates.TessDeleteTextArray));
     }
 
     private TDelegate GetProc<TDelegate>(string name) =>
@@ -149,6 +153,10 @@ internal class TesseractDllHandle : SafeHandle
         internal delegate IntPtr TessBaseAPIGetLoadedLanguagesAsVector(IntPtr handle);
 
         internal delegate IntPtr TessBaseAPIGetAvailableLanguagesAsVector(IntPtr handle);
+
+        internal delegate void TessDeleteText(IntPtr text);
+
+        internal delegate void TessDeleteTextArray(IntPtr textArray);
         // ReSharper enable InconsistentNaming
     }
 }

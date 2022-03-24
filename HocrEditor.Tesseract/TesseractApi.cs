@@ -29,29 +29,34 @@ public sealed class TesseractApi : IDisposable
     public void SetImage(byte[] data, int width, int height, int bytesPerPixel, int bytesPerLine) =>
         dllHandle.TessBaseAPISetImage(apiHandle.DangerousGetHandle(), data, width, height, bytesPerPixel, bytesPerLine);
 
-    public string Version() =>
-        Marshal.PtrToStringUTF8(dllHandle.TessVersion()) ?? ThrowEmptyString();
+    public string Version() => GetText(dllHandle.TessVersion());
 
     public string GetUtf8Text() =>
-        Marshal.PtrToStringUTF8(dllHandle.TessBaseAPIGetUTF8Text(apiHandle.DangerousGetHandle())) ?? ThrowEmptyString();
+        GetText(dllHandle.TessBaseAPIGetUTF8Text(apiHandle.DangerousGetHandle()));
 
     public string GetHocrText(int pageNumber = 0) =>
-        Marshal.PtrToStringUTF8(dllHandle.TessBaseAPIGetHOCRText(apiHandle.DangerousGetHandle(), pageNumber)) ?? ThrowEmptyString();
+        GetText(dllHandle.TessBaseAPIGetHOCRText(apiHandle.DangerousGetHandle(), pageNumber));
 
     public string GetAltoText(int pageNumber = 0) =>
-        Marshal.PtrToStringUTF8(dllHandle.TessBaseAPIGetAltoText(apiHandle.DangerousGetHandle(), pageNumber)) ?? ThrowEmptyString();
+        GetText(dllHandle.TessBaseAPIGetAltoText(apiHandle.DangerousGetHandle(), pageNumber));
 
     public string GetTsvText(int pageNumber = 0) =>
-        Marshal.PtrToStringUTF8(dllHandle.TessBaseAPIGetTsvText(apiHandle.DangerousGetHandle(), pageNumber)) ?? ThrowEmptyString();
+        GetText(dllHandle.TessBaseAPIGetTsvText(apiHandle.DangerousGetHandle(), pageNumber));
 
-    public void SetSourceResolution(int ppi) => dllHandle.TessBaseAPISetSourceResolution(apiHandle.DangerousGetHandle(), ppi);
+    public void SetSourceResolution(int ppi) =>
+        dllHandle.TessBaseAPISetSourceResolution(apiHandle.DangerousGetHandle(), ppi);
 
     public void SetRectangle(int x, int y, int width, int height) =>
         dllHandle.TessBaseAPISetRectangle(apiHandle.DangerousGetHandle(), x, y, width, height);
 
-    public void SetPageSegMode(PageSegmentationMode mode) => dllHandle.TessBaseAPISetPageSegMode(apiHandle.DangerousGetHandle(), (int)mode);
-    public bool SetVariable(string key, string value) => dllHandle.TessBaseAPISetVariable(apiHandle.DangerousGetHandle(), key, value);
-    public void ReadConfigFile(string file) => dllHandle.TessBaseAPIReadConfigFile(apiHandle.DangerousGetHandle(), file);
+    public void SetPageSegMode(PageSegmentationMode mode) =>
+        dllHandle.TessBaseAPISetPageSegMode(apiHandle.DangerousGetHandle(), (int)mode);
+
+    public bool SetVariable(string key, string value) =>
+        dllHandle.TessBaseAPISetVariable(apiHandle.DangerousGetHandle(), key, value);
+
+    public void ReadConfigFile(string file) =>
+        dllHandle.TessBaseAPIReadConfigFile(apiHandle.DangerousGetHandle(), file);
 
     public string[] GetLoadedLanguages()
     {
@@ -95,23 +100,52 @@ public sealed class TesseractApi : IDisposable
         return count;
     }
 
-    private static string[] GetStringVector(IntPtr ptr)
+    private string[] GetStringVector(IntPtr ptr)
     {
-        var count = GetVectorLength(ptr);
-
-        var result = new string[count];
-
-        for (var i = 0; i < count; i++)
+        try
         {
-            var str = Marshal.PtrToStringUTF8(Marshal.ReadIntPtr(ptr, i * IntPtr.Size)) ?? ThrowEmptyString();
+            var count = GetVectorLength(ptr);
 
-            result[i] = str;
+            var result = new string[count];
+
+            for (var i = 0; i < count; i++)
+            {
+                var str = Marshal.PtrToStringUTF8(Marshal.ReadIntPtr(ptr, i * IntPtr.Size)) ?? ThrowEmptyString();
+
+                result[i] = str;
+            }
+
+            return result;
         }
+        finally
+        {
+            if (ptr != IntPtr.Zero)
+            {
+                DeleteTextArray(ptr);
+            }
+        }
+    }
 
-        return result;
+    private string GetText(IntPtr text)
+    {
+        try
+        {
+            return Marshal.PtrToStringUTF8(text) ?? ThrowEmptyString();
+        }
+        finally
+        {
+            if (text != IntPtr.Zero)
+            {
+                DeleteText(text);
+            }
+        }
     }
 
     private static string ThrowEmptyString() => throw new InvalidOperationException("Unexpected null string");
+
+    private void DeleteText(IntPtr text) => dllHandle.TessDeleteText(text);
+
+    private void DeleteTextArray(IntPtr textArray) => dllHandle.TessDeleteTextArray(textArray);
 
     public void Dispose()
     {
