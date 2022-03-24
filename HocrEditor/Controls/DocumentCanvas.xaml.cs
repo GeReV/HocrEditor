@@ -536,6 +536,8 @@ public sealed partial class DocumentCanvas
 
                 if (documentCanvas.IsEditing)
                 {
+                    documentCanvas.OnNodeEdited(documentCanvas.TextBox.Text);
+
                     documentCanvas.wordSplitterValue = documentCanvas.TextBox.Text;
                     documentCanvas.wordSplitterValueSplitStart = documentCanvas.TextBox.SelectionStart;
                     documentCanvas.wordSplitterValueSplitLength = documentCanvas.TextBox.SelectionLength;
