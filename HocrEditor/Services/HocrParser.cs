@@ -22,7 +22,7 @@ namespace HocrEditor.Services
 
             foreach (var page in hocrDocument.Pages)
             {
-                page.Image = Path.Combine(Path.GetDirectoryName(filename) ?? string.Empty, page.Image);
+                page.ImageFilename = Path.Combine(Path.GetDirectoryName(filename) ?? string.Empty, page.ImageFilename);
             }
 
             return hocrDocument;

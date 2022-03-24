@@ -256,7 +256,7 @@ public class HocrWriter
             case HocrPage hocrPage:
                 var relativeImagePath = Path.GetRelativePath(
                     Path.GetDirectoryName(filename) ?? string.Empty,
-                    hocrPage.Image
+                    hocrPage.ImageFilename
                 );
 
                 sb.Append($"; image \"{relativeImagePath}\"");

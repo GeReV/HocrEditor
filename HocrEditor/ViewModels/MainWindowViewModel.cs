@@ -265,7 +265,9 @@ namespace HocrEditor.ViewModels
 
                             using var service = new TesseractService(tesseractPath);
 
-                            var body = await service.Recognize(page.Image, languages);
+                            ArgumentNullException.ThrowIfNull(page.Image);
+
+                            var body = await service.Recognize(page.Image, page.ImageFilename, languages);
 
                             var doc = new HtmlDocument();
                             doc.LoadHtml(body);

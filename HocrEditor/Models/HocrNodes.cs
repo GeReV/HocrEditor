@@ -30,7 +30,7 @@ namespace HocrEditor.Models
             children
         )
         {
-            Image = GetAttributeFromTitle("image").Trim('"');
+            ImageFilename = GetAttributeFromTitle("image").Trim('"');
 
             var dpi = GetAttributeFromTitle("scan_res")
                 .Split(" ", StringSplitOptions.RemoveEmptyEntries)
@@ -45,7 +45,7 @@ namespace HocrEditor.Models
 
         public (int, int) Dpi { get; }
 
-        public string Image { get; set; }
+        public string ImageFilename { get; set; }
 
         public IEnumerable<HocrNode> Descendants => ChildNodes.RecursiveSelect(n => n.ChildNodes);
     }

@@ -353,13 +353,12 @@
                                      ActiveTool="{Binding Document.CanvasTool}"
                                      IsShowNumbering="{Binding Document.ShowNumbering}"
                                      IsShowText="{Binding Document.ShowText}"
-                                     ItemsSource="{Binding Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
+                                     ViewModel="{Binding Document.CurrentPage}"
                                      Margin="-1,0"
                                      NodeVisibility="{Binding Document.NodeVisibility}"
                                      NodesChanged="Canvas_OnNodesChanged"
                                      NodesEdited="Canvas_OnNodeEdited"
                                      WordSplit="Canvas_OnWordSplit"
-                                     SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
                                      SelectionBounds="{Binding Document.SelectionBounds}"
                                      SelectionChanged="Canvas_OnSelectionChanged" />
             <controls:DocumentTreeView

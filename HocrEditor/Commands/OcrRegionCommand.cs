@@ -51,8 +51,11 @@ public class OcrRegionCommand : UndoableAsyncCommandBase<Rect>
                 {
                     using var service = new TesseractService(tesseractPath);
 
+                    ArgumentNullException.ThrowIfNull(hocrPageViewModel.Image);
+
                     var body = await service.Recognize(
                         hocrPageViewModel.Image,
+                        hocrPageViewModel.ImageFilename,
                         Settings.TesseractSelectedLanguages,
                         region
                     );
@@ -81,7 +84,7 @@ public class OcrRegionCommand : UndoableAsyncCommandBase<Rect>
 
                         Debug.Assert(hocrDocument.Pages.Count == 1);
 
-                        var tempPage = new HocrPageViewModel(hocrPageViewModel.Image);
+                        var tempPage = new HocrPageViewModel(hocrPageViewModel.ImageFilename);
 
                         tempPage.Build(hocrDocument.Pages.First());
 

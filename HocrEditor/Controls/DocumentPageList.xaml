@@ -48,7 +48,7 @@
                                        RenderOptions.BitmapScalingMode="HighQuality"
                                        Stretch="Uniform"
                                        StretchDirection="DownOnly"
-                                       UriSource="{Binding Image}" />
+                                       UriSource="{Binding ImageFilename}" />
                         <ProgressBar IsIndeterminate="True"
                                      VerticalAlignment="Bottom"
                                      Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}" />

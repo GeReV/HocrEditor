@@ -10,6 +10,7 @@ using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 using Microsoft.Toolkit.Mvvm.Input;
+using SkiaSharp;
 using Rect = HocrEditor.Models.Rect;
 
 namespace HocrEditor.ViewModels
@@ -28,11 +29,19 @@ namespace HocrEditor.ViewModels
 
         public bool IsProcessing => HocrPage == null;
 
-        public string Image
+        private string imageFilename = string.Empty;
+        public string ImageFilename
         {
-            get;
-            set;
+            get => imageFilename;
+            set
+            {
+                imageFilename = value;
+
+                Image = SKBitmap.Decode(imageFilename);
+            }
         }
+
+        public SKBitmap? Image { get; private set; }
 
         public Direction Direction
         {
@@ -44,6 +53,7 @@ namespace HocrEditor.ViewModels
             Direction == Direction.Ltr ? FlowDirection.LeftToRight : FlowDirection.RightToLeft;
 
         private Rect selectionBounds;
+
         public Rect SelectionBounds
         {
             get => selectionBounds;
@@ -57,14 +67,14 @@ namespace HocrEditor.ViewModels
 
         public ClipboardViewModel Clipboard { get; } = new();
 
-        public HocrPageViewModel(HocrPage page) : this(page.Image)
+        public HocrPageViewModel(HocrPage page) : this(page.ImageFilename)
         {
             Build(page);
         }
 
-        public HocrPageViewModel(string image)
+        public HocrPageViewModel(string imageFilename)
         {
-            Image = image;
+            ImageFilename = imageFilename;
 
             OcrRegionCommand = new OcrRegionCommand(this);
             DeleteCommand = new DeleteNodesCommand(this);
@@ -161,7 +171,7 @@ namespace HocrEditor.ViewModels
         {
             HocrPage = hocrPage;
 
-            Image = hocrPage.Image;
+            ImageFilename = hocrPage.ImageFilename;
             Direction = hocrPage.Direction;
 
             var nodeCache = BuildNodeCache(HocrPage.Descendants.Prepend(HocrPage));
@@ -203,6 +213,14 @@ namespace HocrEditor.ViewModels
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
+
+            if (!disposing)
+            {
+                return;
+            }
+
+            Image?.Dispose();
+            Image = null;
 
             UndoRedoManager.UndoStackChanged -= UpdateUndoRedoCommands;
 

@@ -38,7 +38,6 @@ internal enum MouseState
 
 public class Element
 {
-    public SKBitmap? Background { get; set; }
     public SKRect Bounds { get; set; }
 }
 
@@ -66,24 +65,14 @@ public sealed partial class DocumentCanvas
     private readonly ObjectPool<Element> elementPool =
         new DefaultObjectPool<Element>(new DefaultPooledObjectPolicy<Element>());
 
-    public static readonly DependencyProperty SelectedItemsProperty = DependencyProperty.Register(
-        nameof(SelectedItems),
-        typeof(ObservableHashSet<HocrNodeViewModel>),
-        typeof(DocumentCanvas),
-        new PropertyMetadata(
-            null,
-            SelectedItemsChanged
-        )
-    );
-
-    public static readonly DependencyProperty ItemsSourceProperty
+    public static readonly DependencyProperty ViewModelProperty
         = DependencyProperty.Register(
-            nameof(ItemsSource),
-            typeof(ObservableCollection<HocrNodeViewModel>),
+            nameof(ViewModel),
+            typeof(HocrPageViewModel),
             typeof(DocumentCanvas),
             new PropertyMetadata(
                 null,
-                ItemsSourceChanged
+                ViewModelChanged
             )
         );
 
@@ -163,22 +152,28 @@ public sealed partial class DocumentCanvas
 
     public ObservableHashSet<HocrNodeViewModel>? SelectedItems
     {
-        get => (ObservableHashSet<HocrNodeViewModel>?)GetValue(SelectedItemsProperty);
-        set => SetValue(SelectedItemsProperty, value);
+        get => ViewModel?.SelectedNodes;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(ViewModel);
+            ArgumentNullException.ThrowIfNull(value);
+
+            ViewModel.SelectedNodes = value;
+        }
     }
 
-    public ObservableCollection<HocrNodeViewModel>? ItemsSource
+    public HocrPageViewModel? ViewModel
     {
-        get => (ObservableCollection<HocrNodeViewModel>)GetValue(ItemsSourceProperty);
+        get => (HocrPageViewModel)GetValue(ViewModelProperty);
         set
         {
             if (value == null)
             {
-                ClearValue(ItemsSourceProperty);
+                ClearValue(ViewModelProperty);
             }
             else
             {
-                SetValue(ItemsSourceProperty, value);
+                SetValue(ViewModelProperty, value);
             }
         }
     }
@@ -235,6 +230,8 @@ public sealed partial class DocumentCanvas
 
     private int rootId = -1;
     private readonly Dictionary<int, (HocrNodeViewModel, Element)> elements = new();
+
+    private SKBitmap? background;
 
     private Element RootElement => elements[rootId].Item2;
 
@@ -380,13 +377,13 @@ public sealed partial class DocumentCanvas
         }
     }
 
-    private static void ItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void ViewModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var documentCanvas = (DocumentCanvas)d;
 
         foreach (var (_, element) in documentCanvas.elements.Values)
         {
-            element.Background = null;
+            documentCanvas.background = null;
 
             documentCanvas.elementPool.Return(element);
         }
@@ -397,28 +394,36 @@ public sealed partial class DocumentCanvas
 
         documentCanvas.rootId = -1;
 
-        if (e.OldValue is ObservableCollection<HocrNodeViewModel> oldNodes && oldNodes.Any())
-        {
-            oldNodes.UnsubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
+        documentCanvas.background = null;
 
-            oldNodes.CollectionChanged -= documentCanvas.NodesOnCollectionChanged;
+        if (e.OldValue is HocrPageViewModel oldPage)
+        {
+            oldPage.Nodes.UnsubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
+
+            oldPage.Nodes.CollectionChanged -= documentCanvas.NodesOnCollectionChanged;
+
+            oldPage.SelectedNodes.CollectionChanged -= documentCanvas.SelectedNodesOnCollectionChanged;
         }
 
-        if (e.NewValue is ObservableCollection<HocrNodeViewModel> newNodes)
+        if (e.NewValue is HocrPageViewModel newPage)
         {
-            newNodes.SubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
+            documentCanvas.background = newPage.Image;
 
-            newNodes.CollectionChanged += documentCanvas.NodesOnCollectionChanged;
+            newPage.Nodes.SubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
 
-            if (newNodes.Any())
+            newPage.Nodes.CollectionChanged += documentCanvas.NodesOnCollectionChanged;
+
+            newPage.SelectedNodes.CollectionChanged += documentCanvas.SelectedNodesOnCollectionChanged;
+
+            if (newPage.Nodes.Any())
             {
-                documentCanvas.BuildDocumentElements(newNodes);
+                documentCanvas.BuildDocumentElements(newPage.Nodes);
 
                 documentCanvas.CenterTransformationDocument();
-
-                documentCanvas.Refresh();
             }
         }
+
+        documentCanvas.Refresh();
     }
 
     private void NodesOnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -450,23 +455,6 @@ public sealed partial class DocumentCanvas
         UpdateCanvasSelection();
 
         Refresh();
-    }
-
-    private static void SelectedItemsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        var documentCanvas = (DocumentCanvas)d;
-
-        if (e.OldValue is INotifyCollectionChanged oldCollection)
-        {
-            oldCollection.CollectionChanged -= documentCanvas.SelectedNodesOnCollectionChanged;
-        }
-
-        if (e.NewValue is INotifyCollectionChanged newCollection)
-        {
-            newCollection.CollectionChanged += documentCanvas.SelectedNodesOnCollectionChanged;
-        }
-
-        documentCanvas.Refresh();
     }
 
     private static void NodeVisibilityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -745,7 +733,7 @@ public sealed partial class DocumentCanvas
     {
         base.OnMouseDown(e);
 
-        if (ItemsSource is not { Count: > 0 })
+        if (ViewModel?.Nodes is not { Count: > 0 })
         {
             return;
         }
@@ -1594,11 +1582,9 @@ public sealed partial class DocumentCanvas
 
             elements.Add(node.Id, (node, el));
 
-            if (node.HocrNode is HocrPage page)
+            if (node.HocrNode is HocrPage)
             {
                 rootId = node.Id;
-
-                el.Background = SKBitmap.Decode(page.Image);
             }
         }
     }

@@ -33,100 +33,77 @@ public partial class DocumentCanvas
 
             var shouldRenderNode = nodeVisibilityDictionary[node.NodeType];
 
-            if (element.Background != null)
+            if (shouldRenderNode)
             {
-                if (shouldRenderNode)
+                var color = GetNodeColor(node);
+
+                var scale = transformation.ScaleY;
+
+                if (node.NodeType == HocrNodeType.Word && IsShowText)
                 {
-                    canvas.DrawBitmap(element.Background, bounds);
+                    paint.IsStroke = false;
+                    paint.Color = SKColors.White.WithAlpha(128);
+
+                    canvas.DrawRect(bounds, paint);
+
+                    var fontSize = ((HocrLine)elements[node.ParentId].Item1.HocrNode).FontSize;
+
+                    paint.TextSize = fontSize * scale * 0.75f;
+
+                    paint.Color = SKColors.Black;
+                    paint.IsStroke = false;
+
+                    var textBounds = SKRect.Empty;
+
+                    paint.MeasureText(node.InnerText, ref textBounds);
+
+                    canvas.DrawShapedText(
+                        shaper,
+                        node.InnerText,
+                        bounds.MidX - textBounds.MidX,
+                        bounds.MidY - textBounds.MidY,
+                        paint
+                    );
                 }
                 else
                 {
                     paint.IsStroke = false;
-                    paint.Color = SKColors.White;
+                    paint.Color = node.IsSelected ? SKColors.Red.WithAlpha(16) : color.WithAlpha(16);
 
                     canvas.DrawRect(bounds, paint);
                 }
 
-                paint.Color = SKColors.Gray;
+                if (IsShowNumbering && index >= 0)
+                {
+                    paint.TextSize = counterTextSize * scale;
+
+                    var rectBounds = SKRect.Empty;
+                    paint.MeasureText("99", ref rectBounds);
+
+                    paint.IsStroke = false;
+                    paint.Color = color;
+
+                    rectBounds.Bottom += rectBounds.Height * 0.2f;
+                    rectBounds.Location = bounds.Location;
+
+                    canvas.DrawRect(rectBounds, paint);
+
+                    paint.Color = SKColors.Black;
+
+                    var text = index.ToString();
+
+                    var textBounds = SKRect.Empty;
+                    paint.MeasureText(text, ref textBounds);
+
+                    textBounds.Offset(rectBounds.MidX - textBounds.MidX, rectBounds.MidY - textBounds.MidY);
+
+                    canvas.DrawText(text, textBounds.Left, textBounds.Bottom, paint);
+                }
+
+                paint.Color = node.IsSelected ? SKColors.Red : color;
                 paint.IsStroke = true;
-                paint.StrokeWidth = 1;
 
                 canvas.DrawRect(bounds, paint);
-            }
-            else
-            {
-                if (shouldRenderNode)
-                {
-                    var color = GetNodeColor(node);
-
-                    var scale = transformation.ScaleY;
-
-                    if (node.NodeType == HocrNodeType.Word && IsShowText)
-                    {
-                        paint.IsStroke = false;
-                        paint.Color = SKColors.White.WithAlpha(128);
-
-                        canvas.DrawRect(bounds, paint);
-
-                        var fontSize = ((HocrLine)elements[node.ParentId].Item1.HocrNode).FontSize;
-
-                        paint.TextSize = fontSize * scale * 0.75f;
-
-                        paint.Color = SKColors.Black;
-                        paint.IsStroke = false;
-
-                        var textBounds = SKRect.Empty;
-
-                        paint.MeasureText(node.InnerText, ref textBounds);
-
-                        canvas.DrawShapedText(
-                            shaper,
-                            node.InnerText,
-                            bounds.MidX - textBounds.MidX,
-                            bounds.MidY - textBounds.MidY,
-                            paint
-                        );
-                    }
-                    else
-                    {
-                        paint.IsStroke = false;
-                        paint.Color = node.IsSelected ? SKColors.Red.WithAlpha(16) : color.WithAlpha(16);
-
-                        canvas.DrawRect(bounds, paint);
-                    }
-
-                    if (IsShowNumbering && index >= 0)
-                    {
-                        paint.TextSize = counterTextSize * scale;
-
-                        var rectBounds = SKRect.Empty;
-                        paint.MeasureText("99", ref rectBounds);
-
-                        paint.IsStroke = false;
-                        paint.Color = color;
-
-                        rectBounds.Bottom += rectBounds.Height * 0.2f;
-                        rectBounds.Location = bounds.Location;
-
-                        canvas.DrawRect(rectBounds, paint);
-
-                        paint.Color = SKColors.Black;
-
-                        var text = index.ToString();
-
-                        var textBounds = SKRect.Empty;
-                        paint.MeasureText(text, ref textBounds);
-
-                        textBounds.Offset(rectBounds.MidX - textBounds.MidX, rectBounds.MidY - textBounds.MidY);
-
-                        canvas.DrawText(text, textBounds.Left, textBounds.Bottom, paint);
-                    }
-
-                    paint.Color = node.IsSelected ? SKColors.Red : color;
-                    paint.IsStroke = true;
-
-                    canvas.DrawRect(bounds, paint);
-                }
             }
 
             var counter = node.Children.Count > 1 ? 0 : -1;
@@ -135,6 +112,8 @@ public partial class DocumentCanvas
                 Recurse(childKey, counter >= 0 ? ++counter : counter);
             }
         }
+
+        RenderBackground(canvas, paint);
 
         Recurse(rootId, -1);
 
@@ -153,6 +132,35 @@ public partial class DocumentCanvas
         RenderNodeSelection(canvas);
 
         RenderWordSplitter(canvas);
+    }
+
+    private void RenderBackground(SKCanvas canvas, SKPaint paint)
+    {
+        ArgumentNullException.ThrowIfNull(background);
+
+        var bounds = new SKRect(0, 0, background.Width, background.Height);
+
+        bounds = transformation.MapRect(bounds);
+
+        var shouldRenderNode = nodeVisibilityDictionary[HocrNodeType.Page];
+
+        if (shouldRenderNode)
+        {
+            canvas.DrawBitmap(background, bounds);
+        }
+        else
+        {
+            paint.IsStroke = false;
+            paint.Color = SKColors.White;
+
+            canvas.DrawRect(bounds, paint);
+        }
+
+        paint.Color = SKColors.Gray;
+        paint.IsStroke = true;
+        paint.StrokeWidth = 1;
+
+        canvas.DrawRect(bounds, paint);
     }
 
     private void RenderNodeSelection(SKCanvas canvas)
