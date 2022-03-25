@@ -13,6 +13,6 @@ internal class LeptonicaDllHandle : SafeDllHandle
 
     internal static class LeptonicaDelegates
     {
-        internal delegate void pixDestroy(IntPtr pix);
+        internal delegate void pixDestroy(ref IntPtr pix);
     }
 }

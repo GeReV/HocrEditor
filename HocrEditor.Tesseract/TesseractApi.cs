@@ -197,7 +197,7 @@ public sealed class TesseractApi : IDisposable
 
     private static string ThrowEmptyString() => throw new InvalidOperationException("Unexpected null string");
 
-    private void DestroyPix(IntPtr pix) => leptonicaDllHandle.PixDestroy(pix);
+    private void DestroyPix(IntPtr pix) => leptonicaDllHandle.PixDestroy(ref pix);
 
     private void DeleteText(IntPtr text) => tesseractDllHandle.TessDeleteText(text);
 
