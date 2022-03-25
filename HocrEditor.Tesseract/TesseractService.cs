@@ -9,31 +9,58 @@ public sealed class TesseractService : IDisposable
     private readonly object lck = new();
     private readonly TesseractApi tesseractApi;
 
-    public TesseractService(string tesseractPath)
+    public TesseractService(string tesseractPath, IEnumerable<string> languages)
     {
         tesseractApi = TesseractFactory.CreateApi(tesseractPath);
+
+        tesseractApi.Init(string.Join('+', languages));
+        tesseractApi.SetVariable("hocr_font_info", "1");
+        tesseractApi.SetPageSegMode(PageSegmentationMode.SegmentationOcr);
     }
 
-    public string GetVersion() => tesseractApi.Version();
-
-    public string[] GetLanguages() => tesseractApi.GetAvailableLanguages();
-
-    public SKBitmap GetThresholdedImage(SKBitmap image)
+    public string GetVersion()
     {
-        tesseractApi.Init(string.Empty);
-
-        var bytes = GetBitmapBytes(image);
-
-        tesseractApi.SetImage(bytes, image.Width, image.Height, image.BytesPerPixel, image.RowBytes);
-
-        var thresholdedImage = tesseractApi.GetThresholdedImage();
-
-        tesseractApi.Clear();
-
-        return SKBitmap.FromImage(thresholdedImage);
+        lock (lck)
+        {
+            return tesseractApi.Version();
+        }
     }
 
-    public async Task<string> Recognize(SKBitmap image, string imageFilename, IEnumerable<string> languages, Rectangle region = new())
+    public static string[] GetLanguages(string tesseractPath)
+    {
+        using var service = new TesseractService(tesseractPath, Enumerable.Empty<string>());
+
+        return service.GetLanguages();
+    }
+
+    public string[] GetLanguages()
+    {
+        lock (lck)
+        {
+            return tesseractApi.GetAvailableLanguages();
+        }
+    }
+
+    public SKBitmap GetThresholdedImage(SKBitmap image, Rectangle region = new())
+    {
+        if (isDisposed)
+        {
+            throw new ObjectDisposedException(nameof(tesseractApi));
+        }
+
+        lock (lck)
+        {
+            var bytes = GetBitmapBytes(image);
+
+            tesseractApi.SetImage(bytes, image.Width, image.Height, image.BytesPerPixel, image.RowBytes);
+
+            var thresholdedImage = tesseractApi.GetThresholdedImage();
+
+            return SKBitmap.FromImage(thresholdedImage);
+        }
+    }
+
+    public async Task<string> Recognize(SKBitmap image, string imageFilename, Rectangle region = new())
     {
         if (isDisposed)
         {
@@ -50,15 +77,11 @@ public sealed class TesseractService : IDisposable
                         throw new ObjectDisposedException(nameof(tesseractApi));
                     }
 
-                    tesseractApi.Init(string.Join('+', languages));
-                    tesseractApi.SetVariable("hocr_font_info", "1");
-
                     var bytes = GetBitmapBytes(image);
 
                     tesseractApi.SetInputName(imageFilename);
                     tesseractApi.SetImage(bytes, image.Width, image.Height, image.BytesPerPixel, image.RowBytes);
 
-                    tesseractApi.SetPageSegMode(PageSegmentationMode.SegmentationOcr);
                     // tesseractApi.SetSourceResolution(300);
 
                     if (!region.IsEmpty)
@@ -66,11 +89,7 @@ public sealed class TesseractService : IDisposable
                         tesseractApi.SetRectangle(region.X, region.Y, region.Width, region.Height);
                     }
 
-                    var text = tesseractApi.GetHocrText();
-
-                    tesseractApi.Clear();
-
-                    return text;
+                    return tesseractApi.GetHocrText();
                 }
             }
         );
@@ -87,6 +106,12 @@ public sealed class TesseractService : IDisposable
 
         lock (lck)
         {
+            if (isDisposed)
+            {
+                throw new ObjectDisposedException(nameof(tesseractApi));
+            }
+
+            tesseractApi.Clear();
             tesseractApi.Dispose();
         }
 

@@ -52,9 +52,7 @@ namespace HocrEditor
                 return;
             }
 
-            using var service = new TesseractService(tesseractPath);
-
-            var languages = service.GetLanguages();
+            var languages = TesseractService.GetLanguages(tesseractPath);
 
             if (!languages.Any())
             {
