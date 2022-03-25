@@ -36,7 +36,7 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
         {
             selectedNodes = selectedNodes
                 .Concat(selectedNodes.SelectMany(n => n.Ascendants.TakeWhile(a => !a.IsRoot)))
-                .Distinct()
+                .Distinct() // Duplicates are likely; filter them out.
                 .ToList();
         }
 
@@ -50,7 +50,6 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
                 )
             );
 
-        // ExecuteUndoableCommand(commands);
         UndoRedoManager.ExecuteCommands(commands);
     }
 }
