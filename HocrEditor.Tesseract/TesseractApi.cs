@@ -40,7 +40,7 @@ public sealed class TesseractApi : IDisposable
 
             var pix = Marshal.PtrToStructure<Pix>(pixPtr);
 
-            // Each row is encoded into 32-bits, so get round up to the nearest multiple of 32.
+            // Each row is encoded into 32-bit integers, so get round up to the nearest multiple of 32.
             var width = (int)Math.Ceiling(pix.w / 32.0f) * 32;
 
             var info = new SKImageInfo(width, (int)pix.h, SKColorType.Gray8);
