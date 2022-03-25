@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -206,12 +207,24 @@ namespace HocrEditor.ViewModels
                         {
                             var hocrDocument = await hocrDocumentTask;
 
-                            var documentViewModel = new HocrDocumentViewModel(
-                                hocrDocument,
-                                hocrDocument.Pages.Select(hocrPage => new HocrPageViewModel(hocrPage))
-                            )
+                            using var service = new TesseractService(tesseractPath, Enumerable.Empty<string>());
+
+                            var pages = new List<HocrPageViewModel>(hocrDocument.Pages.Count);
+
+                            foreach (var hocrPage in hocrDocument.Pages)
                             {
-                                Filename = filename
+                                var page = new HocrPageViewModel(hocrPage);
+
+                                ArgumentNullException.ThrowIfNull(page.Image);
+
+                                page.ThresholdedImage = service.GetThresholdedImage(page.Image);
+
+                                pages.Add(page);
+                            }
+
+                            var documentViewModel = new HocrDocumentViewModel(hocrDocument, pages)
+                            {
+                                Filename = filename,
                             };
 
                             documentViewModel.MarkAsUnchanged();
@@ -263,11 +276,13 @@ namespace HocrEditor.ViewModels
                             var languages = TesseractLanguages.Where(l => l.IsSelected)
                                 .Select(l => l.Language);
 
-                            using var service = new TesseractService(tesseractPath);
+                            using var service = new TesseractService(tesseractPath, languages);
 
                             ArgumentNullException.ThrowIfNull(page.Image);
 
-                            var body = await service.Recognize(page.Image, page.ImageFilename, languages);
+                            var body = await service.Recognize(page.Image, page.ImageFilename);
+
+                            page.ThresholdedImage = service.GetThresholdedImage(page.Image);
 
                             var doc = new HtmlDocument();
                             doc.LoadHtml(body);

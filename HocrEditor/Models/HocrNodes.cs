@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HocrEditor.Helpers;
 using HtmlAgilityPack;
+using SkiaSharp;
 
 namespace HocrEditor.Models
 {

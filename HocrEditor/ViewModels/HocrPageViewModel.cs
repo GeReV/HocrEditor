@@ -9,7 +9,6 @@ using HocrEditor.Controls;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
-using HocrEditor.Tesseract;
 using Microsoft.Toolkit.Mvvm.Input;
 using SkiaSharp;
 using Rect = HocrEditor.Models.Rect;
@@ -30,35 +29,11 @@ namespace HocrEditor.ViewModels
 
         public bool IsProcessing => HocrPage == null;
 
-        private string imageFilename = string.Empty;
+        public string ImageFilename { get; private set; }
 
-        public string ImageFilename
-        {
-            get => imageFilename;
-            set
-            {
-                imageFilename = value;
+        public SKBitmap Image { get; private set; }
 
-                Image = SKBitmap.Decode(imageFilename);
-            }
-        }
-
-
-        public SKBitmap? Image { get; private set; }
-
-        public SKBitmap? ThresholdedImage
-        {
-            get
-            {
-                if (Image == null)
-                {
-                    return null;
-                }
-
-                return new TesseractService(Settings.TesseractPath!)
-                    .GetThresholdedImage(Image);
-            }
-        }
+        public SKBitmap? ThresholdedImage { get; set; }
 
         public Direction Direction
         {
@@ -92,6 +67,7 @@ namespace HocrEditor.ViewModels
         public HocrPageViewModel(string imageFilename)
         {
             ImageFilename = imageFilename;
+            Image = SKBitmap.Decode(imageFilename);
 
             OcrRegionCommand = new OcrRegionCommand(this);
             DeleteCommand = new DeleteNodesCommand(this);
@@ -236,8 +212,7 @@ namespace HocrEditor.ViewModels
                 return;
             }
 
-            Image?.Dispose();
-            Image = null;
+            Image.Dispose();
 
             UndoRedoManager.UndoStackChanged -= UpdateUndoRedoCommands;
 
