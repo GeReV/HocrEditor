@@ -2,7 +2,7 @@
 
 namespace HocrEditor.Tesseract;
 
-internal class TesseractDllHandle : SafeHandle
+internal class TesseractDllHandle : SafeDllHandle
 {
     // ReSharper disable InconsistentNaming
     public readonly TesseractDelegates.TessBaseAPICreate TessBaseApiCreate;
@@ -29,28 +29,8 @@ internal class TesseractDllHandle : SafeHandle
     public readonly TesseractDelegates.TessDeleteTextArray TessDeleteTextArray;
     // ReSharper enable InconsistentNaming
 
-    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    private static extern IntPtr LoadLibraryEx(string lpFileName, IntPtr hFile, uint dwFlags);
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
-    private static extern bool FreeLibrary(IntPtr hModule);
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
-    private static extern IntPtr GetProcAddress(IntPtr hModule, [MarshalAs(UnmanagedType.LPStr)] string lpProcName);
-
-    public TesseractDllHandle(string dllPath) : base(IntPtr.Zero, true)
+    public TesseractDllHandle(string dllPath) : base(dllPath)
     {
-        var tesseractHandle = LoadLibraryEx(dllPath, IntPtr.Zero, (uint)LoadLibraryFlags.LoadLibrarySearchDllLoadDir);
-
-        if (tesseractHandle == IntPtr.Zero)
-        {
-            var errorCode = Marshal.GetLastWin32Error();
-
-            throw new Exception($"Failed to load library (ErrorCode: {errorCode})");
-        }
-
-        SetHandle(tesseractHandle);
-
         TessVersion = GetProc<TesseractDelegates.TessVersion>(nameof(TesseractDelegates.TessVersion));
         TessBaseApiCreate = GetProc<TesseractDelegates.TessBaseAPICreate>(nameof(TesseractDelegates.TessBaseAPICreate));
         TessBaseApiDelete = GetProc<TesseractDelegates.TessBaseAPIDelete>(nameof(TesseractDelegates.TessBaseAPIDelete));
@@ -99,13 +79,6 @@ internal class TesseractDllHandle : SafeHandle
         TessDeleteText = GetProc<TesseractDelegates.TessDeleteText>(nameof(TesseractDelegates.TessDeleteText));
         TessDeleteTextArray = GetProc<TesseractDelegates.TessDeleteTextArray>(nameof(TesseractDelegates.TessDeleteTextArray));
     }
-
-    private TDelegate GetProc<TDelegate>(string name) =>
-        Marshal.GetDelegateForFunctionPointer<TDelegate>(GetProcAddress(handle, name));
-
-    protected override bool ReleaseHandle() => FreeLibrary(handle);
-
-    public override bool IsInvalid => handle == IntPtr.Zero;
 
     internal static class TesseractDelegates
     {

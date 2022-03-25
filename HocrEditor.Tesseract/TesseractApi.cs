@@ -8,35 +8,37 @@ public sealed class TesseractApi : IDisposable
     private bool isDisposed;
 
     private readonly string dataPath;
-    private readonly TesseractDllHandle dllHandle;
+    private readonly TesseractDllHandle tesseractDllHandle;
+    private readonly LeptonicaDllHandle leptonicaDllHandle;
     private readonly TesseractApiHandle apiHandle;
 
-    internal TesseractApi(string dllPath, string dataPath)
+    internal TesseractApi(string tesseractDllPath, string leptonicaDllPath, string dataPath)
     {
         this.dataPath = dataPath;
 
-        dllHandle = new TesseractDllHandle(dllPath);
-        apiHandle = new TesseractApiHandle(dllHandle);
+        tesseractDllHandle = new TesseractDllHandle(tesseractDllPath);
+        leptonicaDllHandle = new LeptonicaDllHandle(leptonicaDllPath);
+        apiHandle = new TesseractApiHandle(tesseractDllHandle);
     }
 
-    public void Clear() => dllHandle.TessBaseAPIClear(apiHandle.DangerousGetHandle());
+    public void Clear() => tesseractDllHandle.TessBaseAPIClear(apiHandle.DangerousGetHandle());
 
     public void Init(string language, OcrEngineMode oem = OcrEngineMode.Default) =>
-        dllHandle.TessBaseAPIInit(apiHandle.DangerousGetHandle(), dataPath, language, (int)oem, IntPtr.Zero, 0);
+        tesseractDllHandle.TessBaseAPIInit(apiHandle.DangerousGetHandle(), dataPath, language, (int)oem, IntPtr.Zero, 0);
 
 
-    public string Version() => GetText(dllHandle.TessVersion());
+    public string Version() => GetText(tesseractDllHandle.TessVersion());
 
 
     public int GetThresholdedImageScaleFactor() =>
-        dllHandle.TessBaseAPIGetThresholdedImageScaleFactor(apiHandle.DangerousGetHandle());
+        tesseractDllHandle.TessBaseAPIGetThresholdedImageScaleFactor(apiHandle.DangerousGetHandle());
 
     public SKImage GetThresholdedImage()
     {
         var pixPtr = IntPtr.Zero;
         try
         {
-            pixPtr = dllHandle.TessBaseAPIGetThresholdedImage(apiHandle.DangerousGetHandle());
+            pixPtr = tesseractDllHandle.TessBaseAPIGetThresholdedImage(apiHandle.DangerousGetHandle());
 
             var pix = Marshal.PtrToStructure<Pix>(pixPtr);
 
@@ -72,43 +74,43 @@ public sealed class TesseractApi : IDisposable
         {
             if (pixPtr != IntPtr.Zero)
             {
-                // TODO: pixDestroy(pix);
+                DestroyPix(pixPtr);
             }
         }
     }
 
     public string GetUtf8Text() =>
-        GetText(dllHandle.TessBaseAPIGetUTF8Text(apiHandle.DangerousGetHandle()));
+        GetText(tesseractDllHandle.TessBaseAPIGetUTF8Text(apiHandle.DangerousGetHandle()));
 
     public string GetHocrText(int pageNumber = 0) =>
-        GetText(dllHandle.TessBaseAPIGetHOCRText(apiHandle.DangerousGetHandle(), pageNumber));
+        GetText(tesseractDllHandle.TessBaseAPIGetHOCRText(apiHandle.DangerousGetHandle(), pageNumber));
 
     public string GetAltoText(int pageNumber = 0) =>
-        GetText(dllHandle.TessBaseAPIGetAltoText(apiHandle.DangerousGetHandle(), pageNumber));
+        GetText(tesseractDllHandle.TessBaseAPIGetAltoText(apiHandle.DangerousGetHandle(), pageNumber));
 
     public string GetTsvText(int pageNumber = 0) =>
-        GetText(dllHandle.TessBaseAPIGetTsvText(apiHandle.DangerousGetHandle(), pageNumber));
+        GetText(tesseractDllHandle.TessBaseAPIGetTsvText(apiHandle.DangerousGetHandle(), pageNumber));
 
     public void SetInputName(string name) =>
-        dllHandle.TessBaseAPISetInputName(apiHandle.DangerousGetHandle(), name);
+        tesseractDllHandle.TessBaseAPISetInputName(apiHandle.DangerousGetHandle(), name);
 
     public void SetImage(byte[] data, int width, int height, int bytesPerPixel, int bytesPerLine) =>
-        dllHandle.TessBaseAPISetImage(apiHandle.DangerousGetHandle(), data, width, height, bytesPerPixel, bytesPerLine);
+        tesseractDllHandle.TessBaseAPISetImage(apiHandle.DangerousGetHandle(), data, width, height, bytesPerPixel, bytesPerLine);
 
     public void SetSourceResolution(int ppi) =>
-        dllHandle.TessBaseAPISetSourceResolution(apiHandle.DangerousGetHandle(), ppi);
+        tesseractDllHandle.TessBaseAPISetSourceResolution(apiHandle.DangerousGetHandle(), ppi);
 
     public void SetRectangle(int x, int y, int width, int height) =>
-        dllHandle.TessBaseAPISetRectangle(apiHandle.DangerousGetHandle(), x, y, width, height);
+        tesseractDllHandle.TessBaseAPISetRectangle(apiHandle.DangerousGetHandle(), x, y, width, height);
 
     public void SetPageSegMode(PageSegmentationMode mode) =>
-        dllHandle.TessBaseAPISetPageSegMode(apiHandle.DangerousGetHandle(), (int)mode);
+        tesseractDllHandle.TessBaseAPISetPageSegMode(apiHandle.DangerousGetHandle(), (int)mode);
 
     public bool SetVariable(string key, string value) =>
-        dllHandle.TessBaseAPISetVariable(apiHandle.DangerousGetHandle(), key, value);
+        tesseractDllHandle.TessBaseAPISetVariable(apiHandle.DangerousGetHandle(), key, value);
 
     public void ReadConfigFile(string file) =>
-        dllHandle.TessBaseAPIReadConfigFile(apiHandle.DangerousGetHandle(), file);
+        tesseractDllHandle.TessBaseAPIReadConfigFile(apiHandle.DangerousGetHandle(), file);
 
     public string[] GetLoadedLanguages()
     {
@@ -116,7 +118,7 @@ public sealed class TesseractApi : IDisposable
         {
             Init(string.Empty);
 
-            return GetStringVector(dllHandle.TessBaseAPIGetLoadedLanguagesAsVector(apiHandle.DangerousGetHandle()));
+            return GetStringVector(tesseractDllHandle.TessBaseAPIGetLoadedLanguagesAsVector(apiHandle.DangerousGetHandle()));
         }
         finally
         {
@@ -130,7 +132,7 @@ public sealed class TesseractApi : IDisposable
         {
             Init(string.Empty);
 
-            return GetStringVector(dllHandle.TessBaseAPIGetAvailableLanguagesAsVector(apiHandle.DangerousGetHandle()));
+            return GetStringVector(tesseractDllHandle.TessBaseAPIGetAvailableLanguagesAsVector(apiHandle.DangerousGetHandle()));
         }
         finally
         {
@@ -195,9 +197,11 @@ public sealed class TesseractApi : IDisposable
 
     private static string ThrowEmptyString() => throw new InvalidOperationException("Unexpected null string");
 
-    private void DeleteText(IntPtr text) => dllHandle.TessDeleteText(text);
+    private void DestroyPix(IntPtr pix) => leptonicaDllHandle.PixDestroy(pix);
 
-    private void DeleteTextArray(IntPtr textArray) => dllHandle.TessDeleteTextArray(textArray);
+    private void DeleteText(IntPtr text) => tesseractDllHandle.TessDeleteText(text);
+
+    private void DeleteTextArray(IntPtr textArray) => tesseractDllHandle.TessDeleteTextArray(textArray);
 
     public void Dispose()
     {
@@ -207,7 +211,7 @@ public sealed class TesseractApi : IDisposable
         }
 
         apiHandle.Dispose();
-        dllHandle.Dispose();
+        tesseractDllHandle.Dispose();
 
         isDisposed = true;
     }
