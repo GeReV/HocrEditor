@@ -36,6 +36,7 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
         {
             selectedNodes = selectedNodes
                 .Concat(selectedNodes.SelectMany(n => n.Ascendants.TakeWhile(a => !a.IsRoot)))
+                .Distinct()
                 .ToList();
         }
 
