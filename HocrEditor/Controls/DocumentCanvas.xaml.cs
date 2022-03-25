@@ -407,7 +407,7 @@ public sealed partial class DocumentCanvas
 
         if (e.NewValue is HocrPageViewModel newPage)
         {
-            documentCanvas.background = newPage.Image;
+            documentCanvas.background = newPage.ThresholdedImage;
 
             newPage.Nodes.SubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
 

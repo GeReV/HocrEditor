@@ -10,12 +10,14 @@ internal class TesseractDllHandle : SafeHandle
     public readonly TesseractDelegates.TessBaseAPIClear TessBaseAPIClear;
     public readonly TesseractDelegates.TessVersion TessVersion;
     public readonly TesseractDelegates.TessBaseAPIInit1 TessBaseAPIInit;
-    public readonly TesseractDelegates.TessBaseAPISetInputName TessBaseAPISetInputName;
-    public readonly TesseractDelegates.TessBaseAPISetImage TessBaseAPISetImage;
+    public readonly TesseractDelegates.TessBaseAPIGetThresholdedImage TessBaseAPIGetThresholdedImage;
+    public readonly TesseractDelegates.TessBaseAPIGetThresholdedImageScaleFactor TessBaseAPIGetThresholdedImageScaleFactor;
     public readonly TesseractDelegates.TessBaseAPIGetUTF8Text TessBaseAPIGetUTF8Text;
     public readonly TesseractDelegates.TessBaseAPIGetHOCRText TessBaseAPIGetHOCRText;
     public readonly TesseractDelegates.TessBaseAPIGetAltoText TessBaseAPIGetAltoText;
     public readonly TesseractDelegates.TessBaseAPIGetTsvText TessBaseAPIGetTsvText;
+    public readonly TesseractDelegates.TessBaseAPISetInputName TessBaseAPISetInputName;
+    public readonly TesseractDelegates.TessBaseAPISetImage TessBaseAPISetImage;
     public readonly TesseractDelegates.TessBaseAPISetSourceResolution TessBaseAPISetSourceResolution;
     public readonly TesseractDelegates.TessBaseAPISetRectangle TessBaseAPISetRectangle;
     public readonly TesseractDelegates.TessBaseAPISetPageSegMode TessBaseAPISetPageSegMode;
@@ -54,10 +56,14 @@ internal class TesseractDllHandle : SafeHandle
         TessBaseApiDelete = GetProc<TesseractDelegates.TessBaseAPIDelete>(nameof(TesseractDelegates.TessBaseAPIDelete));
         TessBaseAPIClear = GetProc<TesseractDelegates.TessBaseAPIClear>(nameof(TesseractDelegates.TessBaseAPIClear));
         TessBaseAPIInit = GetProc<TesseractDelegates.TessBaseAPIInit1>(nameof(TesseractDelegates.TessBaseAPIInit1));
-        TessBaseAPISetInputName =
-            GetProc<TesseractDelegates.TessBaseAPISetInputName>(nameof(TesseractDelegates.TessBaseAPISetInputName));
-        TessBaseAPISetImage =
-            GetProc<TesseractDelegates.TessBaseAPISetImage>(nameof(TesseractDelegates.TessBaseAPISetImage));
+        TessBaseAPIGetThresholdedImage =
+            GetProc<TesseractDelegates.TessBaseAPIGetThresholdedImage>(
+                nameof(TesseractDelegates.TessBaseAPIGetThresholdedImage)
+            );
+        TessBaseAPIGetThresholdedImageScaleFactor =
+            GetProc<TesseractDelegates.TessBaseAPIGetThresholdedImageScaleFactor>(
+                nameof(TesseractDelegates.TessBaseAPIGetThresholdedImageScaleFactor)
+            );
         TessBaseAPIGetUTF8Text =
             GetProc<TesseractDelegates.TessBaseAPIGetUTF8Text>(nameof(TesseractDelegates.TessBaseAPIGetUTF8Text));
         TessBaseAPIGetHOCRText =
@@ -70,6 +76,10 @@ internal class TesseractDllHandle : SafeHandle
             GetProc<TesseractDelegates.TessBaseAPISetSourceResolution>(
                 nameof(TesseractDelegates.TessBaseAPISetSourceResolution)
             );
+        TessBaseAPISetInputName =
+            GetProc<TesseractDelegates.TessBaseAPISetInputName>(nameof(TesseractDelegates.TessBaseAPISetInputName));
+        TessBaseAPISetImage =
+            GetProc<TesseractDelegates.TessBaseAPISetImage>(nameof(TesseractDelegates.TessBaseAPISetImage));
         TessBaseAPISetRectangle =
             GetProc<TesseractDelegates.TessBaseAPISetRectangle>(nameof(TesseractDelegates.TessBaseAPISetRectangle));
         TessBaseAPISetPageSegMode =
@@ -117,14 +127,9 @@ internal class TesseractDllHandle : SafeHandle
             int configSize
         );
 
-        internal delegate void TessBaseAPISetImage(
-            IntPtr handle,
-            byte[] data,
-            int width,
-            int height,
-            int bytesPerPixel,
-            int bytesPerLine
-        );
+        internal delegate IntPtr TessBaseAPIGetThresholdedImage(IntPtr handle);
+
+        internal delegate int TessBaseAPIGetThresholdedImageScaleFactor(IntPtr handle);
 
         internal delegate IntPtr TessBaseAPIGetUTF8Text(IntPtr handle);
 
@@ -133,6 +138,15 @@ internal class TesseractDllHandle : SafeHandle
         internal delegate IntPtr TessBaseAPIGetAltoText(IntPtr handle, int pageNumber);
 
         internal delegate IntPtr TessBaseAPIGetTsvText(IntPtr handle, int pageNumber);
+
+        internal delegate void TessBaseAPISetImage(
+            IntPtr handle,
+            byte[] data,
+            int width,
+            int height,
+            int bytesPerPixel,
+            int bytesPerLine
+        );
 
         internal delegate void TessBaseAPISetSourceResolution(IntPtr handle, int ppi);
 

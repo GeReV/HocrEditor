@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using SkiaSharp;
 
 namespace HocrEditor.Tesseract;
 
@@ -23,13 +24,55 @@ public sealed class TesseractApi : IDisposable
     public void Init(string language, OcrEngineMode oem = OcrEngineMode.Default) =>
         dllHandle.TessBaseAPIInit(apiHandle.DangerousGetHandle(), dataPath, language, (int)oem, IntPtr.Zero, 0);
 
-    public void SetInputName(string name) =>
-        dllHandle.TessBaseAPISetInputName(apiHandle.DangerousGetHandle(), name);
-
-    public void SetImage(byte[] data, int width, int height, int bytesPerPixel, int bytesPerLine) =>
-        dllHandle.TessBaseAPISetImage(apiHandle.DangerousGetHandle(), data, width, height, bytesPerPixel, bytesPerLine);
 
     public string Version() => GetText(dllHandle.TessVersion());
+
+
+    public int GetThresholdedImageScaleFactor() =>
+        dllHandle.TessBaseAPIGetThresholdedImageScaleFactor(apiHandle.DangerousGetHandle());
+
+    public SKImage GetThresholdedImage()
+    {
+        var pixPtr = IntPtr.Zero;
+        try
+        {
+            pixPtr = dllHandle.TessBaseAPIGetThresholdedImage(apiHandle.DangerousGetHandle());
+
+            var pix = Marshal.PtrToStructure<Pix>(pixPtr);
+
+            var info = new SKImageInfo((int)pix.w + 1, (int)pix.h, SKColorType.Gray8);
+
+            var words = (int)Math.Ceiling(info.Width * info.Height / 32.0f);
+            var pixels = new byte[info.Width * info.Height];
+
+            for (int i = 0; i < words; i++)
+            {
+                var pixel = Marshal.ReadInt32(pix.data, i * sizeof(int));
+
+                for (int bit = 0; bit < 32; bit++)
+                {
+                    var index = i * 32 + bit;
+
+                    if (index >= pixels.Length)
+                    {
+                        break;
+                    }
+
+                    pixels[index] = (byte)((pixel & 0x80000000) == 0 ? 0xff : 0x0);
+                    pixel <<= 1;
+                }
+            }
+
+            return SKImage.FromPixelCopy(info, pixels);
+        }
+        finally
+        {
+            if (pixPtr != IntPtr.Zero)
+            {
+                // TODO: pixDestroy(pix);
+            }
+        }
+    }
 
     public string GetUtf8Text() =>
         GetText(dllHandle.TessBaseAPIGetUTF8Text(apiHandle.DangerousGetHandle()));
@@ -42,6 +85,12 @@ public sealed class TesseractApi : IDisposable
 
     public string GetTsvText(int pageNumber = 0) =>
         GetText(dllHandle.TessBaseAPIGetTsvText(apiHandle.DangerousGetHandle(), pageNumber));
+
+    public void SetInputName(string name) =>
+        dllHandle.TessBaseAPISetInputName(apiHandle.DangerousGetHandle(), name);
+
+    public void SetImage(byte[] data, int width, int height, int bytesPerPixel, int bytesPerLine) =>
+        dllHandle.TessBaseAPISetImage(apiHandle.DangerousGetHandle(), data, width, height, bytesPerPixel, bytesPerLine);
 
     public void SetSourceResolution(int ppi) =>
         dllHandle.TessBaseAPISetSourceResolution(apiHandle.DangerousGetHandle(), ppi);

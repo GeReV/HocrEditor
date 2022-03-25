@@ -18,6 +18,21 @@ public sealed class TesseractService : IDisposable
 
     public string[] GetLanguages() => tesseractApi.GetAvailableLanguages();
 
+    public SKBitmap GetThresholdedImage(SKBitmap image)
+    {
+        tesseractApi.Init(string.Empty);
+
+        var bytes = GetBitmapBytes(image);
+
+        tesseractApi.SetImage(bytes, image.Width, image.Height, image.BytesPerPixel, image.RowBytes);
+
+        var thresholdedImage = tesseractApi.GetThresholdedImage();
+
+        tesseractApi.Clear();
+
+        return SKBitmap.FromImage(thresholdedImage);
+    }
+
     public async Task<string> Recognize(SKBitmap image, string imageFilename, IEnumerable<string> languages, Rectangle region = new())
     {
         if (isDisposed)

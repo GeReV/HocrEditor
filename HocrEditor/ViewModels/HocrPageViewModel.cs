@@ -9,6 +9,7 @@ using HocrEditor.Controls;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
+using HocrEditor.Tesseract;
 using Microsoft.Toolkit.Mvvm.Input;
 using SkiaSharp;
 using Rect = HocrEditor.Models.Rect;
@@ -30,6 +31,7 @@ namespace HocrEditor.ViewModels
         public bool IsProcessing => HocrPage == null;
 
         private string imageFilename = string.Empty;
+
         public string ImageFilename
         {
             get => imageFilename;
@@ -41,7 +43,22 @@ namespace HocrEditor.ViewModels
             }
         }
 
+
         public SKBitmap? Image { get; private set; }
+
+        public SKBitmap? ThresholdedImage
+        {
+            get
+            {
+                if (Image == null)
+                {
+                    return null;
+                }
+
+                return new TesseractService(Settings.TesseractPath!)
+                    .GetThresholdedImage(Image);
+            }
+        }
 
         public Direction Direction
         {
