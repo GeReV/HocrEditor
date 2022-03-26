@@ -99,15 +99,6 @@ public class OcrRegionCommand : UndoableAsyncCommandBase<Rect>
 
                         var commands = new List<UndoRedoCommand>();
 
-                        foreach (var node in descendants)
-                        {
-                            var bbox = node.BBox;
-
-                            bbox.Offset(selectionBounds.Location);
-
-                            commands.Add(PropertyChangeCommand.FromProperty(node, n => n.BBox, bbox));
-                        }
-
                         var pageRootNode = hocrPageViewModel.Nodes.First(n => n.IsRoot);
 
                         foreach (var node in sourceRootNode.Children)
