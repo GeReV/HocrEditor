@@ -3,18 +3,26 @@ using System.Linq.Expressions;
 
 namespace HocrEditor.Commands.UndoRedo;
 
-public static class PropertyChangeCommand {
+public static class PropertyChangeCommand
+{
     public static PropertyChangeCommand<TRet> FromProperty<TSource, TRet>(
         TSource obj,
         Expression<Func<TSource, TRet>> expression,
         TRet newValue
     ) where TSource : notnull =>
-        FromProperty(obj, expression, () => newValue);
+        FromProperty(obj, expression, _ => newValue);
 
     public static PropertyChangeCommand<TRet> FromProperty<TSource, TRet>(
         TSource obj,
         Expression<Func<TSource, TRet>> expression,
-        Func<TRet> newValueFunc
+        Func<TRet> newValue
+    ) where TSource : notnull =>
+        FromProperty(obj, expression, _ => newValue.Invoke());
+
+    public static PropertyChangeCommand<TRet> FromProperty<TSource, TRet>(
+        TSource obj,
+        Expression<Func<TSource, TRet>> expression,
+        Func<TRet, TRet> newValueFunc
     ) where TSource : notnull
     {
         if (expression.Body.NodeType != ExpressionType.MemberAccess)
@@ -26,30 +34,40 @@ public static class PropertyChangeCommand {
 
         var memberInfo = ((MemberExpression)expression.Body).Member;
 
-        return new PropertyChangeCommand<TRet>(obj, memberInfo.Name, getterFunc(obj), newValueFunc);
+        return new PropertyChangeCommand<TRet>(obj, memberInfo.Name, () => getterFunc(obj), newValueFunc);
     }
 }
 
 public class PropertyChangeCommand<T> : UndoRedoCommand
 {
-    private readonly Func<T> newValueFunc;
+    private readonly Func<T> oldValueFunc;
+    private readonly Func<T, T> newValueFunc;
     public string PropertyName { get; }
-    public T OldValue { get; }
-    public T NewValue => newValueFunc();
+    public T OldValue => oldValueFunc();
+    public T NewValue => newValueFunc(OldValue);
 
-    public PropertyChangeCommand(object sender, string propertyName, T oldValue, T newValue) : this(
+    public PropertyChangeCommand(object sender, string propertyName, Func<T> oldValueFunc, T newValue) : this(
         sender,
         propertyName,
-        oldValue,
+        oldValueFunc,
         () => newValue
     )
     {
     }
 
-    public PropertyChangeCommand(object sender, string propertyName, T oldValue, Func<T> newValueFunc) : base(sender)
+    public PropertyChangeCommand(object sender, string propertyName, Func<T> oldValueFunc, Func<T> newValueFunc) : this(
+        sender,
+        propertyName,
+        oldValueFunc,
+        _ => newValueFunc.Invoke()
+    )
+    {
+    }
+
+    public PropertyChangeCommand(object sender, string propertyName, Func<T> oldValueFunc, Func<T, T> newValueFunc) : base(sender)
     {
         PropertyName = propertyName;
-        OldValue = oldValue;
+        this.oldValueFunc = oldValueFunc;
         this.newValueFunc = newValueFunc;
     }
 
