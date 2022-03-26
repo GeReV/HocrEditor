@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Controls;
+using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 using HocrEditor.ViewModels;
@@ -11,7 +12,6 @@ namespace HocrEditor.Commands;
 
 public class WordSplitCommand : UndoableCommandBase<WordSplitEventArgs>
 {
-    private const int SPLIT_PADDING = 5;
     private HocrPageViewModel HocrPageViewModel { get; }
 
     public WordSplitCommand(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
@@ -36,7 +36,7 @@ public class WordSplitCommand : UndoableCommandBase<WordSplitEventArgs>
 
         commands.Add(PropertyChangeCommand.FromProperty(node, n => n.BBox, node.BBox with
         {
-            Right = e.SplitPosition - SPLIT_PADDING
+            Right = e.SplitPosition
         }));
 
         var parent = node.Parent;
@@ -71,7 +71,7 @@ public class WordSplitCommand : UndoableCommandBase<WordSplitEventArgs>
         clone.InnerText = cloneText;
         clone.BBox = clone.BBox with
         {
-            Left = e.SplitPosition + SPLIT_PADDING
+            Left = e.SplitPosition
         };
 
         commands.Add(PropertyChangeCommand.FromProperty(node, n => n.InnerText, nodeText));
@@ -85,6 +85,11 @@ public class WordSplitCommand : UndoableCommandBase<WordSplitEventArgs>
         UndoRedoManager.BeginBatch();
 
         UndoRedoManager.ExecuteCommands(commands);
+
+        if (Settings.AutoClean)
+        {
+            new CropNodesCommand(HocrPageViewModel).Execute(new[] { node, clone });
+        }
 
         new ExclusiveSelectNodesCommand(HocrPageViewModel).Execute(Enumerable.Repeat(selectNode, 1));
 
