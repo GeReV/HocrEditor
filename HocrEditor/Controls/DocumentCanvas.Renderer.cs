@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
+using HocrEditor.ViewModels;
 using SkiaSharp;
 using SkiaSharp.HarfBuzz;
 
@@ -9,7 +11,7 @@ namespace HocrEditor.Controls;
 
 public partial class DocumentCanvas
 {
-    private void RenderNodes(SKCanvas canvas)
+    private void RenderCanvas(SKCanvas canvas)
     {
         if (rootId < 0)
         {
@@ -22,100 +24,14 @@ public partial class DocumentCanvas
             StrokeWidth = 1
         };
 
-        const float counterFontSize = 9.0f;
-        var counterTextSize = counterFontSize / 72.0f * ((HocrPage)elements[rootId].Item1.HocrNode).Dpi.Item2;
-
-        void Recurse(int key, int index)
-        {
-            var (node, element) = elements[key];
-
-            var bounds = transformation.MapRect(element.Bounds);
-
-            var shouldRenderNode = nodeVisibilityDictionary[node.NodeType];
-
-            if (shouldRenderNode)
-            {
-                var color = GetNodeColor(node);
-
-                var scale = transformation.ScaleY;
-
-                if (node.NodeType == HocrNodeType.Word && IsShowText)
-                {
-                    paint.IsStroke = false;
-                    paint.Color = SKColors.White.WithAlpha(128);
-
-                    canvas.DrawRect(bounds, paint);
-
-                    var fontSize = ((HocrLine)elements[node.ParentId].Item1.HocrNode).FontSize;
-
-                    paint.TextSize = fontSize * scale * 0.75f;
-
-                    paint.Color = SKColors.Black;
-                    paint.IsStroke = false;
-
-                    var textBounds = SKRect.Empty;
-
-                    paint.MeasureText(node.InnerText, ref textBounds);
-
-                    canvas.DrawShapedText(
-                        shaper,
-                        node.InnerText,
-                        bounds.MidX - textBounds.MidX,
-                        bounds.MidY - textBounds.MidY,
-                        paint
-                    );
-                }
-                else
-                {
-                    paint.IsStroke = false;
-                    paint.Color = node.IsSelected ? SKColors.Red.WithAlpha(16) : color.WithAlpha(16);
-
-                    canvas.DrawRect(bounds, paint);
-                }
-
-                if (IsShowNumbering && index >= 0)
-                {
-                    paint.TextSize = counterTextSize * scale;
-
-                    var rectBounds = SKRect.Empty;
-                    paint.MeasureText("99", ref rectBounds);
-
-                    paint.IsStroke = false;
-                    paint.Color = color;
-
-                    rectBounds.Bottom += rectBounds.Height * 0.2f;
-                    rectBounds.Location = bounds.Location;
-
-                    canvas.DrawRect(rectBounds, paint);
-
-                    paint.Color = SKColors.Black;
-
-                    var text = index.ToString();
-
-                    var textBounds = SKRect.Empty;
-                    paint.MeasureText(text, ref textBounds);
-
-                    textBounds.Offset(rectBounds.MidX - textBounds.MidX, rectBounds.MidY - textBounds.MidY);
-
-                    canvas.DrawText(text, textBounds.Left, textBounds.Bottom, paint);
-                }
-
-                paint.Color = node.IsSelected ? SKColors.Red : color;
-                paint.IsStroke = true;
-
-                canvas.DrawRect(bounds, paint);
-            }
-
-            var counter = node.Children.Count > 1 ? 0 : -1;
-            foreach (var childKey in node.Children.Select(c => c.Id))
-            {
-                Recurse(childKey, counter >= 0 ? ++counter : counter);
-            }
-        }
-
         RenderBackground(canvas, paint);
 
-        Recurse(rootId, -1);
+        RenderNodes(canvas, paint, shaper);
+
+        if (IsShowNumbering)
+        {
+            RenderNumbering(canvas, paint);
+        }
 
         canvasSelection.Render(
             canvas,
@@ -132,6 +48,118 @@ public partial class DocumentCanvas
         RenderNodeSelection(canvas);
 
         RenderWordSplitter(canvas);
+    }
+
+    private void RenderNumbering(SKCanvas canvas, SKPaint paint)
+    {
+        const float counterFontSize = 9.0f;
+        var counterTextSize = counterFontSize / 72.0f * ((HocrPage)elements[rootId].Item1.HocrNode).Dpi.Item2;
+
+        var stack = new Stack<int>();
+
+        stack.Push(rootId);
+
+        foreach (var recursionItem in RecurseNodes(rootId))
+        {
+            var (node, element) = recursionItem.Item;
+
+            var shouldRenderNode = nodeVisibilityDictionary[node.NodeType];
+
+            if (!shouldRenderNode)
+            {
+                continue;
+            }
+
+            var bounds = transformation.MapRect(element.Bounds);
+
+            var color = GetNodeColor(node);
+
+            var scale = transformation.ScaleY;
+
+            paint.TextSize = counterTextSize * scale;
+
+            var rectBounds = SKRect.Empty;
+            paint.MeasureText("99", ref rectBounds);
+
+            paint.IsStroke = false;
+            paint.Color = color;
+
+            rectBounds.Bottom += rectBounds.Height * 0.2f;
+            rectBounds.Location = bounds.Location;
+
+            canvas.DrawRect(rectBounds, paint);
+
+            paint.Color = SKColors.Black;
+
+            var text = (recursionItem.LevelIndex + 1).ToString();
+
+            var textBounds = SKRect.Empty;
+            paint.MeasureText(text, ref textBounds);
+
+            textBounds.Offset(rectBounds.MidX - textBounds.MidX, rectBounds.MidY - textBounds.MidY);
+
+            canvas.DrawText(text, textBounds.Left, textBounds.Bottom, paint);
+        }
+    }
+
+    private void RenderNodes(SKCanvas canvas, SKPaint paint, SKShaper shaper)
+    {
+        foreach (var recursionItem in RecurseNodes(rootId))
+        {
+            var (node, element) = recursionItem.Item;
+
+            var bounds = transformation.MapRect(element.Bounds);
+
+            var shouldRenderNode = nodeVisibilityDictionary[node.NodeType];
+
+            if (!shouldRenderNode)
+            {
+                continue;
+            }
+
+            var color = GetNodeColor(node);
+
+            var scale = transformation.ScaleY;
+
+            if (node.NodeType == HocrNodeType.Word && IsShowText)
+            {
+                paint.IsStroke = false;
+                paint.Color = SKColors.White.WithAlpha(128);
+
+                canvas.DrawRect(bounds, paint);
+
+                var fontSize = ((HocrLine)elements[node.ParentId].Item1.HocrNode).FontSize;
+
+                paint.TextSize = fontSize * scale * 0.75f;
+
+                paint.Color = SKColors.Black;
+                paint.IsStroke = false;
+
+                var textBounds = SKRect.Empty;
+
+                paint.MeasureText(node.InnerText, ref textBounds);
+
+                canvas.DrawShapedText(
+                    shaper,
+                    node.InnerText,
+                    bounds.MidX - textBounds.MidX,
+                    bounds.MidY - textBounds.MidY,
+                    paint
+                );
+            }
+            else
+            {
+                paint.IsStroke = false;
+                paint.Color = node.IsSelected ? SKColors.Red.WithAlpha(16) : color.WithAlpha(16);
+
+                canvas.DrawRect(bounds, paint);
+            }
+
+            paint.Color = node.IsSelected ? SKColors.Red : color;
+            paint.IsStroke = true;
+
+            canvas.DrawRect(bounds, paint);
+        }
     }
 
     private void RenderBackground(SKCanvas canvas, SKPaint paint)
@@ -200,4 +228,9 @@ public partial class DocumentCanvas
 
         canvas.DrawDashedLine(point.X, bounds.Top, point.X, bounds.Bottom, HighlightColor);
     }
+
+    private IEnumerable<RecursiveSelectHelper.RecursionItem<(HocrNodeViewModel, Element)>> RecurseNodes(int key) =>
+        Enumerable
+            .Repeat(elements[key], 1)
+            .IndexedRecursiveSelect(tuple => tuple.Item1.Children.Select(c => elements[c.Id]));
 }

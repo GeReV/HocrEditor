@@ -1597,7 +1597,7 @@ public sealed partial class DocumentCanvas
 
         canvas.Clear(SKColors.LightGray);
 
-        RenderNodes(canvas);
+        RenderCanvas(canvas);
     }
 
     private void PerformResize(SKPoint delta)
