@@ -33,7 +33,7 @@ public sealed class TesseractApi : IDisposable
     public int GetThresholdedImageScaleFactor() =>
         tesseractDllHandle.TessBaseAPIGetThresholdedImageScaleFactor(apiHandle.DangerousGetHandle());
 
-    public SKImage GetThresholdedImage()
+    public SKBitmap GetThresholdedImage()
     {
         var pixPtr = IntPtr.Zero;
         try
@@ -43,32 +43,42 @@ public sealed class TesseractApi : IDisposable
             var pix = Marshal.PtrToStructure<Pix>(pixPtr);
 
             // Each row is encoded into 32-bit integers, so get round up to the nearest multiple of 32.
-            var width = (int)Math.Ceiling(pix.w / 32.0f) * 32;
+            var width = (int)(pix.w + 31) / 32 * 32;
 
             var info = new SKImageInfo(width, (int)pix.h, SKColorType.Gray8);
 
+            var bitmap = new SKBitmap(info);
+
             var words = info.Width * info.Height / 32;
-            var pixels = new byte[info.Width * info.Height];
 
-            for (var i = 0; i < words; i++)
+            var pixels = bitmap.GetPixels();
+
+            unsafe
             {
-                var pixel = Marshal.ReadInt32(pix.data, i * sizeof(int));
+                var ptr = (byte*)pixels.ToPointer();
 
-                for (var bit = 0; bit < 32; bit++)
+                for (var i = 0; i < words; i++)
                 {
-                    var index = i * 32 + bit;
+                    var pixel = Marshal.ReadInt32(pix.data, i * sizeof(int));
 
-                    if (index >= pixels.Length)
+                    for (var bit = 0; bit < 32; bit++)
                     {
-                        break;
-                    }
+                        var index = i * 32 + bit;
 
-                    pixels[index] = (byte)((pixel & 0x80000000) == 0 ? 0xff : 0x0);
-                    pixel <<= 1;
+                        if (index >= info.BytesSize)
+                        {
+                            break;
+                        }
+
+                        *ptr = (byte)((pixel & 0x80000000) == 0 ? 0xff : 0x0);
+                        ptr++;
+
+                        pixel <<= 1;
+                    }
                 }
             }
 
-            return SKImage.FromPixelCopy(info, pixels);
+            return bitmap;
         }
         finally
         {

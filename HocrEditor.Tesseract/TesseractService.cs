@@ -54,9 +54,7 @@ public sealed class TesseractService : IDisposable
 
             tesseractApi.SetImage(bytes, image.Width, image.Height, image.BytesPerPixel, image.RowBytes);
 
-            var thresholdedImage = tesseractApi.GetThresholdedImage();
-
-            return SKBitmap.FromImage(thresholdedImage);
+            return tesseractApi.GetThresholdedImage();
         }
     }
 
