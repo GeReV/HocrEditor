@@ -135,17 +135,7 @@ public partial class DocumentCanvas
                 paint.Color = SKColors.Black;
                 paint.IsStroke = false;
 
-                var textBounds = SKRect.Empty;
-
-                paint.MeasureText(node.InnerText, ref textBounds);
-
-                canvas.DrawShapedText(
-                    shaper,
-                    node.InnerText,
-                    bounds.MidX - textBounds.MidX,
-                    bounds.MidY - textBounds.MidY,
-                    paint
-                );
+                RenderText(canvas, new SKPoint(bounds.MidX, bounds.MidY), paint, shaper, node.InnerText);
             }
             else
             {
@@ -160,6 +150,113 @@ public partial class DocumentCanvas
 
             canvas.DrawRect(bounds, paint);
         }
+    }
+
+    private static void RenderText(SKCanvas canvas, SKPoint center, SKPaint paint, SKShaper shaper, string text)
+    {
+        if (paint.ContainsGlyphs(text.AsSpan()))
+        {
+            var textBounds = SKRect.Empty;
+
+            paint.MeasureText(text, ref textBounds);
+
+            canvas.DrawShapedText(
+                shaper,
+                text,
+                center.X - textBounds.MidX,
+                center.Y - textBounds.MidY,
+                paint
+            );
+
+            return;
+        }
+
+        // In this case, we are missing some glyphs, so we will need to render text with a font fallback.
+        RenderMultipleTypefaceText(canvas, center, paint, text);
+    }
+
+    private static void RenderMultipleTypefaceText(
+        SKCanvas canvas,
+        SKPoint center,
+        SKPaint paint,
+        string text
+    )
+    {
+        var originalTypeface = paint.Typeface;
+
+        // The start index keeps track of the start of the current text run, while the cursor index allows skipping
+        // chars if no font is found for them.
+        // When inserting a new run, the start index will not have moved from the end of the previous text run, so
+        // we include characters we may have skipped.
+        var startIndex = 0;
+        var cursorIndex = 0;
+
+        var textBounds = SKRect.Empty;
+
+        var list = new List<(int startIndex, int endIndexExclusive, SKTypeface typeface, SKRect runBounds)>();
+
+        while (true)
+        {
+            var glyphs = paint.GetGlyphs(text.AsSpan()) ?? Array.Empty<ushort>();
+
+            var endIndex = Array.IndexOf(glyphs, (ushort)0, cursorIndex);
+
+            if (endIndex < 0)
+            {
+                endIndex = text.Length;
+            }
+
+            if (endIndex - cursorIndex > 0)
+            {
+                var runBounds = SKRect.Empty;
+
+                paint.MeasureText(text, ref runBounds);
+
+                runBounds.Offset(textBounds.Right, -runBounds.Top);
+
+                // Keep track of the overall side of the text.
+                textBounds.Right += runBounds.Width;
+                textBounds.Bottom = Math.Max(Math.Abs(runBounds.Height), textBounds.Bottom);
+
+                list.Add((startIndex, endIndex, paint.Typeface, runBounds));
+
+                // Advance to the beginning of the next text run.
+                startIndex = endIndex;
+            }
+
+            if (endIndex >= text.Length)
+            {
+                break;
+            }
+
+            cursorIndex = endIndex;
+
+            var typeface = SKFontManager.Default.MatchCharacter(text[cursorIndex]);
+
+            if (typeface == null)
+            {
+                // If we couldn't find a font for this character, skip over it. It will be shown as an unknown char.
+                cursorIndex++;
+            }
+            else
+            {
+                paint.Typeface = typeface;
+            }
+        }
+
+        foreach (var item in list)
+        {
+            paint.Typeface = item.typeface;
+
+            canvas.DrawShapedText(
+                text[item.startIndex..item.endIndexExclusive],
+                center.X - textBounds.MidX + item.runBounds.Left,
+                center.Y - textBounds.MidY + item.runBounds.Height,
+                paint
+            );
+        }
+
+        paint.Typeface = originalTypeface;
     }
 
     private void RenderBackground(SKCanvas canvas, SKPaint paint)
