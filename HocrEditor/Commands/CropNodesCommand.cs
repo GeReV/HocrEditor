@@ -12,6 +12,8 @@ namespace HocrEditor.Commands;
 
 public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewModel>>
 {
+    private const int WORD_CROP_PADDING = 1;
+
     private readonly HocrPageViewModel hocrPageViewModel;
 
     public CropNodesCommand(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
@@ -172,6 +174,8 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
 
             bounds.Right--;
         }
+
+        bounds.Inflate(WORD_CROP_PADDING, WORD_CROP_PADDING);
 
         return bounds;
     }
