@@ -261,7 +261,10 @@ public partial class DocumentCanvas
 
     private void RenderBackground(SKCanvas canvas, SKPaint paint)
     {
-        ArgumentNullException.ThrowIfNull(background);
+        if (background == null)
+        {
+            return;
+        }
 
         var bounds = new SKRect(0, 0, background.Width, background.Height);
 

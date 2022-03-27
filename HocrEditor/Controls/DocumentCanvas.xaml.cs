@@ -398,6 +398,8 @@ public sealed partial class DocumentCanvas
 
         if (e.OldValue is HocrPageViewModel oldPage)
         {
+            oldPage.Image.PropertyChanged -= documentCanvas.ViewModelOnImageChanged;
+
             oldPage.Nodes.UnsubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
 
             oldPage.Nodes.CollectionChanged -= documentCanvas.NodesOnCollectionChanged;
@@ -408,6 +410,8 @@ public sealed partial class DocumentCanvas
         if (e.NewValue is HocrPageViewModel newPage)
         {
             documentCanvas.background = newPage.Image;
+
+            newPage.Image.PropertyChanged += documentCanvas.ViewModelOnImageChanged;
 
             newPage.Nodes.SubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
 
@@ -424,6 +428,24 @@ public sealed partial class DocumentCanvas
         }
 
         documentCanvas.Refresh();
+    }
+
+    private void ViewModelOnImageChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        ArgumentNullException.ThrowIfNull(sender);
+
+        var bitmap = (LazyProperty<SKBitmap>)sender;
+
+        switch (e.PropertyName)
+        {
+            case nameof(LazyProperty<SKBitmap>.Value):
+                background = bitmap;
+                break;
+            default:
+                return;
+        }
+
+        Refresh();
     }
 
     private void NodesOnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)

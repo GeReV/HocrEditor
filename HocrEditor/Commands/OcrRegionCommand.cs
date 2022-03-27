@@ -51,10 +51,10 @@ public class OcrRegionCommand : UndoableAsyncCommandBase<Rect>
                 {
                     using var service = new TesseractService(tesseractPath, Settings.TesseractSelectedLanguages);
 
-                    ArgumentNullException.ThrowIfNull(hocrPageViewModel.Image);
+                    ArgumentNullException.ThrowIfNull(hocrPageViewModel.Image.Value);
 
                     var body = await service.Recognize(
-                        hocrPageViewModel.Image,
+                        hocrPageViewModel.Image.Value,
                         hocrPageViewModel.ImageFilename,
                         region
                     );

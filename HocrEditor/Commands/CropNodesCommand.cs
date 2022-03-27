@@ -52,7 +52,7 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
 
         if (words.Any())
         {
-            ArgumentNullException.ThrowIfNull(hocrPageViewModel.ThresholdedImage);
+            ArgumentNullException.ThrowIfNull(hocrPageViewModel.ThresholdedImage.Value);
 
             foreach (var word in words)
             {
@@ -61,7 +61,7 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
                     {
                         var bounds = oldBounds.ToSKRectI();
 
-                        var croppedBounds = CropWord(hocrPageViewModel.ThresholdedImage, bounds);
+                        var croppedBounds = CropWord(hocrPageViewModel.ThresholdedImage.Value, bounds);
 
                         if (croppedBounds.Width == 0 || croppedBounds.Height == 0 || croppedBounds == bounds)
                         {

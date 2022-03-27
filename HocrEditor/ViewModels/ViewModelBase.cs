@@ -22,7 +22,6 @@ namespace HocrEditor.ViewModels
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-
         [NotifyPropertyChangedInvocator]
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {

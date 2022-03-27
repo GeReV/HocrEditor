@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using HocrEditor.Commands;
 using HocrEditor.Controls;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
+using HocrEditor.Tesseract;
 using Microsoft.Toolkit.Mvvm.Input;
 using SkiaSharp;
 using Rect = HocrEditor.Models.Rect;
@@ -31,9 +33,9 @@ namespace HocrEditor.ViewModels
 
         public string ImageFilename { get; private set; }
 
-        public SKBitmap Image { get; private set; }
+        public LazyProperty<SKBitmap> Image { get; }
 
-        public SKBitmap? ThresholdedImage { get; set; }
+        public LazyProperty<SKBitmap> ThresholdedImage { get; }
 
         public Direction Direction
         {
@@ -67,7 +69,25 @@ namespace HocrEditor.ViewModels
         public HocrPageViewModel(string imageFilename)
         {
             ImageFilename = imageFilename;
-            Image = SKBitmap.Decode(imageFilename);
+            Image = new LazyProperty<SKBitmap>(cancellationToken => Task.Run<SKBitmap?>(() => SKBitmap.Decode(imageFilename), cancellationToken));
+            ThresholdedImage = new LazyProperty<SKBitmap>(
+                cancellationToken => Task.Run(
+                    async () =>
+                    {
+                        using var service = new TesseractService(Settings.TesseractPath ?? string.Empty, Enumerable.Empty<string>());
+
+                        var image = await Image.ValueAsync;
+
+                        if (image == null)
+                        {
+                            return null;
+                        }
+
+                        return service.GetThresholdedImage(image);
+                    },
+                    cancellationToken
+                )
+            );
 
             OcrRegionCommand = new OcrRegionCommand(this);
             DeleteCommand = new DeleteNodesCommand(this);
@@ -212,7 +232,7 @@ namespace HocrEditor.ViewModels
                 return;
             }
 
-            Image.Dispose();
+            Image.Value?.Dispose();
 
             UndoRedoManager.UndoStackChanged -= UpdateUndoRedoCommands;
 

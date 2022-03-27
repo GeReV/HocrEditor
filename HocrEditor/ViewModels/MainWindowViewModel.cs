@@ -217,7 +217,7 @@ namespace HocrEditor.ViewModels
 
                                 ArgumentNullException.ThrowIfNull(page.Image);
 
-                                page.ThresholdedImage = service.GetThresholdedImage(page.Image);
+                                // page.ThresholdedImage = service.GetThresholdedImage(page.Image);
 
                                 pages.Add(page);
                             }
@@ -278,11 +278,11 @@ namespace HocrEditor.ViewModels
 
                             using var service = new TesseractService(tesseractPath, languages);
 
-                            ArgumentNullException.ThrowIfNull(page.Image);
+                            ArgumentNullException.ThrowIfNull(page.Image.Value);
 
-                            var body = await service.Recognize(page.Image, page.ImageFilename);
+                            var body = await service.Recognize(page.Image.Value, page.ImageFilename);
 
-                            page.ThresholdedImage = service.GetThresholdedImage(page.Image);
+                            // page.ThresholdedImage = service.GetThresholdedImage(page.Image);
 
                             var doc = new HtmlDocument();
                             doc.LoadHtml(body);
