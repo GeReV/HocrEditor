@@ -161,15 +161,9 @@ public partial class DocumentCanvas
 
             paint.MeasureText(text, ref textBounds);
 
-            var paraLevel = ViewModel?.Direction == Direction.Rtl ? BiDi.BiDiDirection.RTL : BiDi.BiDiDirection.LTR;
-
-            bidi.SetPara(text, (byte)paraLevel, null);
-
-            // DO_MIRRORING takes care of flipping characters like parentheses.
-            text = bidi.GetReordered(BiDi.CallReorderingOptions.DO_MIRRORING);
 
             canvas.DrawText(
-                text,
+                ReorderBidirectionalText(text),
                 center.X - textBounds.MidX,
                 center.Y - textBounds.MidY,
                 paint
@@ -201,6 +195,8 @@ public partial class DocumentCanvas
         var textBounds = SKRect.Empty;
 
         var list = new List<(int startIndex, int endIndexExclusive, SKTypeface typeface, SKRect runBounds)>();
+
+        text = ReorderBidirectionalText(text);
 
         while (true)
         {
@@ -254,12 +250,6 @@ public partial class DocumentCanvas
         foreach (var item in list)
         {
             paint.Typeface = item.typeface;
-
-            var paraLevel = ViewModel?.Direction == Direction.Rtl ? BiDi.BiDiDirection.RTL : BiDi.BiDiDirection.LTR;
-
-            bidi.SetPara(text, (byte)paraLevel, null);
-
-            text = bidi.GetReordered(BiDi.CallReorderingOptions.DEFAULT);
 
             canvas.DrawText(
                 text[item.startIndex..item.endIndexExclusive],
@@ -340,6 +330,17 @@ public partial class DocumentCanvas
         var point = transformation.MapPoint(wordSplitterPosition);
 
         canvas.DrawDashedLine(point.X, bounds.Top, point.X, bounds.Bottom, HighlightColor);
+    }
+
+    private string ReorderBidirectionalText(string text)
+    {
+        var paraLevel = ViewModel?.Direction == Direction.Rtl ? BiDi.BiDiDirection.RTL : BiDi.BiDiDirection.LTR;
+
+        bidi.SetPara(text, (byte)paraLevel, null);
+
+        // DO_MIRRORING takes care of flipping characters like parentheses.
+        text = bidi.GetReordered(BiDi.CallReorderingOptions.DO_MIRRORING);
+        return text;
     }
 
     private IEnumerable<RecursiveSelectHelper.RecursionItem<(HocrNodeViewModel, Element)>> RecurseNodes(int key) =>
