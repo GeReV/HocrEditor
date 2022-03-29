@@ -4,6 +4,7 @@ using System.Linq;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 using HocrEditor.ViewModels;
+using Icu;
 using SkiaSharp;
 using SkiaSharp.HarfBuzz;
 
@@ -11,6 +12,8 @@ namespace HocrEditor.Controls;
 
 public partial class DocumentCanvas
 {
+    private BiDi bidi = new();
+
     private void RenderCanvas(SKCanvas canvas)
     {
         if (rootId < 0)
@@ -152,7 +155,7 @@ public partial class DocumentCanvas
         }
     }
 
-    private static void RenderText(SKCanvas canvas, SKPoint center, SKPaint paint, SKShaper shaper, string text)
+    private void RenderText(SKCanvas canvas, SKPoint center, SKPaint paint, SKShaper shaper, string text)
     {
         if (paint.ContainsGlyphs(text.AsSpan()))
         {
@@ -160,8 +163,14 @@ public partial class DocumentCanvas
 
             paint.MeasureText(text, ref textBounds);
 
-            canvas.DrawShapedText(
-                shaper,
+            var paraLevel = ViewModel?.Direction == Direction.Rtl ? BiDi.BiDiDirection.RTL : BiDi.BiDiDirection.LTR;
+
+            bidi.SetPara(text, (byte)paraLevel, null);
+
+            // DO_MIRRORING takes care of flipping characters like parentheses.
+            text = bidi.GetReordered(BiDi.CallReorderingOptions.DO_MIRRORING);
+
+            canvas.DrawText(
                 text,
                 center.X - textBounds.MidX,
                 center.Y - textBounds.MidY,
@@ -175,7 +184,7 @@ public partial class DocumentCanvas
         RenderMultipleTypefaceText(canvas, center, paint, text);
     }
 
-    private static void RenderMultipleTypefaceText(
+    private void RenderMultipleTypefaceText(
         SKCanvas canvas,
         SKPoint center,
         SKPaint paint,
@@ -248,7 +257,13 @@ public partial class DocumentCanvas
         {
             paint.Typeface = item.typeface;
 
-            canvas.DrawShapedText(
+            var paraLevel = ViewModel?.Direction == Direction.Rtl ? BiDi.BiDiDirection.RTL : BiDi.BiDiDirection.LTR;
+
+            bidi.SetPara(text, (byte)paraLevel, null);
+
+            text = bidi.GetReordered(BiDi.CallReorderingOptions.DEFAULT);
+
+            canvas.DrawText(
                 text[item.startIndex..item.endIndexExclusive],
                 center.X - textBounds.MidX + item.runBounds.Left,
                 center.Y - textBounds.MidY + item.runBounds.Height,

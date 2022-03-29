@@ -294,6 +294,8 @@ public sealed partial class DocumentCanvas
         var documentCanvas = (DocumentCanvas)sender;
 
         documentCanvas.canvasSelection.Dispose();
+
+        documentCanvas.bidi.Dispose();
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
