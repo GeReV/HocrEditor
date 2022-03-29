@@ -6,7 +6,6 @@ using HocrEditor.Models;
 using HocrEditor.ViewModels;
 using Icu;
 using SkiaSharp;
-using SkiaSharp.HarfBuzz;
 
 namespace HocrEditor.Controls;
 
@@ -21,7 +20,6 @@ public partial class DocumentCanvas
             return;
         }
 
-        using var shaper = new SKShaper(SKTypeface.Default);
         using var paint = new SKPaint(new SKFont(SKTypeface.Default))
         {
             StrokeWidth = 1
@@ -29,7 +27,7 @@ public partial class DocumentCanvas
 
         RenderBackground(canvas, paint);
 
-        RenderNodes(canvas, paint, shaper);
+        RenderNodes(canvas, paint);
 
         if (IsShowNumbering)
         {
@@ -105,7 +103,7 @@ public partial class DocumentCanvas
         }
     }
 
-    private void RenderNodes(SKCanvas canvas, SKPaint paint, SKShaper shaper)
+    private void RenderNodes(SKCanvas canvas, SKPaint paint)
     {
         foreach (var recursionItem in RecurseNodes(rootId))
         {
@@ -138,7 +136,7 @@ public partial class DocumentCanvas
                 paint.Color = SKColors.Black;
                 paint.IsStroke = false;
 
-                RenderText(canvas, new SKPoint(bounds.MidX, bounds.MidY), paint, shaper, node.InnerText);
+                RenderText(canvas, new SKPoint(bounds.MidX, bounds.MidY), paint, node.InnerText);
             }
             else
             {
@@ -155,7 +153,7 @@ public partial class DocumentCanvas
         }
     }
 
-    private void RenderText(SKCanvas canvas, SKPoint center, SKPaint paint, SKShaper shaper, string text)
+    private void RenderText(SKCanvas canvas, SKPoint center, SKPaint paint, string text)
     {
         if (paint.ContainsGlyphs(text.AsSpan()))
         {
