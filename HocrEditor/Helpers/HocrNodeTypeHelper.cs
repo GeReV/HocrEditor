@@ -42,7 +42,7 @@ public static class HocrNodeTypeHelper
         (HocrNodeType.Header, HocrNodeType.Paragraph) => true,
         (HocrNodeType.Footer, HocrNodeType.Paragraph) => true,
         (HocrNodeType.TextFloat, HocrNodeType.Paragraph) => true,
-        (HocrNodeType.Caption, HocrNodeType.ContentArea) => true,
+        (HocrNodeType.Caption, HocrNodeType.Paragraph) => true,
         (HocrNodeType.Word, HocrNodeType.Line) => true,
         (HocrNodeType.Word, HocrNodeType.TextFloat) => true,
         (HocrNodeType.Word, HocrNodeType.Caption) => true,
