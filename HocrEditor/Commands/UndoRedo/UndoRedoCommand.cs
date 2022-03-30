@@ -4,7 +4,7 @@ public abstract class UndoRedoCommand
 {
     public object Sender { get; }
 
-    public UndoRedoCommand(object sender)
+    protected UndoRedoCommand(object sender)
     {
         Sender = sender;
     }
