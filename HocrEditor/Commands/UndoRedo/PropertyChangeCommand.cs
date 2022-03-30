@@ -43,8 +43,9 @@ public class PropertyChangeCommand<T> : UndoRedoCommand
     private readonly Func<T> oldValueFunc;
     private readonly Func<T, T> newValueFunc;
     public string PropertyName { get; }
-    public T OldValue => oldValueFunc();
-    public T NewValue => newValueFunc(OldValue);
+    public T? OldValue { get; private set; }
+
+    public T NewValue => newValueFunc(OldValue!);
 
     public PropertyChangeCommand(object sender, string propertyName, Func<T> oldValueFunc, T newValue) : this(
         sender,
@@ -80,6 +81,8 @@ public class PropertyChangeCommand<T> : UndoRedoCommand
 
     public override void Redo()
     {
+        OldValue = oldValueFunc();
+
         var property = Sender.GetType().GetProperty(PropertyName);
 
         property?.SetValue(Sender, NewValue, null);
