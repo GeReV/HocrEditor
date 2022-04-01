@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
@@ -52,26 +53,38 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
 
         if (words.Any())
         {
-            ArgumentNullException.ThrowIfNull(hocrPageViewModel.ThresholdedImage.Value);
-
-            foreach (var word in words)
-            {
-                commands.Add(
-                    PropertyChangeCommand.FromProperty(word, n => n.BBox, oldBounds =>
+            hocrPageViewModel.ThresholdedImage
+                .ContinueWith(
+                    async task =>
                     {
-                        var bounds = oldBounds.ToSKRectI();
+                        var thresholdedImage = await task.ConfigureAwait(false);
 
-                        var croppedBounds = CropWord(hocrPageViewModel.ThresholdedImage.Value, bounds);
-
-                        if (croppedBounds.Width == 0 || croppedBounds.Height == 0 || croppedBounds == bounds)
+                        foreach (var word in words)
                         {
-                            return bounds;
-                        }
+                            commands.Add(
+                                PropertyChangeCommand.FromProperty(
+                                    word,
+                                    n => n.BBox,
+                                    oldBounds =>
+                                    {
+                                        var bounds = oldBounds.ToSKRectI();
 
-                        return croppedBounds;
+                                        var croppedBounds = CropWord(thresholdedImage, bounds);
+
+                                        if (croppedBounds.Width == 0 || croppedBounds.Height == 0 ||
+                                            croppedBounds == bounds)
+                                        {
+                                            return bounds;
+                                        }
+
+                                        return croppedBounds;
+                                    }
+                                )
+                            );
+                        }
                     }
-                ));
-            }
+                )
+                .Wait();
         }
 
         commands.AddRange(

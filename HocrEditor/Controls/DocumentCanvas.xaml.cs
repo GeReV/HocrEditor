@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -231,6 +232,7 @@ public sealed partial class DocumentCanvas
     private int rootId = -1;
     private readonly Dictionary<int, (HocrNodeViewModel, Element)> elements = new();
 
+    private CancellationTokenSource backgroundLoadCancellationTokenSource = new();
     private SKBitmap? background;
 
     private Element RootElement => elements[rootId].Item2;
@@ -400,7 +402,7 @@ public sealed partial class DocumentCanvas
 
         if (e.OldValue is HocrPageViewModel oldPage)
         {
-            oldPage.Image.PropertyChanged -= documentCanvas.ViewModelOnImageChanged;
+            documentCanvas.backgroundLoadCancellationTokenSource.Cancel();
 
             oldPage.Nodes.UnsubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
 
@@ -411,9 +413,23 @@ public sealed partial class DocumentCanvas
 
         if (e.NewValue is HocrPageViewModel newPage)
         {
-            documentCanvas.background = newPage.Image;
+            documentCanvas.backgroundLoadCancellationTokenSource = new CancellationTokenSource();
 
-            newPage.Image.PropertyChanged += documentCanvas.ViewModelOnImageChanged;
+            newPage.Image
+                .ContinueWith(
+                async task =>
+                {
+                    if (task.IsCanceled)
+                    {
+                        return;
+                    }
+
+                    documentCanvas.background = await task;
+
+                    documentCanvas.Refresh();
+                },
+                documentCanvas.backgroundLoadCancellationTokenSource.Token
+            );
 
             newPage.Nodes.SubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
 
@@ -430,24 +446,6 @@ public sealed partial class DocumentCanvas
         }
 
         documentCanvas.Refresh();
-    }
-
-    private void ViewModelOnImageChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        ArgumentNullException.ThrowIfNull(sender);
-
-        var bitmap = (LazyProperty<SKBitmap>)sender;
-
-        switch (e.PropertyName)
-        {
-            case nameof(LazyProperty<SKBitmap>.Value):
-                background = bitmap;
-                break;
-            default:
-                return;
-        }
-
-        Refresh();
     }
 
     private void NodesOnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)

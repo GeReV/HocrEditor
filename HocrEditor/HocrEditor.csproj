@@ -37,6 +37,7 @@
         <PackageReference Include="SkiaSharp" Version="2.80.3" />
         <PackageReference Include="SkiaSharp.Views.WPF" Version="2.80.3" />
         <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
+        <PackageReference Include="System.Runtime.Caching" Version="6.0.0" />
     </ItemGroup>
 
     <ItemGroup>

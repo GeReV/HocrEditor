@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.Caching;
 using System.Threading.Tasks;
 using System.Windows;
 using HocrEditor.Commands;
@@ -21,6 +22,11 @@ namespace HocrEditor.ViewModels
     {
         private int lastId;
 
+        private static readonly MemoryCache ImageCache = new("images", new NameValueCollection
+        {
+            { "CacheMemoryLimitMegabytes", "1024" }
+        });
+
         public HocrPage? HocrPage { get; private set; }
 
         public RangeObservableCollection<HocrNodeViewModel> Nodes { get; } = new();
@@ -33,9 +39,60 @@ namespace HocrEditor.ViewModels
 
         public string ImageFilename { get; private set; }
 
-        public LazyProperty<SKBitmap> Image { get; }
+        public Task<SKBitmap> Image
+        {
+            get
+            {
+                if (ImageCache.Get(ImageFilename) is SKBitmap image)
+                {
+                    return Task.FromResult(image);
+                }
 
-        public LazyProperty<SKBitmap> ThresholdedImage { get; }
+                return Task.Run(
+                    () =>
+                    {
+                        var cachePolicy = new CacheItemPolicy();
+
+                        image = SKBitmap.Decode(ImageFilename);
+
+                        ImageCache.Add(ImageFilename, image, cachePolicy);
+
+                        return image;
+                    }
+                );
+            }
+        }
+
+        public Task<SKBitmap> ThresholdedImage
+        {
+            get
+            {
+                var key = $"{ImageFilename}-thresholded";
+
+                if (ImageCache.Get(key) is SKBitmap image)
+                {
+                    return Task.FromResult(image);
+                }
+
+                return Task.Run(
+                    async () =>
+                    {
+                        using var service = new TesseractService(
+                            Settings.TesseractPath ?? string.Empty,
+                            Enumerable.Empty<string>()
+                        );
+
+                        var originalImage = await Image.ConfigureAwait(false);
+
+                        image = service.GetThresholdedImage(originalImage);
+
+                        ImageCache.Add(key, image, new CacheItemPolicy());
+
+                        return image;
+                    }
+                );
+            }
+        }
 
         public Direction Direction
         {
@@ -51,6 +108,7 @@ namespace HocrEditor.ViewModels
         public Rect SelectionBounds
         {
             get => selectionBounds;
+
             set
             {
                 selectionBounds = value;
@@ -61,7 +119,8 @@ namespace HocrEditor.ViewModels
 
         public ClipboardViewModel Clipboard { get; } = new();
 
-        public HocrPageViewModel(HocrPage page) : this(page.ImageFilename)
+        public HocrPageViewModel(HocrPage page) :
+            this(page.ImageFilename)
         {
             Build(page);
         }
@@ -69,25 +128,6 @@ namespace HocrEditor.ViewModels
         public HocrPageViewModel(string imageFilename)
         {
             ImageFilename = imageFilename;
-            Image = new LazyProperty<SKBitmap>(cancellationToken => Task.Run<SKBitmap?>(() => SKBitmap.Decode(imageFilename), cancellationToken));
-            ThresholdedImage = new LazyProperty<SKBitmap>(
-                cancellationToken => Task.Run(
-                    async () =>
-                    {
-                        using var service = new TesseractService(Settings.TesseractPath ?? string.Empty, Enumerable.Empty<string>());
-
-                        var image = await Image.ValueAsync;
-
-                        if (image == null)
-                        {
-                            return null;
-                        }
-
-                        return service.GetThresholdedImage(image);
-                    },
-                    cancellationToken
-                )
-            );
 
             OcrRegionCommand = new OcrRegionCommand(this);
             DeleteCommand = new DeleteNodesCommand(this);
@@ -231,8 +271,6 @@ namespace HocrEditor.ViewModels
             {
                 return;
             }
-
-            Image.Value?.Dispose();
 
             UndoRedoManager.UndoStackChanged -= UpdateUndoRedoCommands;
 
