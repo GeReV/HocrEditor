@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Core;
@@ -53,6 +54,37 @@ public class DeleteNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMo
             )
         );
 
+        UndoRedoManager.BeginBatch();
+
         UndoRedoManager.ExecuteCommands(commands);
+
+        if (nodes.Count == 1)
+        {
+            TrySelectNextNode(nodes.First());
+        }
+
+        UndoRedoManager.ExecuteBatch();
+    }
+
+    private void TrySelectNextNode(HocrNodeViewModel node)
+    {
+        Ensure.IsNotNull(node.Parent);
+
+        var children = node.Parent.Children;
+
+        if (children.Count <= 1)
+        {
+            return;
+        }
+
+        var index = children.IndexOf(node);
+
+        var nextSelectedNode = index switch
+        {
+            0 => children[1],
+            _ => children[index - 1]
+        };
+
+        new AppendSelectNodesCommand(hocrPageViewModel).Execute(Enumerable.Repeat(nextSelectedNode, 1));
     }
 }
