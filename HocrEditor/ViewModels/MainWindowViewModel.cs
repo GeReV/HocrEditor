@@ -140,7 +140,7 @@ namespace HocrEditor.ViewModels
             }
         }
 
-        private bool CanSave(bool _) => Document.IsChanged && Document.Pages.Any();
+        private bool CanSave(bool forceSaveAs) => (Document.IsChanged || forceSaveAs) && Document.Pages.Any();
 
         private bool Save(bool forceSaveAs)
         {
