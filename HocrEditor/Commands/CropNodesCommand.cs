@@ -104,16 +104,17 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
 
     private static SKRectI CropWord(SKBitmap binaryImage, SKRectI bounds)
     {
+        var nextBounds = bounds;
         var pixels = binaryImage.GetPixelSpan();
         var width = binaryImage.RowBytes;
-        var cornerColor = pixels[bounds.Top * width + bounds.Left];
+        var cornerColor = pixels[nextBounds.Top * width + nextBounds.Left];
 
         // Horizontal lines from top.
-        for (var brk = false; bounds.Top <= bounds.Bottom;)
+        for (var brk = false; nextBounds.Top <= nextBounds.Bottom;)
         {
-            for (var x = bounds.Left; x <= bounds.Right; x++)
+            for (var x = nextBounds.Left; x <= nextBounds.Right; x++)
             {
-                if (pixels[bounds.Top * width + x] != cornerColor)
+                if (pixels[nextBounds.Top * width + x] != cornerColor)
                 {
                     brk = true;
                     break;
@@ -125,15 +126,15 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
                 break;
             }
 
-            bounds.Top++;
+            nextBounds.Top++;
         }
 
         // Horizontal lines from bottom.
-        for (var brk = false; bounds.Bottom >= bounds.Top;)
+        for (var brk = false; nextBounds.Bottom >= nextBounds.Top;)
         {
-            for (var x = bounds.Left; x <= bounds.Right; x++)
+            for (var x = nextBounds.Left; x <= nextBounds.Right; x++)
             {
-                if (pixels[bounds.Bottom * width + x] != cornerColor)
+                if (pixels[nextBounds.Bottom * width + x] != cornerColor)
                 {
                     brk = true;
                     break;
@@ -145,15 +146,15 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
                 break;
             }
 
-            bounds.Bottom--;
+            nextBounds.Bottom--;
         }
 
         // Vertical lines from left.
-        for (var brk = false; bounds.Left <= bounds.Right;)
+        for (var brk = false; nextBounds.Left <= nextBounds.Right;)
         {
-            for (var y = bounds.Top; y <= bounds.Bottom; y++)
+            for (var y = nextBounds.Top; y <= nextBounds.Bottom; y++)
             {
-                if (pixels[y * width + bounds.Left] != cornerColor)
+                if (pixels[y * width + nextBounds.Left] != cornerColor)
                 {
                     brk = true;
                     break;
@@ -165,15 +166,15 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
                 break;
             }
 
-            bounds.Left++;
+            nextBounds.Left++;
         }
 
         // Vertical lines from right.
-        for (var brk = false; bounds.Right >= bounds.Left;)
+        for (var brk = false; nextBounds.Right >= nextBounds.Left;)
         {
-            for (var y = bounds.Top; y <= bounds.Bottom; y++)
+            for (var y = nextBounds.Top; y <= nextBounds.Bottom; y++)
             {
-                if (pixels[y * width + bounds.Right] != cornerColor)
+                if (pixels[y * width + nextBounds.Right] != cornerColor)
                 {
                     brk = true;
                     break;
@@ -185,11 +186,15 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
                 break;
             }
 
-            bounds.Right--;
+            nextBounds.Right--;
         }
 
-        bounds.Inflate(WORD_CROP_PADDING, WORD_CROP_PADDING);
+        // If anything change, add some padding.
+        if (nextBounds != bounds)
+        {
+            nextBounds.Inflate(WORD_CROP_PADDING, WORD_CROP_PADDING);
+        }
 
-        return bounds;
+        return nextBounds;
     }
 }
