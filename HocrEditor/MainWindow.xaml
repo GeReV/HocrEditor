@@ -332,6 +332,9 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
                 <Separator />
+                <ToggleButton IsChecked="{Binding Document.ShowThresholdedImage}"
+                              ToolTip="Show thresholded image"
+                              helpers:IconButton.Source="/Icons/contrast.png" />
                 <ToggleButton IsChecked="{Binding Document.ShowText}"
                               ToolTip="Show text"
                               helpers:IconButton.Source="/Icons/edit.png" />
@@ -351,8 +354,9 @@
                                        ItemsSource="{Binding PagesCollectionView}" />
             <controls:DocumentCanvas Grid.Column="1"
                                      ActiveTool="{Binding Document.CanvasTool}"
-                                     IsShowNumbering="{Binding Document.ShowNumbering}"
+                                     IsShowThresholdedImage="{Binding Document.ShowThresholdedImage}"
                                      IsShowText="{Binding Document.ShowText}"
+                                     IsShowNumbering="{Binding Document.ShowNumbering}"
                                      ViewModel="{Binding Document.CurrentPage}"
                                      Margin="-1,0"
                                      NodeVisibility="{Binding Document.NodeVisibility}"

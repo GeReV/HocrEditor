@@ -1,6 +1,7 @@
 ﻿// Adapted from: https://github.com/CoryCharlton/CCSWE.Core/blob/2cea0791bfba39d832e000d5bdddc3939e85e3ed/src/Core/Ensure.cs
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
 namespace HocrEditor.Core;
@@ -43,6 +44,14 @@ namespace HocrEditor.Core;
         public static void IsInRange(string name, bool expression, string? message = null)
         {
             IsValid<ArgumentOutOfRangeException>(name, expression, string.IsNullOrWhiteSpace(message) ? $"The value passed for '{name}' is out of range." : message);
+        }
+
+        /// <summary>Throws an <see cref="ArgumentNullException"/> if <paramref name="argument"/> is null.</summary>
+        /// <param name="argument">The reference type argument to validate as non-null.</param>
+        /// <param name="paramName">The name of the parameter with which <paramref name="argument"/> corresponds.</param>
+        public static void IsNotNull([System.Diagnostics.CodeAnalysis.NotNull] object? argument, [CallerArgumentExpression("argument")] string? paramName = null)
+        {
+            IsValid<ArgumentNullException>(paramName ?? "argument", argument is not null);
         }
 
         /// <summary>

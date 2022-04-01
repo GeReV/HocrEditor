@@ -264,12 +264,14 @@ public partial class DocumentCanvas
 
     private void RenderBackground(SKCanvas canvas, SKPaint paint)
     {
-        if (background == null)
+        var image = IsShowThresholdedImage ? backgroundThresholded : background;
+
+        if (image == null)
         {
             return;
         }
 
-        var bounds = new SKRect(0, 0, background.Width, background.Height);
+        var bounds = new SKRect(0, 0, image.Width, image.Height);
 
         bounds = transformation.MapRect(bounds);
 
@@ -277,7 +279,7 @@ public partial class DocumentCanvas
 
         if (shouldRenderNode)
         {
-            canvas.DrawBitmap(background, bounds);
+            canvas.DrawBitmap(image, bounds);
         }
         else
         {

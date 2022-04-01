@@ -88,6 +88,16 @@ public sealed partial class DocumentCanvas
             )
         );
 
+    public static readonly DependencyProperty IsShowThresholdedImageProperty = DependencyProperty.Register(
+        nameof(IsShowThresholdedImage),
+        typeof(bool),
+        typeof(DocumentCanvas),
+        new PropertyMetadata(
+            false,
+            IsShowThresholdedImageChanged
+        )
+    );
+
     public static readonly DependencyProperty IsShowTextProperty = DependencyProperty.Register(
         nameof(IsShowText),
         typeof(bool),
@@ -185,6 +195,12 @@ public sealed partial class DocumentCanvas
         set => SetValue(NodeVisibilityProperty, value);
     }
 
+    public bool IsShowThresholdedImage
+    {
+        get => (bool)GetValue(IsShowThresholdedImageProperty);
+        set => SetValue(IsShowThresholdedImageProperty, value);
+    }
+
     public bool IsShowText
     {
         get => (bool)GetValue(IsShowTextProperty);
@@ -234,6 +250,7 @@ public sealed partial class DocumentCanvas
 
     private CancellationTokenSource backgroundLoadCancellationTokenSource = new();
     private SKBitmap? background;
+    private SKBitmap? backgroundThresholded;
 
     private Element RootElement => elements[rootId].Item2;
 
@@ -510,6 +527,33 @@ public sealed partial class DocumentCanvas
         nodeVisibilityDictionary[nodeVisibility.NodeTypeViewModel.NodeType] = nodeVisibility.Visible;
 
         Refresh();
+    }
+
+    private static void IsShowThresholdedImageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var documentCanvas = (DocumentCanvas)d;
+
+        if (e.NewValue is true)
+        {
+            documentCanvas.ViewModel?.ThresholdedImage
+                .ContinueWith(
+                    async task =>
+                    {
+                        if (task.IsCanceled)
+                        {
+                            return;
+                        }
+
+                        documentCanvas.backgroundThresholded = await task;
+                        documentCanvas.Refresh();
+                    }
+                );
+
+            return;
+        }
+
+        documentCanvas.backgroundThresholded = null;
+        documentCanvas.Refresh();
     }
 
     private static void IsShowInfoChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

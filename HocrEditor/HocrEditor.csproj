@@ -135,4 +135,9 @@
       <ProjectReference Include="..\HocrEditor.Tesseract\HocrEditor.Tesseract.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="Icons\contrast.png" />
+      <Resource Include="Icons\contrast.png" />
+    </ItemGroup>
+
 </Project>
