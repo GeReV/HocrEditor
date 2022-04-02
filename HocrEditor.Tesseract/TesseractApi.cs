@@ -31,7 +31,7 @@ public sealed class TesseractApi : IDisposable
     /// Gets Tesseract version string
     /// </summary>
     /// <remarks>This string does not need to be freed as it has a static lifetime.</remarks>
-    public string Version() => Marshal.PtrToStringUTF8(tesseractDllHandle.TessVersion()) ?? string.Empty;
+    public string Version() => Marshal.PtrToStringAnsi(tesseractDllHandle.TessVersion()) ?? string.Empty;
 
 
     public int GetThresholdedImageScaleFactor() =>
