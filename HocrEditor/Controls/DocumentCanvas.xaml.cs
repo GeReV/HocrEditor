@@ -1840,7 +1840,7 @@ public sealed partial class DocumentCanvas
         IEnumerable<HocrNodeViewModel> selectedNodes
     )
     {
-        var dragLimit = SKRect.Empty;
+        var dragLimitBounds = SKRect.Empty;
 
         foreach (var node in selectedNodes)
         {
@@ -1864,18 +1864,18 @@ public sealed partial class DocumentCanvas
                     parentBounds.Bottom - nodeBounds.Bottom
                 );
 
-                if (dragLimit.IsEmpty)
+                if (dragLimitBounds.IsEmpty)
                 {
-                    dragLimit = limitRect;
+                    dragLimitBounds = limitRect;
                 }
                 else
                 {
-                    dragLimit.Intersect(limitRect);
+                    dragLimitBounds.Intersect(limitRect);
                 }
             }
         }
 
-        return dragLimit;
+        return dragLimitBounds;
     }
 
     private void CaptureKeyDownEvents()
