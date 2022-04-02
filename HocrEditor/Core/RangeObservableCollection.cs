@@ -139,8 +139,8 @@ namespace HocrEditor.Core
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is not in the collection range.</exception>
         public void InsertRange(int index, IEnumerable<T> collection)
         {
-            if (collection == null)
-                throw new ArgumentNullException(nameof(collection));
+            ArgumentNullException.ThrowIfNull(collection);
+
             if (index < 0)
                 throw new ArgumentOutOfRangeException(nameof(index));
             if (index > Count)
@@ -188,8 +188,7 @@ namespace HocrEditor.Core
         /// <exception cref="ArgumentNullException"><paramref name="collection"/> is null.</exception>
         public void RemoveRange(IEnumerable<T> collection)
         {
-            if (collection == null)
-                throw new ArgumentNullException(nameof(collection));
+            ArgumentNullException.ThrowIfNull(collection);
 
             var enumerable = collection.ToList();
             if (Count == 0)
@@ -285,8 +284,8 @@ namespace HocrEditor.Core
                 throw new ArgumentOutOfRangeException(nameof(count));
             if (index + count > Count)
                 throw new ArgumentOutOfRangeException(nameof(index));
-            if (match == null)
-                throw new ArgumentNullException(nameof(match));
+
+            ArgumentNullException.ThrowIfNull(match);
 
             if (Count == 0)
                 return 0;
@@ -422,8 +421,7 @@ namespace HocrEditor.Core
             if (index + count > Count)
                 throw new ArgumentOutOfRangeException(nameof(index));
 
-            if (collection == null)
-                throw new ArgumentNullException(nameof(collection));
+            ArgumentNullException.ThrowIfNull(collection);
 
             if (!AllowDuplicates)
                 collection =

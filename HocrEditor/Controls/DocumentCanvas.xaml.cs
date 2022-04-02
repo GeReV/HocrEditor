@@ -166,8 +166,9 @@ public sealed partial class DocumentCanvas
         get => ViewModel?.SelectedNodes;
         set
         {
-            ArgumentNullException.ThrowIfNull(ViewModel);
             ArgumentNullException.ThrowIfNull(value);
+
+            Ensure.IsNotNull(ViewModel);
 
             ViewModel.SelectedNodes = value;
         }
@@ -342,7 +343,7 @@ public sealed partial class DocumentCanvas
                     second = wordSplitterValue[secondStart..];
                 }
 
-                ArgumentNullException.ThrowIfNull(SelectedItems);
+                Ensure.IsNotNull(SelectedItems);
 
                 var node = SelectedItems.First();
 

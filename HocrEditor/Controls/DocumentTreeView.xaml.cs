@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using GongSolutions.Wpf.DragDrop;
+using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.ViewModels;
 
@@ -119,7 +120,7 @@ public partial class DocumentTreeView
         }
 
         // This should never be reached. Parent should always terminate before reaching the root node.
-        ArgumentNullException.ThrowIfNull(parent);
+        Ensure.IsNotNull(parent);
 
         // Find the item from the parent node. This is done recursively by this function.
         // To receive a result from this function, the item for the passed object  must be visible

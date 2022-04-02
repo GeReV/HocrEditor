@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using HocrEditor.Commands.UndoRedo;
+using HocrEditor.Core;
 using HocrEditor.Models;
 using HocrEditor.ViewModels;
 
@@ -43,7 +44,7 @@ public class ConvertToImageCommand : UndoableCommandBase<IEnumerable<HocrNodeVie
             return;
         }
 
-        ArgumentNullException.ThrowIfNull(hocrPageViewModel.HocrPage);
+        Ensure.IsNotNull(hocrPageViewModel.HocrPage);
 
         var commands = new List<UndoRedoCommand>
         {

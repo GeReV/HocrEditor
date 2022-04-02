@@ -129,7 +129,7 @@ public class HocrWriter
         {
             var page = hocrDocumentViewModel.Pages[index];
 
-            ArgumentNullException.ThrowIfNull(page.HocrPage);
+            Ensure.IsNotNull(page.HocrPage);
 
             body.AppendChild(
                 CreateNode(

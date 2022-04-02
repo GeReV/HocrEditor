@@ -122,7 +122,7 @@ public class IconButton
 
         var border = button.FindVisualChild<Border>();
 
-        ArgumentNullException.ThrowIfNull(border);
+        Ensure.IsNotNull(border);
 
         var borderChild = border.Child;
 
@@ -167,7 +167,7 @@ public class IconButton
 
                 var icon = stackPanel.FindImmediateVisualChild<Image>();
 
-                ArgumentNullException.ThrowIfNull(icon);
+                Ensure.IsNotNull(icon);
 
                 stackPanel.Children.Remove(icon);
 
