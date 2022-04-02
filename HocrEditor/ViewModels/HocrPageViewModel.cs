@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.Caching;
-using System.Threading.Tasks;
 using System.Windows;
 using HocrEditor.Commands;
 using HocrEditor.Controls;
@@ -22,10 +20,7 @@ namespace HocrEditor.ViewModels
     {
         private int lastId;
 
-        private static readonly MemoryCache ImageCache = new("images", new NameValueCollection
-        {
-            { "CacheMemoryLimitMegabytes", "1024" }
-        });
+        private static readonly SKBitmapManager ImageCache = new(1024);
 
         public HocrPage? HocrPage { get; private set; }
 
@@ -39,60 +34,23 @@ namespace HocrEditor.ViewModels
 
         public string ImageFilename { get; private set; }
 
-        public Task<SKBitmap> Image
-        {
-            get
-            {
-                if (ImageCache.Get(ImageFilename) is SKBitmap image)
+        public SKBitmapManager.SKBitmapReference Image => ImageCache.Get(ImageFilename, () => SKBitmap.Decode(ImageFilename));
+
+        public SKBitmapManager.SKBitmapReference ThresholdedImage =>
+            ImageCache.Get(
+                $"{ImageFilename}-thresholded",
+                async () =>
                 {
-                    return Task.FromResult(image);
+                    using var service = new TesseractService(
+                        Settings.TesseractPath ?? string.Empty,
+                        Enumerable.Empty<string>()
+                    );
+
+                    var originalBitmap = await Image.GetBitmap().ConfigureAwait(false);
+
+                    return service.GetThresholdedImage(originalBitmap);
                 }
-
-                return Task.Run(
-                    () =>
-                    {
-                        var cachePolicy = new CacheItemPolicy();
-
-                        image = SKBitmap.Decode(ImageFilename);
-
-                        ImageCache.Add(ImageFilename, image, cachePolicy);
-
-                        return image;
-                    }
-                );
-            }
-        }
-
-        public Task<SKBitmap> ThresholdedImage
-        {
-            get
-            {
-                var key = $"{ImageFilename}-thresholded";
-
-                if (ImageCache.Get(key) is SKBitmap image)
-                {
-                    return Task.FromResult(image);
-                }
-
-                return Task.Run(
-                    async () =>
-                    {
-                        using var service = new TesseractService(
-                            Settings.TesseractPath ?? string.Empty,
-                            Enumerable.Empty<string>()
-                        );
-
-                        var originalImage = await Image.ConfigureAwait(false);
-
-                        image = service.GetThresholdedImage(originalImage);
-
-                        ImageCache.Add(key, image, new CacheItemPolicy());
-
-                        return image;
-                    }
-                );
-            }
-        }
+            );
 
         public Direction Direction
         {

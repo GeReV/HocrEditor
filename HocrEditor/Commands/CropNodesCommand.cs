@@ -54,6 +54,7 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
         if (words.Any())
         {
             hocrPageViewModel.ThresholdedImage
+                .GetBitmap()
                 .ContinueWith(
                     async task =>
                     {

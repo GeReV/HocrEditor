@@ -249,8 +249,7 @@ public sealed partial class DocumentCanvas
     private readonly Dictionary<int, (HocrNodeViewModel, Element)> elements = new();
 
     private CancellationTokenSource backgroundLoadCancellationTokenSource = new();
-    private SKBitmap? background;
-    private SKBitmap? backgroundThresholded;
+    private SKBitmapManager.SKBitmapReference? background;
 
     private Element RootElement => elements[rootId].Item2;
 
@@ -404,8 +403,6 @@ public sealed partial class DocumentCanvas
 
         foreach (var (_, element) in documentCanvas.elements.Values)
         {
-            documentCanvas.background = null;
-
             documentCanvas.elementPool.Return(element);
         }
 
@@ -432,21 +429,7 @@ public sealed partial class DocumentCanvas
         {
             documentCanvas.backgroundLoadCancellationTokenSource = new CancellationTokenSource();
 
-            newPage.Image
-                .ContinueWith(
-                async task =>
-                {
-                    if (task.IsCanceled)
-                    {
-                        return;
-                    }
-
-                    documentCanvas.background = await task;
-
-                    documentCanvas.Refresh();
-                },
-                documentCanvas.backgroundLoadCancellationTokenSource.Token
-            );
+            documentCanvas.background = documentCanvas.IsShowThresholdedImage ? newPage.ThresholdedImage : newPage.Image;
 
             newPage.Nodes.SubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
 
@@ -533,26 +516,8 @@ public sealed partial class DocumentCanvas
     {
         var documentCanvas = (DocumentCanvas)d;
 
-        if (e.NewValue is true)
-        {
-            documentCanvas.ViewModel?.ThresholdedImage
-                .ContinueWith(
-                    async task =>
-                    {
-                        if (task.IsCanceled)
-                        {
-                            return;
-                        }
+        documentCanvas.background = (bool)e.NewValue ? documentCanvas.ViewModel?.ThresholdedImage : documentCanvas.ViewModel?.Image;
 
-                        documentCanvas.backgroundThresholded = await task;
-                        documentCanvas.Refresh();
-                    }
-                );
-
-            return;
-        }
-
-        documentCanvas.backgroundThresholded = null;
         documentCanvas.Refresh();
     }
 

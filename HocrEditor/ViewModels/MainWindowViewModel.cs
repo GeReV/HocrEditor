@@ -276,7 +276,7 @@ namespace HocrEditor.ViewModels
 
                             using var service = new TesseractService(tesseractPath, languages);
 
-                            var image = await page.Image.ConfigureAwait(false);
+                            var image = await page.Image.GetBitmap().ConfigureAwait(false);
 
                             var body = await service.Recognize(image, page.ImageFilename)
                                 .ConfigureAwait(false);

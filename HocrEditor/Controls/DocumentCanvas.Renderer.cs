@@ -264,12 +264,31 @@ public partial class DocumentCanvas
 
     private void RenderBackground(SKCanvas canvas, SKPaint paint)
     {
-        var image = IsShowThresholdedImage ? backgroundThresholded : background;
-
-        if (image == null)
+        if (background == null)
         {
             return;
         }
+
+        var backgroundTask = background.GetBitmap();
+
+        if (!backgroundTask.IsCompleted)
+        {
+            // If the background isn't available yet, schedule another render for when it is available and skip it for now.
+            backgroundTask.ContinueWith(
+                task =>
+                {
+                    if (task.IsCanceled)
+                    {
+                        return;
+                    }
+
+                    Refresh();
+                }, backgroundLoadCancellationTokenSource.Token);
+
+            return;
+        }
+
+        var image = backgroundTask.Result;
 
         var bounds = new SKRect(0, 0, image.Width, image.Height);
 

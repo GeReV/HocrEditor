@@ -52,7 +52,7 @@ public class OcrRegionCommand : UndoableAsyncCommandBase<Rect>
                     using var service = new TesseractService(tesseractPath, Settings.TesseractSelectedLanguages);
 
                     var body = await service.Recognize(
-                        await hocrPageViewModel.Image,
+                        await hocrPageViewModel.Image.GetBitmap(),
                         hocrPageViewModel.ImageFilename,
                         region
                     );
