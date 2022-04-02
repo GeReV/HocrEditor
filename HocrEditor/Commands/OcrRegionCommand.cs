@@ -28,7 +28,8 @@ public class OcrRegionCommand : UndoableAsyncCommandBase<Rect>
 
     protected override bool IsCancelable => true;
 
-    protected override bool CanExecuteImpl(Rect selectionBounds) => selectionBounds.Width > 0 && selectionBounds.Height > 0;
+    protected override bool CanExecuteImpl(Rect selectionBounds) =>
+        selectionBounds.Width > 0 && selectionBounds.Height > 0;
 
     protected override Task ExecuteAsyncImpl(Rect selectionBounds, CancellationToken? cancellationToken)
     {
