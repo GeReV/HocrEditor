@@ -66,12 +66,12 @@ public class CycleSelectionCommand : UndoableCommandBase
                 {
                     if (!item.Children.Any())
                     {
-                        // Reached a dead-end, need to step up again and keep walking.
+                        // Reached a dead-end, no other siblings to continue to, need to step up again and keep walking.
                         found = false;
                         break;
                     }
 
-                    item = stepBack ? item.Children.Last() : item.Children.First();
+                    item = stepBack ? item.Children[^1] : item.Children[0];
                 }
 
                 if (found)
@@ -82,8 +82,16 @@ public class CycleSelectionCommand : UndoableCommandBase
                 }
             }
 
-            // No sibling is available, step up so we take the next sibling of the parent.
-            item = item.Parent;
+            if (index + step > 0 && index + step < siblings.Count - 1)
+            {
+                // Still have another sibling to step to, move to it.
+                item = siblings[index + step];
+            }
+            else
+            {
+                // No sibling is available, step up so we take the next sibling of the parent.
+                item = item.Parent;
+            }
         }
 
         if (next != null)
