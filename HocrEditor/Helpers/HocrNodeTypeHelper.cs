@@ -7,6 +7,13 @@ namespace HocrEditor.Helpers;
 
 public static class HocrNodeTypeHelper
 {
+    public static bool IsLineElement(HocrNodeType nodeType) => nodeType is
+        HocrNodeType.Line or
+        HocrNodeType.Header or
+        HocrNodeType.Footer or
+        HocrNodeType.Caption or
+        HocrNodeType.TextFloat;
+
     public static HocrNodeType? GetParentNodeType(HocrNodeType nodeType) => nodeType switch
     {
         HocrNodeType.Page => null,
@@ -64,6 +71,45 @@ public static class HocrNodeTypeHelper
         HocrNodeType.Header => "/Icons/edit-heading.png",
         HocrNodeType.Image => "/Icons/image.png",
         HocrNodeType.Word => "/Icons/edit-quotation.png",
-        _ => throw new ArgumentOutOfRangeException()
+        _ => throw new ArgumentOutOfRangeException(nameof(nodeType))
     };
+
+    public static string HocrClassNameForType(HocrNodeType nodeType) =>
+        nodeType switch
+        {
+            HocrNodeType.Page => "ocr_page",
+            HocrNodeType.ContentArea => "ocr_carea",
+            HocrNodeType.Paragraph => "ocr_par",
+            HocrNodeType.Line => "ocr_line",
+            HocrNodeType.Header => "ocr_header",
+            HocrNodeType.Footer => "ocr_footer",
+            HocrNodeType.TextFloat => "ocr_textfloat",
+            HocrNodeType.Caption => "ocr_caption",
+            HocrNodeType.Word => "ocrx_word",
+            HocrNodeType.Image => "ocr_image",
+            _ => throw new ArgumentOutOfRangeException(nameof(nodeType))
+        };
+
+    public static string HocrIdForType(HocrNodeType nodeType) =>
+        nodeType switch
+        {
+            var t when IsLineElement(t) => "line",
+            HocrNodeType.Page => "page",
+            HocrNodeType.ContentArea => "block",
+            HocrNodeType.Paragraph => "par",
+            HocrNodeType.Word => "word",
+            HocrNodeType.Image => "image",
+            _ => throw new ArgumentOutOfRangeException(nameof(nodeType))
+        };
+
+    public static string ElementTypeForType(HocrNodeType nodeType) =>
+        nodeType switch
+        {
+            HocrNodeType.Page or HocrNodeType.ContentArea => "div",
+            HocrNodeType.Paragraph => "p",
+            HocrNodeType.Word => "span",
+            HocrNodeType.Image => "div",
+            var t when IsLineElement(t) => "span",
+            _ => throw new ArgumentOutOfRangeException(nameof(nodeType))
+        };
 }

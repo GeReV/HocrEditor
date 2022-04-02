@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using HocrEditor.Helpers;
 using HtmlAgilityPack;
 
 namespace HocrEditor.Models
@@ -86,12 +87,7 @@ namespace HocrEditor.Models
         public Rect BBox { get; set; }
         public List<HocrNode> ChildNodes { get; }
 
-        public bool IsLineElement => NodeType is
-            HocrNodeType.Line or
-            HocrNodeType.Header or
-            HocrNodeType.Footer or
-            HocrNodeType.Caption or
-            HocrNodeType.TextFloat;
+        public bool IsLineElement => HocrNodeTypeHelper.IsLineElement(NodeType);
 
         protected string GetAttributeFromTitle(string attribute)
         {

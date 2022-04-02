@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using HocrEditor.Core;
 using HocrEditor.Core.Iso15924;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
@@ -33,7 +34,6 @@ public class HocrWriter
     {
         var html = document.CreateElement("html");
 
-        // TODO: Change this value based on common language or just leave as-is?
         html.SetAttributeValue("lang", "en");
 
         var commonDirection = hocrDocumentViewModel.Pages.CountBy(page => page.Direction).MaxBy(pair => pair.Value).Key;
@@ -153,47 +153,15 @@ public class HocrWriter
     {
         var hocrNode = hocrNodeViewModel.HocrNode;
 
-        ArgumentNullException.ThrowIfNull(hocrNode);
+        Ensure.IsNotNull(hocrNode);
 
         var node = document.CreateElement(
-            hocrNode switch
-            {
-                _ when hocrNode.NodeType is HocrNodeType.Page or HocrNodeType.ContentArea => "div",
-                _ when hocrNode.NodeType is HocrNodeType.Paragraph => "p",
-                _ when hocrNode.IsLineElement => "span",
-                _ when hocrNode.NodeType is HocrNodeType.Word => "span",
-                _ when hocrNode.NodeType is HocrNodeType.Image => "div",
-                _ => throw new ArgumentOutOfRangeException()
-            }
+            HocrNodeTypeHelper.ElementTypeForType(hocrNode.NodeType)
         );
 
-        node.AddClass(
-            hocrNode.NodeType switch
-            {
-                HocrNodeType.Page => "ocr_page",
-                HocrNodeType.ContentArea => "ocr_carea",
-                HocrNodeType.Paragraph => "ocr_par",
-                HocrNodeType.Line => "ocr_line",
-                HocrNodeType.Header => "ocr_header",
-                HocrNodeType.Footer => "ocr_footer",
-                HocrNodeType.TextFloat => "ocr_textfloat",
-                HocrNodeType.Caption => "ocr_caption",
-                HocrNodeType.Word => "ocrx_word",
-                HocrNodeType.Image => "ocr_image",
-                _ => throw new ArgumentOutOfRangeException()
-            }
-        );
+        node.AddClass(HocrNodeTypeHelper.HocrClassNameForType(hocrNode.NodeType));
 
-        var nodeId = hocrNode switch
-        {
-            _ when hocrNode.IsLineElement => "line",
-            _ when hocrNode.NodeType is HocrNodeType.Page => "page",
-            _ when hocrNode.NodeType is HocrNodeType.ContentArea => "block",
-            _ when hocrNode.NodeType is HocrNodeType.Paragraph => "par",
-            _ when hocrNode.NodeType is HocrNodeType.Word => "word",
-            _ when hocrNode.NodeType is HocrNodeType.Image => "image",
-            _ => throw new ArgumentOutOfRangeException()
-        };
+        var nodeId = HocrNodeTypeHelper.HocrIdForType(hocrNode.NodeType);
 
         var id = $"{nodeId}_{pageIndex + 1}";
 
