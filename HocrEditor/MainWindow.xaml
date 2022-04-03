@@ -42,7 +42,8 @@
         <core:ForwardingCommandBinding SourceCommand="Copy"
                                        TargetCommand="{Binding Document.CurrentPage.CopyCommand, FallbackValue={x:Null}}" />
         <core:ForwardingCommandBinding SourceCommand="Paste"
-                                       TargetCommand="{Binding Document.CurrentPage.PasteCommand, FallbackValue={x:Null}}" />
+                                       TargetCommand="{Binding Document.CurrentPage.PasteCommand, FallbackValue={x:Null}}"
+                                       TargetCommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
 
         <core:ForwardingCommandBinding SourceCommand="{x:Static commands:RoutedCommands.MergeCommand}"
                                        TargetCommand="{Binding Document.CurrentPage.MergeCommand, FallbackValue={x:Null}}"
@@ -156,8 +157,8 @@
                 <MenuItem Command="Copy"
                           Header="_Copy"
                           InputGestureText="Ctrl+C" />
-                <MenuItem Command="Paste"
-                          Header="_Paste"
+                <MenuItem Header="_Paste"
+                          Command="Paste"
                           InputGestureText="Ctrl+V" />
                 <Separator />
                 <MenuItem Command="Delete"

@@ -6,10 +6,11 @@ using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 using HocrEditor.ViewModels;
+using Rect = HocrEditor.Models.Rect;
 
 namespace HocrEditor.Commands;
 
-public class PasteCommand : UndoableCommandBase
+public class PasteCommand : UndoableCommandBase<ICollection<HocrNodeViewModel>>
 {
     private const int PASTE_OFFSET = 20;
 
@@ -20,10 +21,10 @@ public class PasteCommand : UndoableCommandBase
         this.hocrPageViewModel = hocrPageViewModel;
     }
 
-    public override bool CanExecute(object? parameter) =>
+    public override bool CanExecute(ICollection<HocrNodeViewModel>? selectedNodes) =>
         hocrPageViewModel.Clipboard.HasData;
 
-    public override void Execute(object? parameter)
+    public override void Execute(ICollection<HocrNodeViewModel>? selectedNodes)
     {
         if (!hocrPageViewModel.Clipboard.HasData)
         {
@@ -57,8 +58,24 @@ public class PasteCommand : UndoableCommandBase
 
         var commands = new List<UndoRedoCommand>();
 
-        // Those inserted nodes are added to their original parent nodes.
-        commands.AddRange(topmostNodes.Select(n => n.Parent!.Children.ToCollectionAddCommand(n)));
+        var selectedNode = selectedNodes?.SingleOrDefault();
+
+        // If we can paste into the selected node
+        if (selectedNode != null && topmostNodes.All(n => HocrNodeTypeHelper.CanNodeTypeBeChildOf(n.NodeType, selectedNode.NodeType)))
+        {
+            // Set the topmost nodes' parent to be the selected node.
+            commands.AddRange(topmostNodes.Select(node => PropertyChangeCommand.FromProperty(node, n => n.Parent, selectedNode)));
+
+            // Add them to the selected node's children.
+            commands.Add(selectedNode.Children.ToCollectionAddCommand(topmostNodes));
+
+            MoveNodesIntoRect(topmostNodes, selectedNode.BBox);
+        }
+        else
+        {
+            // Those inserted nodes are added to their original parent nodes.
+            commands.AddRange(topmostNodes.Select(n => n.Parent!.Children.ToCollectionAddCommand(n)));
+        }
 
         // Add all nodes to the page nodes collection.
         commands.Add(hocrPageViewModel.Nodes.ToCollectionAddCommand(allNodes));
@@ -70,5 +87,30 @@ public class PasteCommand : UndoableCommandBase
         new ExclusiveSelectNodesCommand(hocrPageViewModel).Execute(topmostNodes);
 
         UndoRedoManager.ExecuteBatch();
+    }
+
+    private static void MoveNodesIntoRect(IEnumerable<HocrNodeViewModel> topmostNodes, Rect rect)
+    {
+        foreach (var node in topmostNodes)
+        {
+            var location = node.BBox.Location;
+
+            location.Clamp(rect);
+
+            var offset = location - node.BBox.Location;
+
+            node.BBox = node.BBox with
+            {
+                Location = location
+            };
+
+            foreach (var descendant in node.Descendants)
+            {
+                descendant.BBox = descendant.BBox with
+                {
+                    Location = descendant.BBox.Location + offset
+                };
+            }
+        }
     }
 }
