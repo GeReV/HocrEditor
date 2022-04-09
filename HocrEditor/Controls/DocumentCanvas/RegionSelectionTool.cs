@@ -41,12 +41,43 @@ public class RegionSelectionTool : RegionToolBase
         );
     }
 
-    protected override void OnMouseMove(DocumentCanvas canvas, MouseEventArgs e)
+    protected override void OnMouseDown(DocumentCanvas canvas, MouseButtonEventArgs e, SKPoint normalizedPosition)
     {
-        var position = e.GetPosition(canvas).ToSKPoint();
+        if (canvas.CanvasSelection.ShouldShowCanvasSelection &&
+            canvas.CanvasSelection.Bounds.Contains(normalizedPosition))
+        {
+            // Handle dragging the selection region.
+            MouseMoveState = RegionToolMouseState.Dragging;
 
-        var delta = canvas.InverseScaleTransformation.MapPoint(position - DragStart);
+            var parentBounds = canvas.RootCanvasElement.Bounds;
 
+            DragLimit = SKRect.Create(
+                parentBounds.Width - canvas.CanvasSelection.Bounds.Width,
+                parentBounds.Height - canvas.CanvasSelection.Bounds.Height
+            );
+
+            OffsetStart = canvas.Transformation.MapPoint(canvas.CanvasSelection.Bounds.Location);
+        }
+        else
+        {
+            MouseMoveState = RegionToolMouseState.Selecting;
+
+            canvas.EndEditing();
+
+            canvas.ClearSelection();
+
+            DragLimit = canvas.RootCanvasElement.Bounds;
+
+            var bounds = SKRect.Create(normalizedPosition, SKSize.Empty);
+
+            bounds.Clamp(DragLimit);
+
+            canvas.CanvasSelection.Bounds = bounds;
+        }
+    }
+
+    protected override void OnMouseMove(DocumentCanvas canvas, MouseEventArgs e, SKPoint delta)
+    {
         switch (MouseMoveState)
         {
             case RegionToolMouseState.Selecting:

@@ -98,17 +98,8 @@ public class SelectionTool : RegionToolBase
         canvas.DrawRect(bbox, paint);
     }
 
-    protected override void OnMouseDown(DocumentCanvas canvas, MouseButtonEventArgs e)
+    protected override void OnMouseDown(DocumentCanvas canvas, MouseButtonEventArgs e, SKPoint normalizedPosition)
     {
-        var position = e.GetPosition(canvas).ToSKPoint();
-
-        var normalizedPosition = canvas.InverseTransformation.MapPoint(position);
-
-        if (MouseMoveState != RegionToolMouseState.Selecting)
-        {
-            return;
-        }
-
         // Dragging current the selection, no need to select anything else.
         if (canvas.CanvasSelection.ShouldShowCanvasSelection &&
             canvas.CanvasSelection.Bounds.Contains(normalizedPosition))
@@ -149,7 +140,7 @@ public class SelectionTool : RegionToolBase
         }
     }
 
-    protected override void OnMouseUp(DocumentCanvas canvas, MouseButtonEventArgs e)
+    protected override void OnMouseUp(DocumentCanvas canvas, MouseButtonEventArgs e, SKPoint normalizedPosition)
     {
         canvas.SelectedItems.MatchSome(
             items =>
@@ -161,9 +152,7 @@ public class SelectionTool : RegionToolBase
 
                 e.Handled = true;
 
-                var position = e.GetPosition(canvas).ToSKPoint();
-
-                var mouseMoved = position != DragStart;
+                var mouseMoved = e.GetPosition(canvas).ToSKPoint() != DragStart;
 
                 switch (MouseMoveState)
                 {
@@ -172,8 +161,6 @@ public class SelectionTool : RegionToolBase
                     {
                         if (!mouseMoved)
                         {
-                            var normalizedPosition = canvas.InverseTransformation.MapPoint(position);
-
                             SelectNode(canvas, normalizedPosition);
                         }
 
@@ -213,15 +200,11 @@ public class SelectionTool : RegionToolBase
         );
     }
 
-    protected override void OnMouseMove(DocumentCanvas canvas, MouseEventArgs e)
+    protected override void OnMouseMove(DocumentCanvas canvas, MouseEventArgs e, SKPoint delta)
     {
         canvas.SelectedItems.MatchSome(
             items =>
             {
-                var position = e.GetPosition(canvas).ToSKPoint();
-
-                var delta = canvas.InverseScaleTransformation.MapPoint(position - DragStart);
-
                 switch (MouseMoveState)
                 {
                     case RegionToolMouseState.Selecting:

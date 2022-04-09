@@ -84,8 +84,6 @@ public abstract class RegionToolBase : ICanvasTool
 
         canvas.EndEditing();
 
-        var normalizedPosition = canvas.InverseTransformation.MapPoint(position);
-
         // Handle resize.
         if (canvas.CanvasSelection.ShouldShowCanvasSelection)
         {
@@ -110,39 +108,9 @@ public abstract class RegionToolBase : ICanvasTool
             }
         }
 
-        if (canvas.CanvasSelection.ShouldShowCanvasSelection &&
-            canvas.CanvasSelection.Bounds.Contains(normalizedPosition))
-        {
-            // Handle dragging the selection region.
-            MouseMoveState = RegionToolMouseState.Dragging;
+        var normalizedPosition = canvas.InverseTransformation.MapPoint(position);
 
-            var parentBounds = canvas.RootCanvasElement.Bounds;
-
-            DragLimit = SKRect.Create(
-                parentBounds.Width - canvas.CanvasSelection.Bounds.Width,
-                parentBounds.Height - canvas.CanvasSelection.Bounds.Height
-            );
-
-            OffsetStart = canvas.Transformation.MapPoint(canvas.CanvasSelection.Bounds.Location);
-        }
-        else
-        {
-            MouseMoveState = RegionToolMouseState.Selecting;
-
-            canvas.EndEditing();
-
-            canvas.ClearSelection();
-
-            DragLimit = canvas.RootCanvasElement.Bounds;
-
-            var bounds = SKRect.Create(normalizedPosition, SKSize.Empty);
-
-            bounds.Clamp(DragLimit);
-
-            canvas.CanvasSelection.Bounds = bounds;
-        }
-
-        OnMouseDown(canvas, e);
+        OnMouseDown(canvas, e, normalizedPosition);
 
         canvas.Refresh();
     }
@@ -193,12 +161,14 @@ public abstract class RegionToolBase : ICanvasTool
                 throw new ArgumentOutOfRangeException(nameof(MouseMoveState));
         }
 
-        OnMouseUp(canvas, e);
+        var position = e.GetPosition(canvas).ToSKPoint();
+        var normalizedPosition = canvas.InverseTransformation.MapPoint(position);
+
+        OnMouseUp(canvas, e, normalizedPosition);
 
         MouseMoveState = RegionToolMouseState.None;
 
         canvas.ReleaseMouseCapture();
-
         canvas.Refresh();
     }
 
@@ -279,20 +249,20 @@ public abstract class RegionToolBase : ICanvasTool
                 throw new ArgumentOutOfRangeException(nameof(MouseMoveState));
         }
 
-        OnMouseMove(canvas, e);
+        OnMouseMove(canvas, e, delta);
 
         canvas.Refresh();
     }
 
-    protected virtual void OnMouseDown(DocumentCanvas canvas, MouseButtonEventArgs e)
+    protected virtual void OnMouseDown(DocumentCanvas canvas, MouseButtonEventArgs e, SKPoint normalizedPosition)
     {
     }
 
-    protected virtual void OnMouseUp(DocumentCanvas canvas, MouseButtonEventArgs e)
+    protected virtual void OnMouseUp(DocumentCanvas canvas, MouseButtonEventArgs e, SKPoint normalizedPosition)
     {
     }
 
-    protected virtual void OnMouseMove(DocumentCanvas canvas, MouseEventArgs e)
+    protected virtual void OnMouseMove(DocumentCanvas canvas, MouseEventArgs e, SKPoint delta)
     {
     }
 
