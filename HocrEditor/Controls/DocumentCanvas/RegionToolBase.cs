@@ -39,7 +39,7 @@ public abstract class RegionToolBase : ICanvasTool
         canvas.MouseWheel += DocumentCanvasOnMouseWheel;
     }
 
-    public virtual void Unmount()
+    public void Unmount()
     {
         var canvas = Canvas.ValueOrFailure();
 
@@ -48,7 +48,11 @@ public abstract class RegionToolBase : ICanvasTool
         canvas.MouseMove -= DocumentCanvasOnMouseMove;
         canvas.MouseWheel -= DocumentCanvasOnMouseWheel;
 
-        canvas.Cursor = canvas.CurrentCursor = null;
+        Unmount(canvas);
+    }
+
+    protected virtual void Unmount(DocumentCanvas canvas)
+    {
     }
 
     public abstract void Render(SKCanvas canvas);
@@ -244,6 +248,7 @@ public abstract class RegionToolBase : ICanvasTool
             }
             case RegionToolMouseState.Dragging:
             case RegionToolMouseState.Selecting:
+                // Handled by the specific tools.
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(MouseMoveState));

@@ -36,11 +36,16 @@ public class SelectionTool : RegionToolBase
     private Option<ObservableHashSet<HocrNodeViewModel>> selectedItems =
         Option.None<ObservableHashSet<HocrNodeViewModel>>();
 
+    private static DependencyPropertyDescriptor ViewModelProperty => DependencyPropertyDescriptor.FromProperty(
+        DocumentCanvas.ViewModelProperty,
+        typeof(DocumentCanvas)
+    );
+
     public override void Mount(DocumentCanvas canvas)
     {
         base.Mount(canvas);
 
-        DependencyPropertyDescriptor.FromProperty(DocumentCanvas.ViewModelProperty, typeof(DocumentCanvas))
+        ViewModelProperty
             .AddValueChanged(canvas, OnDocumentCanvasViewModelChanged);
 
         // Transfer the current selection when we turn on the tool.
@@ -50,18 +55,15 @@ public class SelectionTool : RegionToolBase
         }
     }
 
-    public override void Unmount()
+    protected override void Unmount(DocumentCanvas canvas)
     {
-        base.Unmount();
-
-        var canvas = Canvas.ValueOrFailure();
-
-        DependencyPropertyDescriptor.FromProperty(DocumentCanvas.ViewModelProperty, typeof(DocumentCanvas))
+        ViewModelProperty
             .RemoveValueChanged(canvas, OnDocumentCanvasViewModelChanged);
 
         selectedItems.MatchSome(
             items => items.CollectionChanged -= SelectedItemsOnCollectionChanged
         );
+        selectedItems = Option.None<ObservableHashSet<HocrNodeViewModel>>();
 
         canvas.ClearCanvasSelection();
     }

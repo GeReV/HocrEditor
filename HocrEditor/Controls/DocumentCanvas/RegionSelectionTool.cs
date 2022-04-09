@@ -1,19 +1,13 @@
 ﻿using System;
 using System.Windows.Input;
 using HocrEditor.Helpers;
-using HocrEditor.Models;
-using HocrEditor.ViewModels;
-using Optional;
 using Optional.Unsafe;
 using SkiaSharp;
-using SkiaSharp.Views.WPF;
 
 namespace HocrEditor.Controls;
 
-public class RegionSelectionTool : RegionToolBase
+public sealed class RegionSelectionTool : RegionToolBase
 {
-    public bool CanMount(HocrPageViewModel page) => true;
-
     public override void Mount(DocumentCanvas canvas)
     {
         base.Mount(canvas);
@@ -21,12 +15,8 @@ public class RegionSelectionTool : RegionToolBase
         canvas.Cursor = canvas.CurrentCursor = Cursors.Cross;
     }
 
-    public override void Unmount()
+    protected override void Unmount(DocumentCanvas canvas)
     {
-        base.Unmount();
-
-        var canvas = Canvas.ValueOrFailure();
-
         canvas.Cursor = canvas.CurrentCursor = null;
     }
 
