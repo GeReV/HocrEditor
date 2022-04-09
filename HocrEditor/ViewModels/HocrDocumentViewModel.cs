@@ -78,7 +78,7 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
         }
     }
 
-    public DocumentCanvasTool CanvasTool { get; set; }
+    public ICanvasTool CanvasTool { get; set; }
 
     public ReadOnlyObservableCollection<NodeVisibility> NodeVisibility { get; } = new(
         new ObservableCollection<NodeVisibility>(
@@ -89,7 +89,7 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
     public IRelayCommand<HocrPageViewModel> DeletePageCommand { get; }
     public IRelayCommand NextPageCommand { get; }
     public IRelayCommand PreviousPageCommand { get; }
-    public IRelayCommand<DocumentCanvasTool> SelectToolCommand { get; }
+    public IRelayCommand<ICanvasTool> SelectToolCommand { get; }
 
     public HocrDocumentViewModel() : this(
         new HocrDocument(Enumerable.Empty<HocrPage>()),
@@ -101,6 +101,8 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
     public HocrDocumentViewModel(HocrDocument hocrDocument, IEnumerable<HocrPageViewModel> pages)
     {
         HocrDocument = hocrDocument;
+
+        CanvasTool = DocumentCanvasTools.SelectionTool;
 
         Pages = new ObservableCollection<HocrPageViewModel>(pages);
 
@@ -121,23 +123,26 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
             () => !PagesCollectionView.IsCurrentFirst()
         );
 
-        SelectToolCommand = new RelayCommand<DocumentCanvasTool>(
-            tool => CanvasTool = CanvasTool != tool
-                ? tool
-                : DocumentCanvasTool.None,
+        SelectToolCommand = new RelayCommand<ICanvasTool>(
             tool =>
             {
+                tool ??= DocumentCanvasTools.SelectionTool;
+
+                if (CanvasTool != tool)
+                {
+                    CanvasTool = tool;
+                }
+            },
+            tool =>
+            {
+                tool ??= DocumentCanvasTools.SelectionTool;
+
                 if (CurrentPage == null)
                 {
                     return false;
                 }
 
-                return tool switch
-                {
-                    DocumentCanvasTool.WordSplitTool => CurrentPage.SelectedNodes.Count == 1 &&
-                                                        CurrentPage.SelectedNodes.First().NodeType == HocrNodeType.Word,
-                    _ => true
-                };
+                return tool.CanMount(CurrentPage);
             }
         );
 

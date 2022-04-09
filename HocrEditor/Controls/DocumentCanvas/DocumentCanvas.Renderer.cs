@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
@@ -15,7 +16,7 @@ public partial class DocumentCanvas
 
     private void RenderCanvas(SKCanvas canvas)
     {
-        if (rootId < 0)
+        if (RootId < 0)
         {
             return;
         }
@@ -34,48 +35,34 @@ public partial class DocumentCanvas
             RenderNumbering(canvas, paint);
         }
 
-        canvasSelection.Render(
-            canvas,
-            transformation,
-            ActiveTool switch
-            {
-                DocumentCanvasTool.None => NodeSelectionColor,
-                DocumentCanvasTool.SelectionTool => SKColor.Empty,
-                DocumentCanvasTool.WordSplitTool => HighlightColor,
-                _ => throw new ArgumentOutOfRangeException()
-            }
-        );
-
-        RenderNodeSelection(canvas);
-
-        RenderWordSplitter(canvas);
+        ActiveTool.Render(canvas);
     }
 
     private void RenderNumbering(SKCanvas canvas, SKPaint paint)
     {
         const float counterFontSize = 9.0f;
-        var counterTextSize = counterFontSize / 72.0f * ((HocrPage)elements[rootId].Item1.HocrNode).Dpi.Item2;
+        var counterTextSize = counterFontSize / 72.0f * ((HocrPage)Elements[RootId].Item1.HocrNode).Dpi.Item2;
 
         var stack = new Stack<int>();
 
-        stack.Push(rootId);
+        stack.Push(RootId);
 
-        foreach (var recursionItem in RecurseNodes(rootId))
+        foreach (var recursionItem in RecurseNodes(RootId))
         {
             var (node, element) = recursionItem.Item;
 
-            var shouldRenderNode = nodeVisibilityDictionary[node.NodeType];
+            var shouldRenderNode = NodeVisibilityDictionary[node.NodeType];
 
             if (!shouldRenderNode)
             {
                 continue;
             }
 
-            var bounds = transformation.MapRect(element.Bounds);
+            var bounds = Transformation.MapRect(element.Bounds);
 
             var color = GetNodeColor(node);
 
-            var scale = transformation.ScaleY;
+            var scale = Transformation.ScaleY;
 
             paint.TextSize = counterTextSize * scale;
 
@@ -92,7 +79,7 @@ public partial class DocumentCanvas
 
             paint.Color = SKColors.Black;
 
-            var text = (recursionItem.LevelIndex + 1).ToString();
+            var text = (recursionItem.LevelIndex + 1).ToString(new NumberFormatInfo());
 
             var textBounds = SKRect.Empty;
             paint.MeasureText(text, ref textBounds);
@@ -105,13 +92,13 @@ public partial class DocumentCanvas
 
     private void RenderNodes(SKCanvas canvas, SKPaint paint)
     {
-        foreach (var recursionItem in RecurseNodes(rootId))
+        foreach (var recursionItem in RecurseNodes(RootId))
         {
             var (node, element) = recursionItem.Item;
 
-            var bounds = transformation.MapRect(element.Bounds);
+            var bounds = Transformation.MapRect(element.Bounds);
 
-            var shouldRenderNode = nodeVisibilityDictionary[node.NodeType];
+            var shouldRenderNode = NodeVisibilityDictionary[node.NodeType];
 
             if (!shouldRenderNode)
             {
@@ -120,7 +107,7 @@ public partial class DocumentCanvas
 
             var color = GetNodeColor(node);
 
-            var scale = transformation.ScaleY;
+            var scale = Transformation.ScaleY;
 
             if (node.NodeType == HocrNodeType.Word && IsShowText)
             {
@@ -129,7 +116,7 @@ public partial class DocumentCanvas
 
                 canvas.DrawRect(bounds, paint);
 
-                var fontSize = ((HocrLine)elements[node.ParentId].Item1.HocrNode).FontSize;
+                var fontSize = ((HocrLine)Elements[node.ParentId].Item1.HocrNode).FontSize;
 
                 paint.TextSize = fontSize * scale * 0.75f;
 
@@ -283,7 +270,9 @@ public partial class DocumentCanvas
                     }
 
                     Refresh();
-                }, backgroundLoadCancellationTokenSource.Token);
+                },
+                backgroundLoadCancellationTokenSource.Token
+            );
 
             return;
         }
@@ -292,9 +281,9 @@ public partial class DocumentCanvas
 
         var bounds = new SKRect(0, 0, image.Width, image.Height);
 
-        bounds = transformation.MapRect(bounds);
+        bounds = Transformation.MapRect(bounds);
 
-        var shouldRenderNode = nodeVisibilityDictionary[HocrNodeType.Page];
+        var shouldRenderNode = NodeVisibilityDictionary[HocrNodeType.Page];
 
         if (shouldRenderNode)
         {
@@ -315,44 +304,6 @@ public partial class DocumentCanvas
         canvas.DrawRect(bounds, paint);
     }
 
-    private void RenderNodeSelection(SKCanvas canvas)
-    {
-        if (nodeSelection.IsEmpty)
-        {
-            return;
-        }
-
-        var bbox = transformation.MapRect(nodeSelection);
-
-        var paint = new SKPaint
-        {
-            IsStroke = false,
-            Color = NodeSelectorColor.WithAlpha(64),
-        };
-
-        canvas.DrawRect(bbox, paint);
-
-        paint.IsStroke = true;
-        paint.Color = NodeSelectorColor;
-
-        canvas.DrawRect(bbox, paint);
-    }
-
-    private void RenderWordSplitter(SKCanvas canvas)
-    {
-        if (wordSplitterPosition.IsEmpty)
-        {
-            return;
-        }
-
-        var selectedElement = elements[selectedElements.First()].Item2;
-
-        var bounds = transformation.MapRect(selectedElement.Bounds);
-        var point = transformation.MapPoint(wordSplitterPosition);
-
-        canvas.DrawDashedLine(point.X, bounds.Top, point.X, bounds.Bottom, HighlightColor);
-    }
-
     private string ReorderBidirectionalText(string text)
     {
         var paraLevel = ViewModel?.Direction == Direction.Rtl ? BiDi.BiDiDirection.RTL : BiDi.BiDiDirection.LTR;
@@ -364,8 +315,9 @@ public partial class DocumentCanvas
         return text;
     }
 
-    private IEnumerable<RecursiveSelectHelper.RecursionItem<(HocrNodeViewModel, Element)>> RecurseNodes(int key) =>
+    private IEnumerable<RecursiveSelectHelper.RecursionItem<(HocrNodeViewModel, CanvasElement)>>
+        RecurseNodes(int key) =>
         Enumerable
-            .Repeat(elements[key], 1)
-            .IndexedRecursiveSelect(tuple => tuple.Item1.Children.Select(c => elements[c.Id]));
+            .Repeat(Elements[key], 1)
+            .IndexedRecursiveSelect(tuple => tuple.Item1.Children.Select(c => Elements[c.Id]));
 }

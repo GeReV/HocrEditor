@@ -2,6 +2,7 @@
 using System.Linq;
 using HocrEditor.Models;
 using HocrEditor.ViewModels;
+using SkiaSharp;
 
 namespace HocrEditor.Helpers;
 
@@ -28,6 +29,48 @@ public static class NodeHelpers
                     return rect;
                 }
             );
+    }
+
+    public static SKRect CalculateDragLimitBounds(
+        IEnumerable<HocrNodeViewModel> selectedNodes
+    )
+    {
+        var dragLimitBounds = SKRect.Empty;
+
+        foreach (var node in selectedNodes)
+        {
+            if (node.Parent == null)
+            {
+                continue;
+            }
+
+            var parentNode = node.Parent;
+
+            var parentBounds = parentNode.BBox.ToSKRect();
+            var nodeBounds = node.BBox.ToSKRect();
+
+            // In some cases, the child node isn't contained within its parent. In that case, don't limit dragging for it (leave limit empty).
+            if (parentBounds.Contains(nodeBounds))
+            {
+                var limitRect = new SKRect(
+                    parentBounds.Left - nodeBounds.Left,
+                    parentBounds.Top - nodeBounds.Top,
+                    parentBounds.Right - nodeBounds.Right,
+                    parentBounds.Bottom - nodeBounds.Bottom
+                );
+
+                if (dragLimitBounds.IsEmpty)
+                {
+                    dragLimitBounds = limitRect;
+                }
+                else
+                {
+                    dragLimitBounds.Intersect(limitRect);
+                }
+            }
+        }
+
+        return dragLimitBounds;
     }
 
     public static HocrNodeViewModel? FindParent<T>(this HocrNodeViewModel node) where T : HocrNode

@@ -196,7 +196,7 @@ namespace HocrEditor
 
         private void OcrRegionCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            ViewModel.Document.CanvasTool = DocumentCanvasTool.None;
+            ViewModel.Document.CanvasTool = DocumentCanvasTools.SelectionTool;
         }
 
         private void CreateNodeCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)

@@ -1,18 +1,20 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using HocrEditor.ViewModels;
+using Optional;
+using Optional.Collections;
 
 namespace HocrEditor.Helpers;
 
 public static class SelectionHelper
 {
-    public static HocrNodeViewModel? SelectEditable(IEnumerable<HocrNodeViewModel> items)
+    public static Option<HocrNodeViewModel> SelectEditable(IEnumerable<HocrNodeViewModel> items)
     {
         var list = items.ToList();
 
-        var editableNode = list.FirstOrDefault(n => n.IsEditable);
+        var editableNode = list.FirstOrNone();
 
-        if (editableNode != null)
+        if (editableNode.HasValue)
         {
             return editableNode;
         }
@@ -27,11 +29,11 @@ public static class SelectionHelper
 
             if (iter.IsEditable)
             {
-                return iter;
+                return Option.Some(iter);
             }
         }
 
-        return null;
+        return Option.None<HocrNodeViewModel>();
     }
 
     public static IEnumerable<HocrNodeViewModel> SelectAllEditable(IEnumerable<HocrNodeViewModel> items)

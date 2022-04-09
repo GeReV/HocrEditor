@@ -10,6 +10,8 @@ using GongSolutions.Wpf.DragDrop;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.ViewModels;
+using Optional;
+using Optional.Unsafe;
 
 namespace HocrEditor.Controls;
 
@@ -30,9 +32,9 @@ public partial class DocumentTreeView
             new FrameworkPropertyMetadata(null)
         );
 
-    public ICollection<HocrNodeViewModel>? SelectedItems
+    public Option<ICollection<HocrNodeViewModel>> SelectedItems
     {
-        get => (ICollection<HocrNodeViewModel>?)GetValue(SelectedItemsProperty);
+        get => (Option<ICollection<HocrNodeViewModel>>)GetValue(SelectedItemsProperty);
         set => SetValue(SelectedItemsProperty, value);
     }
 
@@ -89,18 +91,18 @@ public partial class DocumentTreeView
     public IDragSource DragHandler { get; }
     public IDropTarget DropHandler { get; }
 
-    private HocrNodeViewModel? editingNode;
+    private Option<HocrNodeViewModel> editingNode = Option.None<HocrNodeViewModel>();
 
     private void TreeViewItem_OnKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Return || editingNode != null || SelectedItems == null)
+        if (e.Key != Key.Return || !editingNode.HasValue || !SelectedItems.HasValue)
         {
             return;
         }
 
-        editingNode = SelectionHelper.SelectEditable(SelectedItems);
+        editingNode = SelectedItems.FlatMap(SelectionHelper.SelectEditable);
 
-        if (editingNode is not { IsEditing: false })
+        if (editingNode.Exists(node => node is not { IsEditing: false }))
         {
             return;
         }
@@ -109,10 +111,10 @@ public partial class DocumentTreeView
         // selected parent.
         var stack = new Stack<HocrNodeViewModel>();
 
-        var parent = editingNode;
+        var parent = editingNode.ValueOrDefault();
 
         // Stack the parents. It is assumed that one of the parent nodes is selected.
-        while (parent != null && !SelectedItems.Contains(parent))
+        while (parent != null && !SelectedItems.ValueOrFailure().Contains(parent))
         {
             stack.Push(parent);
 
@@ -148,7 +150,8 @@ public partial class DocumentTreeView
                 }
 
                 // At this point, the target tree view item should be visible and we can start editing it.
-                editingNode.IsEditing = true;
+                editingNode.ValueOrFailure().IsEditing = true;
+
                 editableTextBlock.IsEditing = true;
             },
             DispatcherPriority.Input
@@ -167,11 +170,13 @@ public partial class DocumentTreeView
 
         OnNodeEdited(editableTextBlock.Text);
 
-        if (editingNode != null)
-        {
-            editingNode!.IsEditing = false;
-            editingNode = null;
-        }
+        editingNode.MatchSome(
+            node =>
+            {
+                node.IsEditing = false;
+
+                editingNode = Option.None<HocrNodeViewModel>();
+            });
 
         editableTextBlock.IsEditing = false;
 
@@ -181,13 +186,16 @@ public partial class DocumentTreeView
 
     private void EditableTextBlock_OnLostFocus(object sender, RoutedEventArgs e)
     {
-        if (editingNode == null)
+        if (!editingNode.HasValue)
         {
             return;
         }
 
-        editingNode.IsEditing = false;
-        editingNode = null;
+        editingNode.MatchSome(
+            node => node.IsEditing = false
+        );
+
+        editingNode = Option.None<HocrNodeViewModel>();
 
         if (this.FindVisualChild<EditableTextBlock>() is { } editableTextBlock)
         {
@@ -197,11 +205,13 @@ public partial class DocumentTreeView
 
     private void OnNodeEdited(string value)
     {
+        var enumerable = SelectedItems.Map(items => items.AsEnumerable()).ValueOr(Enumerable.Empty<HocrNodeViewModel>());
+
         RaiseEvent(
             new NodesEditedEventArgs(
                 NodesEditedEvent,
                 this,
-                SelectionHelper.SelectAllEditable(SelectedItems ?? Enumerable.Empty<HocrNodeViewModel>()),
+                SelectionHelper.SelectAllEditable(enumerable),
                 value
             )
         );
