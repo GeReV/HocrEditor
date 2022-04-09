@@ -1,0 +1,12 @@
+﻿# top-most EditorConfig file
+root = true
+
+# Don't use tabs for indentation.
+[*]
+indent_style = space
+trim_trailing_whitespace = true
+charset = utf-8
+
+[*.cs]
+dotnet_diagnostic.MA0015.severity = none
+dotnet_diagnostic.MA0051.severity = none
