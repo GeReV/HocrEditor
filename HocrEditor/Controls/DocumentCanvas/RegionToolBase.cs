@@ -14,8 +14,8 @@ namespace HocrEditor.Controls;
 
 public abstract class RegionToolBase : ICanvasTool
 {
-    private const int KEYBOARD_MOVE_CTRL_MULTIPLIER = 5;
-    private const int KEYBOARD_MOVE_CTRL_SHIFT_MULTIPLIER = 10;
+    private const int KEYBOARD_MOVE_CTRL_MULTIPLIER = 10;
+    private const int KEYBOARD_MOVE_CTRL_SHIFT_MULTIPLIER = 30;
 
     protected Option<DocumentCanvas> Canvas { get; private set; } = Option.None<DocumentCanvas>();
 
