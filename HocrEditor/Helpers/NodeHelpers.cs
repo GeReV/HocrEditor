@@ -31,11 +31,11 @@ public static class NodeHelpers
             );
     }
 
-    public static SKRect CalculateDragLimitBounds(
+    public static SKRectI CalculateDragLimitBounds(
         IEnumerable<HocrNodeViewModel> selectedNodes
     )
     {
-        var dragLimitBounds = SKRect.Empty;
+        var dragLimitBounds = SKRectI.Empty;
 
         foreach (var node in selectedNodes)
         {
@@ -46,13 +46,13 @@ public static class NodeHelpers
 
             var parentNode = node.Parent;
 
-            var parentBounds = parentNode.BBox.ToSKRect();
-            var nodeBounds = node.BBox.ToSKRect();
+            var parentBounds = parentNode.BBox.ToSKRectI();
+            var nodeBounds = node.BBox.ToSKRectI();
 
             // In some cases, the child node isn't contained within its parent. In that case, don't limit dragging for it (leave limit empty).
             if (parentBounds.Contains(nodeBounds))
             {
-                var limitRect = new SKRect(
+                var limitRect = new SKRectI(
                     parentBounds.Left - nodeBounds.Left,
                     parentBounds.Top - nodeBounds.Top,
                     parentBounds.Right - nodeBounds.Right,

@@ -391,7 +391,7 @@ public sealed partial class DocumentCanvas
         switch (e.PropertyName)
         {
             case nameof(HocrNodeViewModel.BBox):
-                Elements[node.Id].Item2.Bounds = node.BBox.ToSKRect();
+                Elements[node.Id].Item2.Bounds = node.BBox.ToSKRectI();
                 break;
             case nameof(HocrNodeViewModel.IsSelected):
                 var enumerable = Enumerable.Repeat(node, 1);
@@ -787,7 +787,7 @@ public sealed partial class DocumentCanvas
         }
 
         // dragLimit = SKRect.Empty;
-        CanvasSelection.Bounds = SKRect.Empty;
+        CanvasSelection.Bounds = SKRectI.Empty;
 
         SelectionBounds = Rect.Empty;
 
@@ -800,7 +800,7 @@ public sealed partial class DocumentCanvas
     {
         var allNodes = SelectedElements.Select(id => Elements[id].Item1).ToList();
 
-        CanvasSelection.Bounds = NodeHelpers.CalculateUnionRect(allNodes).ToSKRect();
+        CanvasSelection.Bounds = NodeHelpers.CalculateUnionRect(allNodes).ToSKRectI();
     }
 
     private void ResetTransformation()
@@ -914,7 +914,7 @@ public sealed partial class DocumentCanvas
         foreach (var node in nodes)
         {
             var el = elementPool.Get();
-            el.Bounds = node.BBox.ToSKRect();
+            el.Bounds = node.BBox.ToSKRectI();
 
             Elements.Add(node.Id, (node, el));
 

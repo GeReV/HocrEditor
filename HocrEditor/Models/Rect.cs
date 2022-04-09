@@ -312,10 +312,7 @@ namespace HocrEditor.Models
         }
 
         // ReSharper disable once InconsistentNaming
-        public SKRect ToSKRect() => new(Left, Top, Right, Bottom);
-
-        // ReSharper disable once InconsistentNaming
-        public SKRectI ToSKRectI() => new(Left, Top, Right, Bottom);
+        public readonly SKRectI ToSKRectI() => new(Left, Top, Right, Bottom);
 
         /// <param name="left">The <see cref="T:HocrEditor.Models.BoundingBox" /> structure that is to the left of the equality operator.</param>
         /// <param name="right">The <see cref="T:HocrEditor.Models.BoundingBox" /> structure that is to the right of the equality operator.</param>

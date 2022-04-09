@@ -21,7 +21,7 @@ internal sealed class CanvasSelection : IDisposable
         StrokeWidth = 1,
     };
 
-    private SKRect bounds;
+    private SKRectI bounds;
     private readonly ResizeHandle[] resizeHandles;
 
     public CanvasSelection()
@@ -40,9 +40,9 @@ internal sealed class CanvasSelection : IDisposable
         };
     }
 
-    public SKRect InitialBounds { get; private set; } = SKRect.Empty;
+    public SKRectI InitialBounds { get; private set; } = SKRectI.Empty;
 
-    public SKRect Bounds
+    public SKRectI Bounds
     {
         get => bounds;
         set => bounds = value;
@@ -62,33 +62,33 @@ internal sealed class CanvasSelection : IDisposable
 
     public bool IsEmpty => Bounds.IsEmpty;
 
-    public float Left
+    public int Left
     {
         get => bounds.Left;
         set => bounds.Left = value;
     }
 
-    public float Top
+    public int Top
     {
         get => bounds.Top;
         set => bounds.Top = value;
     }
 
-    public float Right
+    public int Right
     {
         get => bounds.Right;
         set => bounds.Right = value;
     }
 
-    public float Bottom
+    public int Bottom
     {
         get => bounds.Bottom;
         set => bounds.Bottom = value;
     }
 
-    public float Width => bounds.Width;
+    public int Width => bounds.Width;
 
-    public float Height => bounds.Height;
+    public int Height => bounds.Height;
 
     public float MidX => bounds.MidX;
     public float MidY => bounds.MidY;
@@ -169,7 +169,7 @@ internal sealed class CanvasSelection : IDisposable
 
     public void EndResize()
     {
-        InitialBounds = SKRect.Empty;
+        InitialBounds = SKRectI.Empty;
 
         // Ensure our final size has positive width and height, if it was flipped during resize.
         bounds = bounds.Standardized;

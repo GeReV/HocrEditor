@@ -127,7 +127,7 @@ public sealed class WordSplittingTool : ICanvasTool
 
         Keyboard.Focus(canvas);
 
-        var normalizedPosition = canvas.InverseTransformation.MapPoint(position);
+        var normalizedPosition = SKPointI.Truncate(canvas.InverseTransformation.MapPoint(position));
 
         Ensure.IsValid(
             nameof(canvas.SelectedItems),

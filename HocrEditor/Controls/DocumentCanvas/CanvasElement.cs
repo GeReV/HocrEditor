@@ -4,5 +4,5 @@ namespace HocrEditor.Controls;
 
 public class CanvasElement
 {
-    public SKRect Bounds { get; set; }
+    public SKRectI Bounds { get; set; }
 }

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
@@ -101,7 +100,7 @@ public sealed class SelectionTool : RegionToolBase
         canvas.DrawRect(bbox, paint);
     }
 
-    protected override void OnMouseDown(DocumentCanvas canvas, MouseButtonEventArgs e, SKPoint normalizedPosition)
+    protected override void OnMouseDown(DocumentCanvas canvas, MouseButtonEventArgs e, SKPointI normalizedPosition)
     {
         // Dragging current the selection, no need to select anything else.
         if (canvas.CanvasSelection.ShouldShowCanvasSelection &&
@@ -247,14 +246,14 @@ public sealed class SelectionTool : RegionToolBase
 
                         element.Bounds = element.Bounds with
                         {
-                            Location = newLocation + deltaFromDraggedElement
+                            Location = SKPointI.Truncate(newLocation + deltaFromDraggedElement)
                         };
                     }
 
                     // Apply to selection rect.
                     canvas.CanvasSelection.Bounds = canvas.CanvasSelection.Bounds with
                     {
-                        Location = newLocation
+                        Location = SKPointI.Truncate(newLocation)
                     };
                 }
 
@@ -412,7 +411,7 @@ public sealed class SelectionTool : RegionToolBase
         return canvas.Elements.Keys
             .Where(NodeIsVisible)
             .Where(k => canvas.Elements[k].Item1.NodeType != HocrNodeType.Page)
-            .Where(k => canvas.Elements[k].Item2.Bounds.Contains(p))
+            .Where(k => canvas.Elements[k].Item2.Bounds.Contains(SKPointI.Truncate(p)))
             .OrderByDescending(k => canvas.Elements[k].Item1.NodeType)
             .ToList();
     }

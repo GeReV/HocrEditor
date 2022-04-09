@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
 using System.Windows.Input;
 using HocrEditor.Helpers;
 using HocrEditor.ViewModels;
@@ -15,8 +14,8 @@ namespace HocrEditor.Controls;
 
 public abstract class RegionToolBase : ICanvasTool
 {
-    private const float KEYBOARD_MOVE_CTRL_MULTIPLIER = 5.0f;
-    private const float KEYBOARD_MOVE_CTRL_SHIFT_MULTIPLIER = 10.0f;
+    private const int KEYBOARD_MOVE_CTRL_MULTIPLIER = 5;
+    private const int KEYBOARD_MOVE_CTRL_SHIFT_MULTIPLIER = 10;
 
     protected Option<DocumentCanvas> Canvas { get; private set; } = Option.None<DocumentCanvas>();
 
@@ -25,10 +24,10 @@ public abstract class RegionToolBase : ICanvasTool
     protected SKPoint DragStart;
     protected SKPoint OffsetStart;
 
-    protected SKRect DragLimit = SKRect.Empty;
+    protected SKRectI DragLimit = SKRectI.Empty;
 
-    private SKRect resizeLimitInside = SKRect.Empty;
-    private SKRect resizeLimitOutside = SKRect.Empty;
+    private SKRectI resizeLimitInside = SKRectI.Empty;
+    private SKRectI resizeLimitOutside = SKRectI.Empty;
 
     private Option<ResizeHandle> selectedResizeHandle = Option.None<ResizeHandle>();
 
@@ -119,7 +118,7 @@ public abstract class RegionToolBase : ICanvasTool
             }
         }
 
-        var normalizedPosition = canvas.InverseTransformation.MapPoint(position);
+        var normalizedPosition = SKPointI.Truncate(canvas.InverseTransformation.MapPoint(position));
 
         OnMouseDown(canvas, e, normalizedPosition);
 
@@ -173,7 +172,7 @@ public abstract class RegionToolBase : ICanvasTool
         }
 
         var position = e.GetPosition(canvas).ToSKPoint();
-        var normalizedPosition = canvas.InverseTransformation.MapPoint(position);
+        var normalizedPosition = SKPointI.Truncate(canvas.InverseTransformation.MapPoint(position));
 
         OnMouseUp(canvas, e, normalizedPosition);
 
@@ -290,10 +289,10 @@ public abstract class RegionToolBase : ICanvasTool
 
         var delta = e.Key switch
         {
-            Key.Up => new SKPoint(0, -1),
-            Key.Down => new SKPoint(0, 1),
-            Key.Left => new SKPoint(-1, 0),
-            Key.Right => new SKPoint(1, 0),
+            Key.Up => new SKPointI(0, -1),
+            Key.Down => new SKPointI(0, 1),
+            Key.Left => new SKPointI(-1, 0),
+            Key.Right => new SKPointI(1, 0),
             _ => throw new ArgumentOutOfRangeException()
         };
 
@@ -320,7 +319,7 @@ public abstract class RegionToolBase : ICanvasTool
     }
 
 
-    protected virtual void OnMouseDown(DocumentCanvas canvas, MouseButtonEventArgs e, SKPoint normalizedPosition)
+    protected virtual void OnMouseDown(DocumentCanvas canvas, MouseButtonEventArgs e, SKPointI normalizedPosition)
     {
     }
 
@@ -348,7 +347,7 @@ public abstract class RegionToolBase : ICanvasTool
 
     private void ClearCanvasResizeLimit(DocumentCanvas canvas)
     {
-        resizeLimitInside = SKRect.Empty;
+        resizeLimitInside = SKRectI.Empty;
         resizeLimitOutside = canvas.RootCanvasElement.Bounds;
     }
 
@@ -362,7 +361,7 @@ public abstract class RegionToolBase : ICanvasTool
 
             var containedChildren = node.Children.Where(c => node.BBox.Contains(c.BBox));
 
-            resizeLimitInside = NodeHelpers.CalculateUnionRect(containedChildren).ToSKRect();
+            resizeLimitInside = NodeHelpers.CalculateUnionRect(containedChildren).ToSKRectI();
 
             // TODO: This fails when merging.
             // Debug.Assert(
@@ -443,7 +442,7 @@ public abstract class RegionToolBase : ICanvasTool
                 var deltaX = resizePivot.X - nextLeft;
 
                 // Calculate next right position from the expected left position, but clamp within the limits.
-                canvas.CanvasSelection.Right = Math.Clamp(
+                canvas.CanvasSelection.Right = (int)Math.Clamp(
                     nextLeft + 2 * deltaX,
                     resizeLimitInside.IsEmpty || resizeWithChildren
                         ? resizeLimitOutside.Left
@@ -462,7 +461,7 @@ public abstract class RegionToolBase : ICanvasTool
                 resizePivot.X = canvas.CanvasSelection.InitialBounds.Right;
             }
 
-            canvas.CanvasSelection.Left = nextLeft;
+            canvas.CanvasSelection.Left = (int)nextLeft;
         }
 
         if (resizeHandle.Direction.HasFlag(CardinalDirections.North))
@@ -479,7 +478,7 @@ public abstract class RegionToolBase : ICanvasTool
             {
                 var deltaY = resizePivot.Y - nextTop;
 
-                canvas.CanvasSelection.Bottom = Math.Clamp(
+                canvas.CanvasSelection.Bottom = (int)Math.Clamp(
                     nextTop + 2 * deltaY,
                     resizeLimitInside.IsEmpty || resizeWithChildren
                         ? resizeLimitOutside.Top
@@ -496,7 +495,7 @@ public abstract class RegionToolBase : ICanvasTool
                 resizePivot.Y = canvas.CanvasSelection.InitialBounds.Bottom;
             }
 
-            canvas.CanvasSelection.Top = nextTop;
+            canvas.CanvasSelection.Top = (int)nextTop;
         }
 
         if (resizeHandle.Direction.HasFlag(CardinalDirections.East))
@@ -513,7 +512,7 @@ public abstract class RegionToolBase : ICanvasTool
             {
                 var deltaX = nextRight - resizePivot.X;
 
-                canvas.CanvasSelection.Left = Math.Clamp(
+                canvas.CanvasSelection.Left = (int)Math.Clamp(
                     nextRight - 2 * deltaX,
                     resizeLimitOutside.Left,
                     resizeLimitInside.IsEmpty || resizeWithChildren
@@ -530,7 +529,7 @@ public abstract class RegionToolBase : ICanvasTool
                 resizePivot.X = canvas.CanvasSelection.InitialBounds.Left;
             }
 
-            canvas.CanvasSelection.Right = nextRight;
+            canvas.CanvasSelection.Right = (int)nextRight;
         }
 
         if (resizeHandle.Direction.HasFlag(CardinalDirections.South))
@@ -547,7 +546,7 @@ public abstract class RegionToolBase : ICanvasTool
             {
                 var deltaY = nextBottom - resizePivot.Y;
 
-                canvas.CanvasSelection.Top = Math.Clamp(
+                canvas.CanvasSelection.Top = (int)Math.Clamp(
                     nextBottom - 2 * deltaY,
                     resizeLimitOutside.Top,
                     resizeLimitInside.IsEmpty || resizeWithChildren
@@ -564,7 +563,7 @@ public abstract class RegionToolBase : ICanvasTool
                 resizePivot.Y = canvas.CanvasSelection.InitialBounds.Top;
             }
 
-            canvas.CanvasSelection.Bottom = nextBottom;
+            canvas.CanvasSelection.Bottom = (int)nextBottom;
         }
 
         var ratio = canvas.CanvasSelection.ResizeRatio;
@@ -574,11 +573,11 @@ public abstract class RegionToolBase : ICanvasTool
         foreach (var id in canvas.SelectedElements)
         {
             // Start with the initial value, so pressing and releasing Ctrl reverts to original size.
-            var bounds = canvas.Elements[id].Item1.BBox.ToSKRect();
+            var bounds = canvas.Elements[id].Item1.BBox.ToSKRectI();
 
             if (resizeWithChildren || canvas.SelectedItems.Exists(items => items.Any(node => node.Id == id)))
             {
-                bounds = matrix.MapRect(bounds);
+                bounds = SKRectI.Truncate(matrix.MapRect(bounds));
                 bounds.Clamp(canvas.CanvasSelection.Bounds);
             }
 

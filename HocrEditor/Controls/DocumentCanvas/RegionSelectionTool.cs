@@ -32,7 +32,7 @@ public sealed class RegionSelectionTool : RegionToolBase
         );
     }
 
-    protected override void OnMouseDown(DocumentCanvas canvas, MouseButtonEventArgs e, SKPoint normalizedPosition)
+    protected override void OnMouseDown(DocumentCanvas canvas, MouseButtonEventArgs e, SKPointI normalizedPosition)
     {
         if (canvas.CanvasSelection.ShouldShowCanvasSelection &&
             canvas.CanvasSelection.Bounds.Contains(normalizedPosition))
@@ -42,7 +42,7 @@ public sealed class RegionSelectionTool : RegionToolBase
 
             var parentBounds = canvas.RootCanvasElement.Bounds;
 
-            DragLimit = SKRect.Create(
+            DragLimit = SKRectI.Create(
                 parentBounds.Width - canvas.CanvasSelection.Bounds.Width,
                 parentBounds.Height - canvas.CanvasSelection.Bounds.Height
             );
@@ -63,13 +63,13 @@ public sealed class RegionSelectionTool : RegionToolBase
 
             bounds.Clamp(DragLimit);
 
-            canvas.CanvasSelection.Bounds = bounds;
+            canvas.CanvasSelection.Bounds = SKRectI.Truncate(bounds);
         }
     }
 
     protected override bool OnSelectSelection(DocumentCanvas canvas, SKPoint delta)
     {
-        var newLocation = canvas.InverseTransformation.MapPoint(DragStart) + delta;
+        var newLocation = SKPointI.Truncate(canvas.InverseTransformation.MapPoint(DragStart) + delta);
 
         newLocation.Clamp(DragLimit);
 
@@ -81,7 +81,7 @@ public sealed class RegionSelectionTool : RegionToolBase
 
     protected override bool OnDragSelection(DocumentCanvas canvas, SKPoint delta)
     {
-        var newLocation = canvas.InverseTransformation.MapPoint(OffsetStart) + delta;
+        var newLocation = SKPointI.Truncate(canvas.InverseTransformation.MapPoint(OffsetStart) + delta);
 
         newLocation.Clamp(DragLimit);
 
