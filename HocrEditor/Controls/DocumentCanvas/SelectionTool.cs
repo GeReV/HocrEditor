@@ -19,7 +19,7 @@ using Rect = HocrEditor.Models.Rect;
 
 namespace HocrEditor.Controls;
 
-public class SelectionTool : RegionToolBase
+public sealed class SelectionTool : RegionToolBase
 {
     private static readonly SKColor NodeSelectionColor = new(0xffa6cee3);
     private static readonly SKColor NodeSelectorColor = new(0xff1f78b4);

@@ -12,7 +12,7 @@ using SkiaSharp.Views.WPF;
 
 namespace HocrEditor.Controls;
 
-public class WordSplittingTool : ICanvasTool
+public sealed class WordSplittingTool : ICanvasTool
 {
     private static readonly SKColor HighlightColor = new(0xffffff99);
 
@@ -67,6 +67,7 @@ public class WordSplittingTool : ICanvasTool
         canvas.MouseDown -= DocumentCanvasOnMouseDown;
         canvas.MouseUp -= DocumentCanvasOnMouseUp;
         canvas.MouseMove -= DocumentCanvasOnMouseMove;
+        canvas.KeyDown -= DocumentCanvasOnKeyDown;
 
         wordSplitterPosition = SKPoint.Empty;
         wordSplitterValue = string.Empty;
@@ -151,7 +152,7 @@ public class WordSplittingTool : ICanvasTool
         canvas.Refresh();
     }
 
-    private void DocumentCanvasOnMouseUp(object sender, MouseButtonEventArgs e)
+    private static void DocumentCanvasOnMouseUp(object sender, MouseButtonEventArgs e)
     {
         var canvas = (DocumentCanvas)sender;
 
