@@ -64,7 +64,7 @@ public class WordSplitCommand : UndoableCommandBase<WordSplitEventArgs>
                 insertOffset = 0;
                 break;
             default:
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(HocrPageViewModel.Direction));
         }
 
         clone.Id = HocrPageViewModel.NextId();

@@ -37,7 +37,7 @@ public class PasteCommand : UndoableCommandBase<ICollection<HocrNodeViewModel>>
         {
             Direction.Ltr => new Point(PASTE_OFFSET, PASTE_OFFSET),
             Direction.Rtl => new Point(-PASTE_OFFSET, PASTE_OFFSET),
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(hocrPageViewModel.Direction))
         };
 
         // Update the nodes' individual data.

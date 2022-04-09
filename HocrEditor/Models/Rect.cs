@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using SkiaSharp;
 
 namespace HocrEditor.Models
 {
+    [StructLayout(LayoutKind.Auto)]
     public struct Rect : IEquatable<Rect>
     {
         public static Rect FromSKRect(SKRect rect) => new(

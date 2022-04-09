@@ -32,7 +32,7 @@ namespace HocrEditor.ViewModels
                 ParagraphSeparator,
                 Children
             ),
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException("this")
         };
 
         public HocrNodeViewModel(HocrNode node)

@@ -16,7 +16,7 @@ namespace HocrEditor.Models
             var directionCount = new Dictionary<Direction, int>
             {
                 { Direction.Ltr, 0 },
-                { Direction.Rtl, 0 }
+                { Direction.Rtl, 0 },
             };
 
             foreach (var page in Pages)

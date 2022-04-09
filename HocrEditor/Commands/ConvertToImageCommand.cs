@@ -48,7 +48,7 @@ public class ConvertToImageCommand : UndoableCommandBase<IEnumerable<HocrNodeVie
 
         var commands = new List<UndoRedoCommand>
         {
-            new PageRemoveNodesCommand(hocrPageViewModel, selectedNodes.SelectMany(node => node.Children))
+            new PageRemoveNodesCommand(hocrPageViewModel, selectedNodes.SelectMany(node => node.Children)),
         };
 
         foreach (var node in selectedNodes)

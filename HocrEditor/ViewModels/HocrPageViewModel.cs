@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -128,9 +129,12 @@ namespace HocrEditor.ViewModels
             {
                 case NotifyCollectionChangedAction.Remove:
                 case NotifyCollectionChangedAction.Replace:
-                    var oldItems = e.OldItems ?? throw new ArgumentException("e.OldItems");
+                    if (e.OldItems == null)
+                    {
+                        break;
+                    }
 
-                    foreach (var item in oldItems.Cast<HocrNodeViewModel>())
+                    foreach (var item in e.OldItems.Cast<HocrNodeViewModel>())
                     {
                         foreach (var node in item.Descendants.Prepend(item))
                         {
@@ -147,7 +151,7 @@ namespace HocrEditor.ViewModels
                     // Ignore.
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException("e.Action");
             }
         }
 

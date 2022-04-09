@@ -39,7 +39,7 @@ public class ValueConverterGroup : List<IValueConverter>, IValueConverter
     {
         if (parameter != null)
         {
-            parameters = Regex.Split(parameter.ToString() ?? string.Empty, @"(?<!\\),");
+            parameters = Regex.Split(parameter.ToString() ?? string.Empty, @"(?<!\\),", RegexOptions.None, TimeSpan.FromSeconds(1));
         }
     }
 

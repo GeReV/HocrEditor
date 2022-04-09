@@ -65,7 +65,7 @@ namespace HocrEditor
             {
                 const string english = "eng";
 
-                selectedLanguages.Add(languages.Contains(english) ? english : languages.First());
+                selectedLanguages.Add(languages.Contains(english, StringComparer.Ordinal) ? english : languages[0]);
             }
 
             Array.Sort(
@@ -80,7 +80,7 @@ namespace HocrEditor
                         // Unselected languages are compared based on name.
                         (-1, -1) =>
                             // Scripts sink to bottom. Everything else is string compared.
-                            (a.StartsWith("script/"), b.StartsWith("script/")) switch
+                            (a.StartsWith("script/", StringComparison.Ordinal), b.StartsWith("script/", StringComparison.Ordinal)) switch
                             {
                                 (true, false) => 1,
                                 (false, true) => -1,
@@ -96,7 +96,7 @@ namespace HocrEditor
 
             foreach (var language in languages)
             {
-                ViewModel.TesseractLanguages.Add(new TesseractLanguage(language, selectedLanguages.Contains(language)));
+                ViewModel.TesseractLanguages.Add(new TesseractLanguage(language, selectedLanguages.Contains(language, StringComparer.Ordinal)));
             }
         }
 

@@ -139,12 +139,12 @@ public class IconButton
                 {
                     Source = GetSource(button),
                     Width = 16,
-                    Height = 16
+                    Height = 16,
                 };
 
                 var stackPanel = new StackPanel
                 {
-                    Orientation = orientation
+                    Orientation = orientation,
                 };
 
                 if (GetPosition(button) == IconPosition.Before)

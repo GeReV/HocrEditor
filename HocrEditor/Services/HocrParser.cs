@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using HocrEditor.Helpers;
@@ -76,7 +77,7 @@ namespace HocrEditor.Services
             };
 
             var children = node.ChildNodes
-                .Where(childNode => childNode.Name != "#text")
+                .Where(childNode => !string.Equals(childNode.Name, "#text", StringComparison.Ordinal))
                 .Select(childNode => Parse(childNode, nodeId, language, direction))
                 .ToList();
 

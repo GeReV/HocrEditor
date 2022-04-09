@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -43,14 +44,14 @@ public sealed record Script(string Code, int Number, string Name)
         {
             var line = reader.ReadLine()?.Trim();
 
-            if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
+            if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#'))
             {
                 continue;
             }
 
             var parts = line.Split(';');
 
-            var (code, number, name) = (parts[0], int.Parse(parts[1]), parts[2]);
+            var (code, number, name) = (parts[0], int.Parse(parts[1], new NumberFormatInfo()), parts[2]);
 
             database.Add(new Script(code, number, name));
         }

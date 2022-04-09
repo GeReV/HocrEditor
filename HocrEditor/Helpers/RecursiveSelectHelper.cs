@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace HocrEditor.Helpers
 {
@@ -47,6 +48,7 @@ namespace HocrEditor.Helpers
             }
         }
 
+        [StructLayout(LayoutKind.Auto)]
         public readonly struct RecursionItem<T>
         {
             public T Item { get; }

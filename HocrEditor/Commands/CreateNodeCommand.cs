@@ -128,7 +128,7 @@ public class CreateNodeCommand : UndoableCommandBase<HocrNodeType>
                 ),
                 HocrNodeType.Image => new HocrImage(id, parentNode.Id, title, string.Empty, Direction.Ltr),
                 HocrNodeType.Page => throw new InvalidOperationException("Expected to not receive a page node type"),
-                _ => throw new ArgumentOutOfRangeException()
+                _ => throw new ArgumentOutOfRangeException(nameof(hocrNodeType))
             };
 
             var hocrNodeViewModel = new HocrNodeViewModel(hocrNode)

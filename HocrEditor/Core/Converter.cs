@@ -1,5 +1,6 @@
 ﻿// Adapted from: https://github.com/CoryCharlton/CCSWE.Core/blob/2cea0791bfba39d832e000d5bdddc3939e85e3ed/src/Core/Converter.cs
 using System;
+using System.Globalization;
 
 namespace HocrEditor.Core;
 
@@ -37,7 +38,7 @@ public class Converter
             return Enum.ToObject(type, value);
         }
 
-        return System.Convert.ChangeType(value, type);
+        return System.Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
     }
 
     public static T? ConvertValue<T>(object? input)
@@ -64,7 +65,7 @@ public class Converter
             return (T)Enum.ToObject(type, input);
         }
 
-        return (T)System.Convert.ChangeType(input, type);
+        return (T)System.Convert.ChangeType(input, type, CultureInfo.InvariantCulture);
     }
 
 

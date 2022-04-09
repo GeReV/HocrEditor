@@ -38,7 +38,7 @@ namespace HocrEditor.ViewModels
             else
             {
                 ExclusiveSelectNodesCommand.TryExecute(
-                    Nodes.Where(n => n.NodeType == item.NodeType && n.InnerText == item.InnerText).ToList()
+                    Nodes.Where(n => n.NodeType == item.NodeType && string.Equals(n.InnerText, item.InnerText, StringComparison.Ordinal)).ToList()
                 );
             }
         }

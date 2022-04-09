@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -22,7 +23,7 @@ public class HocrWriter
 
     private readonly HtmlDocument document = new();
 
-    private readonly Dictionary<string, uint> nodeCounters = new();
+    private readonly Dictionary<string, uint> nodeCounters = new(StringComparer.Ordinal);
 
     public HocrWriter(HocrDocumentViewModel hocrDocumentViewModel, string filename)
     {
@@ -66,7 +67,7 @@ public class HocrWriter
 
         var allLanguages = hocrDocumentViewModel.Pages
             .SelectMany(page => page.Nodes.Select(n => n.HocrNode.Language))
-            .Distinct()
+            .Distinct(StringComparer.Ordinal)
             .ToList();
 
         var languages = GetLanguages(allLanguages);
@@ -83,7 +84,12 @@ public class HocrWriter
             head.AppendChild(document.CreateMeta("ocr-scripts", string.Join(' ', scripts.Select(s => s.Code))));
         }
 
-        head.AppendChild(document.CreateMeta("ocr-number-of-pages", hocrDocumentViewModel.Pages.Count.ToString()));
+        head.AppendChild(
+            document.CreateMeta(
+                "ocr-number-of-pages",
+                hocrDocumentViewModel.Pages.Count.ToString(new NumberFormatInfo())
+            )
+        );
 
         head.AppendChild(document.CreateElement("title"));
 
@@ -91,8 +97,8 @@ public class HocrWriter
     }
 
     private static List<Script> GetScripts(List<string> languages) =>
-        languages.Where(lang => lang.StartsWith(SCRIPT_PREFIX))
-            .Select(script => Core.Iso15924.Script.FromName(script.Remove(0, SCRIPT_PREFIX.Length), true))
+        languages.Where(lang => lang.StartsWith(SCRIPT_PREFIX, StringComparison.Ordinal))
+            .Select(script => Script.FromName(script.Remove(0, SCRIPT_PREFIX.Length), true))
             .OfType<Script>()
             .ToList();
 
@@ -101,7 +107,7 @@ public class HocrWriter
             .Select(
                 lang =>
                 {
-                    if (lang.StartsWith(SCRIPT_PREFIX))
+                    if (lang.StartsWith(SCRIPT_PREFIX, StringComparison.Ordinal))
                     {
                         var script = Script.FromName(lang.Remove(0, SCRIPT_PREFIX.Length), true);
 
@@ -191,7 +197,7 @@ public class HocrWriter
             node.SetAttributeValue("dir", hocrNode.Direction == Direction.Ltr ? "ltr" : "rtl");
         }
 
-        if (hocrNode.Language != currentLanguage)
+        if (!string.Equals(hocrNode.Language, currentLanguage, StringComparison.Ordinal))
         {
             currentLanguage = hocrNode.Language;
 
@@ -217,7 +223,14 @@ public class HocrWriter
     {
         var sb = new StringBuilder();
 
-        sb.Append($"bbox {hocrNode.BBox.Left} {hocrNode.BBox.Top} {hocrNode.BBox.Right} {hocrNode.BBox.Bottom}");
+        sb.AppendFormat(
+            CultureInfo.InvariantCulture,
+            "bbox {0} {1} {2} {3}",
+            hocrNode.BBox.Left,
+            hocrNode.BBox.Top,
+            hocrNode.BBox.Right,
+            hocrNode.BBox.Bottom
+        );
 
         switch (hocrNode)
         {
@@ -227,16 +240,26 @@ public class HocrWriter
                     hocrPage.ImageFilename
                 );
 
-                sb.Append($"; image \"{relativeImagePath}\"");
-                sb.Append($"; ppageno {pageIndex}");
-                sb.Append($"; scan_res {hocrPage.Dpi.Item1} {hocrPage.Dpi.Item2}");
+                sb.AppendFormat(CultureInfo.InvariantCulture, "; image \"{0}\"", relativeImagePath);
+                sb.AppendFormat(CultureInfo.InvariantCulture, "; ppageno {0}", pageIndex);
+                sb.AppendFormat(
+                    CultureInfo.InvariantCulture,
+                    "; scan_res {0} {1}",
+                    hocrPage.Dpi.Item1,
+                    hocrPage.Dpi.Item2
+                );
                 break;
             case HocrLine hocrLine: // Also Caption and TextFloat.
-                sb.Append($"; baseline {hocrLine.Baseline.Item1} {hocrLine.Baseline.Item2}");
-                sb.Append($"; x_fsize {hocrLine.FontSize}");
+                sb.AppendFormat(
+                    CultureInfo.InvariantCulture,
+                    "; baseline {0} {1}",
+                    hocrLine.Baseline.Item1,
+                    hocrLine.Baseline.Item2
+                );
+                sb.AppendFormat(CultureInfo.InvariantCulture, "; x_fsize {0}", hocrLine.FontSize);
                 break;
             case HocrWord hocrWord:
-                sb.Append($"; x_wconf {hocrWord.Confidence}");
+                sb.AppendFormat(CultureInfo.InvariantCulture, "; x_wconf {0}", hocrWord.Confidence);
                 break;
             case HocrContentArea:
             case HocrImage:

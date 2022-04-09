@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -71,7 +72,7 @@ namespace HocrEditor.ViewModels
 
                 if (Document.Pages.Count > 0)
                 {
-                    sb.Append($"Page {Document.PagesCollectionView.CurrentPosition + 1}/{Document.Pages.Count} - ");
+                    sb.AppendFormat(CultureInfo.InvariantCulture, "Page {0}/{1} - ", Document.PagesCollectionView.CurrentPosition + 1, Document.Pages.Count);
                 }
 
                 sb.Append(ApplicationName);
@@ -136,7 +137,7 @@ namespace HocrEditor.ViewModels
                     // Ignore.
                     return true;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(result));
             }
         }
 
@@ -205,7 +206,7 @@ namespace HocrEditor.ViewModels
                     {
                         try
                         {
-                            var hocrDocument = await hocrDocumentTask;
+                            var hocrDocument = await hocrDocumentTask.ConfigureAwait(false);
 
                             using var service = new TesseractService(tesseractPath, Enumerable.Empty<string>());
 
@@ -235,7 +236,8 @@ namespace HocrEditor.ViewModels
                         }
                     },
                     TaskScheduler.FromCurrentSynchronizationContext()
-                );
+                )
+                .ConfigureAwait(false);
         }
 
         private void Import()
@@ -252,7 +254,7 @@ namespace HocrEditor.ViewModels
                 Title = "Pick Images",
                 Filter =
                     "Image files (*.bmp;*.gif;*.tif;*.tiff;*.tga;*.jpg;*.jpeg;*.png)|*.bmp;*.gif;*.tif;*.tiff;*.tga;*.jpg;*.jpeg;*.png",
-                Multiselect = true
+                Multiselect = true,
             };
 
             if (dialog.ShowDialog(window) != true)
@@ -294,17 +296,19 @@ namespace HocrEditor.ViewModels
                         {
                             try
                             {
-                                var hocrDocument = await hocrDocumentTask;
+                                var hocrDocument = await hocrDocumentTask.ConfigureAwait(false);
 
                                 Document.OcrSystem = hocrDocument.OcrSystem;
 
                                 Document.Capabilities.AddRange(
-                                    hocrDocument.Capabilities.ToHashSet().Except(Document.Capabilities)
+                                    hocrDocument.Capabilities
+                                        .ToHashSet(StringComparer.Ordinal)
+                                        .Except(Document.Capabilities, StringComparer.Ordinal)
                                 );
 
                                 Debug.Assert(hocrDocument.Pages.Count == 1);
 
-                                page.Build(hocrDocument.Pages.First());
+                                page.Build(hocrDocument.Pages[0]);
 
                                 if (page.HocrPage == null)
                                 {

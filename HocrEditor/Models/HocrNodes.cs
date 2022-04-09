@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using HocrEditor.Helpers;
 using HtmlAgilityPack;
@@ -122,7 +123,7 @@ namespace HocrEditor.Models
 
             if (!string.IsNullOrEmpty(size))
             {
-                FontSize = (int)float.Parse(size);
+                FontSize = (int)float.Parse(size, new NumberFormatInfo());
             }
 
             var baseline = GetAttributeFromTitle("baseline")
@@ -253,7 +254,7 @@ namespace HocrEditor.Models
 
             if (!string.IsNullOrEmpty(confidence))
             {
-                Confidence = int.Parse(confidence);
+                Confidence = int.Parse(confidence, new NumberFormatInfo());
             }
         }
 
