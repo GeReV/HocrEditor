@@ -64,8 +64,6 @@ public sealed class SelectionTool : RegionToolBase
             items => items.CollectionChanged -= SelectedItemsOnCollectionChanged
         );
         selectedItems = Option.None<ObservableHashSet<HocrNodeViewModel>>();
-
-        canvas.ClearCanvasSelection();
     }
 
     public override void Render(SKCanvas canvas)
@@ -195,71 +193,76 @@ public sealed class SelectionTool : RegionToolBase
 
     protected override bool OnSelectSelection(DocumentCanvas canvas, SKPoint delta) =>
         canvas.SelectedItems.Map(
-            items =>
-            {
-                var newLocation = canvas.InverseTransformation.MapPoint(DragStart) + delta;
-
-                newLocation.Clamp(DragLimit);
-
-                nodeSelection.Right = newLocation.X;
-                nodeSelection.Bottom = newLocation.Y;
-
-                var selection = SelectNodesWithinRegion(canvas, nodeSelection);
-
-                IList removed = Array.Empty<HocrNodeViewModel>();
-
-                if (items is { Count: > 0 })
+                items =>
                 {
-                    removed = items.Except(selection).ToList();
+                    var newLocation = canvas.InverseTransformation.MapPoint(DragStart) + delta;
 
-                    selection.ExceptWith(items);
+                    newLocation.Clamp(DragLimit);
+
+                    nodeSelection.Right = newLocation.X;
+                    nodeSelection.Bottom = newLocation.Y;
+
+                    var selection = SelectNodesWithinRegion(canvas, nodeSelection);
+
+                    IList removed = Array.Empty<HocrNodeViewModel>();
+
+                    if (items is { Count: > 0 })
+                    {
+                        removed = items.Except(selection).ToList();
+
+                        selection.ExceptWith(items);
+                    }
+
+                    canvas.OnSelectionChanged(
+                        new SelectionChangedEventArgs(Selector.SelectionChangedEvent, removed, selection.ToList())
+                    );
+
+                    return true;
                 }
-
-                canvas.OnSelectionChanged(
-                    new SelectionChangedEventArgs(Selector.SelectionChangedEvent, removed, selection.ToList())
-                );
-
-                return true;
-            }
-        ).ValueOr(false);
+            )
+            .ValueOr(false);
 
     protected override bool OnDragSelection(DocumentCanvas canvas, SKPoint delta) =>
         canvas.SelectedItems.Map(
-            items =>
-            {
-                if (!DragLimit.IsEmpty)
+                items =>
                 {
-                    delta.Clamp(DragLimit);
-                }
-
-                var newLocation = canvas.InverseTransformation.MapPoint(OffsetStart) + delta;
-
-                if (items.Any())
-                {
-                    // Apply to all selected elements.
-                    foreach (var id in canvas.SelectedElements)
+                    if (!DragLimit.IsEmpty)
                     {
-                        var (_, element) = canvas.Elements[id];
+                        delta.Clamp(DragLimit);
+                    }
 
-                        var deltaFromDraggedElement =
-                            element.Bounds.Location - canvas.CanvasSelection.Bounds.Location;
+                    var newLocation = canvas.InverseTransformation.MapPoint(OffsetStart) + delta;
 
-                        element.Bounds = element.Bounds with
+                    if (items.Any())
+                    {
+                        // Apply to all selected elements.
+                        foreach (var id in canvas.SelectedElements)
                         {
-                            Location = SKPointI.Truncate(newLocation + deltaFromDraggedElement)
+                            var (_, element) = canvas.Elements[id];
+
+                            var deltaFromDraggedElement =
+                                element.Bounds.Location - canvas.CanvasSelection.Bounds.Location;
+
+                            element.Bounds = element.Bounds with
+                            {
+                                Location = SKPointI.Truncate(newLocation + deltaFromDraggedElement)
+                            };
+                        }
+
+                        // Apply to selection rect.
+                        canvas.CanvasSelection.Bounds = canvas.CanvasSelection.Bounds with
+                        {
+                            Location = SKPointI.Truncate(newLocation)
                         };
                     }
 
-                    // Apply to selection rect.
-                    canvas.CanvasSelection.Bounds = canvas.CanvasSelection.Bounds with
-                    {
-                        Location = SKPointI.Truncate(newLocation)
-                    };
+                    return true;
                 }
+            )
+            .ValueOr(false);
 
-                return true;
-            }
-        ).ValueOr(false);
+    protected override SKRectI CalculateDragLimitBounds(DocumentCanvas canvas) =>
+        NodeHelpers.CalculateDragLimitBounds(canvas.SelectedItems.ValueOrFailure());
 
     private void OnDocumentCanvasViewModelChanged(object? sender, EventArgs e)
     {

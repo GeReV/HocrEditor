@@ -42,6 +42,8 @@ public abstract class RegionToolBase : ICanvasTool
         canvas.MouseMove += DocumentCanvasOnMouseMove;
         canvas.MouseWheel += DocumentCanvasOnMouseWheel;
         canvas.KeyDown += DocumentCanvasOnKeyDown;
+
+        canvas.UpdateCanvasSelection();
     }
 
     public void Unmount()
@@ -273,9 +275,7 @@ public abstract class RegionToolBase : ICanvasTool
     {
         var canvas = (DocumentCanvas)sender;
 
-        canvas.SelectedItems.MatchSome(
-            items => { DragLimit = NodeHelpers.CalculateDragLimitBounds(items); }
-        );
+        DragLimit = CalculateDragLimitBounds(canvas);
     }
 
     private void DocumentCanvasOnKeyDown(object sender, KeyEventArgs e)
@@ -316,6 +316,10 @@ public abstract class RegionToolBase : ICanvasTool
         OnDragSelection(canvas, delta);
 
         UpdateNodes(canvas);
+
+        MouseMoveState = RegionToolMouseState.None;
+
+        canvas.Refresh();
     }
 
 
@@ -339,7 +343,7 @@ public abstract class RegionToolBase : ICanvasTool
         {
             var (node, element) = canvas.Elements[id];
 
-            changes.Add(new NodesChangedEventArgs.NodeChange(node, (Rect)element.Bounds, node.BBox));
+            changes.Add(new NodesChangedEventArgs.NodeChange(node, element.Bounds, node.BBox));
         }
 
         canvas.OnNodesChanged(changes);
@@ -388,13 +392,15 @@ public abstract class RegionToolBase : ICanvasTool
         }
     }
 
+    protected abstract SKRectI CalculateDragLimitBounds(DocumentCanvas canvas);
+
     protected void BeginDrag(DocumentCanvas canvas)
     {
         MouseMoveState = RegionToolMouseState.Dragging;
 
         OffsetStart = canvas.Transformation.MapPoint(canvas.CanvasSelection.Bounds.Location);
 
-        DragLimit = NodeHelpers.CalculateDragLimitBounds(canvas.SelectedItems.ValueOrFailure());
+        DragLimit = CalculateDragLimitBounds(canvas);
     }
 
     private void BeginResize(DocumentCanvas canvas)

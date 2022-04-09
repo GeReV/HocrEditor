@@ -468,6 +468,8 @@ public sealed partial class DocumentCanvas
 
     private static void ActiveToolChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
+        var documentCanvas = (DocumentCanvas)d;
+
         if (e.OldValue is ICanvasTool previousTool)
         {
             previousTool.Unmount();
@@ -475,7 +477,9 @@ public sealed partial class DocumentCanvas
 
         var nextTool = (ICanvasTool)e.NewValue;
 
-        nextTool.Mount((DocumentCanvas)d);
+        nextTool.Mount(documentCanvas);
+
+        documentCanvas.Refresh();
     }
 
     private static void SelectionBoundsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -798,7 +802,7 @@ public sealed partial class DocumentCanvas
 
     internal void UpdateCanvasSelection()
     {
-        var allNodes = SelectedElements.Select(id => Elements[id].Item1).ToList();
+        var allNodes = SelectedElements.Select(id => Elements[id].Item1);
 
         CanvasSelection.Bounds = NodeHelpers.CalculateUnionRect(allNodes).ToSKRectI();
     }

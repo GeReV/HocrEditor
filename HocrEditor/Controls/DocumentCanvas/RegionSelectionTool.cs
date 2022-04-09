@@ -1,6 +1,4 @@
-﻿using System;
-using System.Windows;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 using HocrEditor.Helpers;
 using Optional.Unsafe;
 using SkiaSharp;
@@ -38,16 +36,7 @@ public sealed class RegionSelectionTool : RegionToolBase
             canvas.CanvasSelection.Bounds.Contains(normalizedPosition))
         {
             // Handle dragging the selection region.
-            MouseMoveState = RegionToolMouseState.Dragging;
-
-            var parentBounds = canvas.RootCanvasElement.Bounds;
-
-            DragLimit = SKRectI.Create(
-                parentBounds.Width - canvas.CanvasSelection.Bounds.Width,
-                parentBounds.Height - canvas.CanvasSelection.Bounds.Height
-            );
-
-            OffsetStart = canvas.Transformation.MapPoint(canvas.CanvasSelection.Bounds.Location);
+            BeginDrag(canvas);
         }
         else
         {
@@ -93,5 +82,15 @@ public sealed class RegionSelectionTool : RegionToolBase
         canvas.CanvasSelection.Bounds = newBounds;
 
         return true;
+    }
+
+    protected override SKRectI CalculateDragLimitBounds(DocumentCanvas canvas)
+    {
+        var parentBounds = canvas.RootCanvasElement.Bounds;
+
+        return SKRectI.Create(
+            parentBounds.Width - canvas.CanvasSelection.Bounds.Width,
+            parentBounds.Height - canvas.CanvasSelection.Bounds.Height
+        );
     }
 }
