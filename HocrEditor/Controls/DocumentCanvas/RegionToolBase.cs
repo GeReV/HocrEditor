@@ -1,18 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using HocrEditor.Helpers;
-using HocrEditor.Models;
 using HocrEditor.ViewModels;
 using Optional;
 using Optional.Unsafe;
 using SkiaSharp;
 using SkiaSharp.Views.WPF;
+using Rect = HocrEditor.Models.Rect;
 
 namespace HocrEditor.Controls;
 
 public abstract class RegionToolBase : ICanvasTool
 {
+    private const float KEYBOARD_MOVE_CTRL_MULTIPLIER = 5.0f;
+    private const float KEYBOARD_MOVE_CTRL_SHIFT_MULTIPLIER = 10.0f;
+
     protected Option<DocumentCanvas> Canvas { get; private set; } = Option.None<DocumentCanvas>();
 
     protected RegionToolMouseState MouseMoveState;
@@ -37,6 +42,7 @@ public abstract class RegionToolBase : ICanvasTool
         canvas.MouseUp += DocumentCanvasOnMouseUp;
         canvas.MouseMove += DocumentCanvasOnMouseMove;
         canvas.MouseWheel += DocumentCanvasOnMouseWheel;
+        canvas.KeyDown += DocumentCanvasOnKeyDown;
     }
 
     public void Unmount()
@@ -47,6 +53,7 @@ public abstract class RegionToolBase : ICanvasTool
         canvas.MouseUp -= DocumentCanvasOnMouseUp;
         canvas.MouseMove -= DocumentCanvasOnMouseMove;
         canvas.MouseWheel -= DocumentCanvasOnMouseWheel;
+        canvas.KeyDown -= DocumentCanvasOnKeyDown;
 
         Unmount(canvas);
     }
@@ -247,28 +254,20 @@ public abstract class RegionToolBase : ICanvasTool
                 break;
             }
             case RegionToolMouseState.Dragging:
-            case RegionToolMouseState.Selecting:
-                // Handled by the specific tools.
+            {
+                e.Handled |= OnDragSelection(canvas, delta);
                 break;
+            }
+            case RegionToolMouseState.Selecting:
+            {
+                e.Handled |= OnSelectSelection(canvas, delta);
+                break;
+            }
             default:
                 throw new ArgumentOutOfRangeException(nameof(MouseMoveState));
         }
 
-        OnMouseMove(canvas, e, delta);
-
         canvas.Refresh();
-    }
-
-    protected virtual void OnMouseDown(DocumentCanvas canvas, MouseButtonEventArgs e, SKPoint normalizedPosition)
-    {
-    }
-
-    protected virtual void OnMouseUp(DocumentCanvas canvas, MouseButtonEventArgs e, SKPoint normalizedPosition)
-    {
-    }
-
-    protected virtual void OnMouseMove(DocumentCanvas canvas, MouseEventArgs e, SKPoint delta)
-    {
     }
 
     private void DocumentCanvasOnMouseWheel(object sender, MouseWheelEventArgs e)
@@ -278,6 +277,73 @@ public abstract class RegionToolBase : ICanvasTool
         canvas.SelectedItems.MatchSome(
             items => { DragLimit = NodeHelpers.CalculateDragLimitBounds(items); }
         );
+    }
+
+    private void DocumentCanvasOnKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key is not (Key.Up or Key.Down or Key.Left or Key.Right))
+        {
+            return;
+        }
+
+        e.Handled = true;
+
+        var delta = e.Key switch
+        {
+            Key.Up => new SKPoint(0, -1),
+            Key.Down => new SKPoint(0, 1),
+            Key.Left => new SKPoint(-1, 0),
+            Key.Right => new SKPoint(1, 0),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            var multiplier = KEYBOARD_MOVE_CTRL_MULTIPLIER;
+
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+            {
+                multiplier = KEYBOARD_MOVE_CTRL_SHIFT_MULTIPLIER;
+            }
+
+            delta.X *= multiplier;
+            delta.Y *= multiplier;
+        }
+
+        var canvas = (DocumentCanvas)sender;
+
+        BeginDrag(canvas);
+
+        OnDragSelection(canvas, delta);
+
+        UpdateNodes(canvas);
+    }
+
+
+    protected virtual void OnMouseDown(DocumentCanvas canvas, MouseButtonEventArgs e, SKPoint normalizedPosition)
+    {
+    }
+
+    protected virtual void OnMouseUp(DocumentCanvas canvas, MouseButtonEventArgs e, SKPoint normalizedPosition)
+    {
+    }
+
+    protected abstract bool OnSelectSelection(DocumentCanvas canvas, SKPoint delta);
+
+    protected abstract bool OnDragSelection(DocumentCanvas canvas, SKPoint delta);
+
+    protected static void UpdateNodes(DocumentCanvas canvas)
+    {
+        var changes = new List<NodesChangedEventArgs.NodeChange>(canvas.SelectedElements.Count);
+
+        foreach (var id in canvas.SelectedElements)
+        {
+            var (node, element) = canvas.Elements[id];
+
+            changes.Add(new NodesChangedEventArgs.NodeChange(node, (Rect)element.Bounds, node.BBox));
+        }
+
+        canvas.OnNodesChanged(changes);
     }
 
     private void ClearCanvasResizeLimit(DocumentCanvas canvas)

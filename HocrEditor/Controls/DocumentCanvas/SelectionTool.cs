@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
@@ -182,16 +183,7 @@ public sealed class SelectionTool : RegionToolBase
 
                 if (canvas.SelectedElements.Any() && mouseMoved)
                 {
-                    var changes = new List<NodesChangedEventArgs.NodeChange>();
-
-                    foreach (var id in canvas.SelectedElements)
-                    {
-                        var (node, element) = canvas.Elements[id];
-
-                        changes.Add(new NodesChangedEventArgs.NodeChange(node, (Rect)element.Bounds, node.BBox));
-                    }
-
-                    canvas.OnNodesChanged(changes);
+                    UpdateNodes(canvas);
 
                     DragLimit = NodeHelpers.CalculateDragLimitBounds(items);
                 }
@@ -202,86 +194,73 @@ public sealed class SelectionTool : RegionToolBase
         );
     }
 
-    protected override void OnMouseMove(DocumentCanvas canvas, MouseEventArgs e, SKPoint delta)
-    {
-        canvas.SelectedItems.MatchSome(
+    protected override bool OnSelectSelection(DocumentCanvas canvas, SKPoint delta) =>
+        canvas.SelectedItems.Map(
             items =>
             {
-                switch (MouseMoveState)
+                var newLocation = canvas.InverseTransformation.MapPoint(DragStart) + delta;
+
+                newLocation.Clamp(DragLimit);
+
+                nodeSelection.Right = newLocation.X;
+                nodeSelection.Bottom = newLocation.Y;
+
+                var selection = SelectNodesWithinRegion(canvas, nodeSelection);
+
+                IList removed = Array.Empty<HocrNodeViewModel>();
+
+                if (items is { Count: > 0 })
                 {
-                    case RegionToolMouseState.Selecting:
-                    {
-                        e.Handled = true;
+                    removed = items.Except(selection).ToList();
 
-                        var newLocation = canvas.InverseTransformation.MapPoint(DragStart) + delta;
-
-                        newLocation.Clamp(DragLimit);
-
-                        nodeSelection.Right = newLocation.X;
-                        nodeSelection.Bottom = newLocation.Y;
-
-                        var selection = SelectNodesWithinRegion(canvas, nodeSelection);
-
-                        IList removed = Array.Empty<HocrNodeViewModel>();
-
-                        if (items is { Count: > 0 })
-                        {
-                            removed = items.Except(selection).ToList();
-
-                            selection.ExceptWith(items);
-                        }
-
-                        canvas.OnSelectionChanged(
-                            new SelectionChangedEventArgs(Selector.SelectionChangedEvent, removed, selection.ToList())
-                        );
-
-                        break;
-                    }
-                    case RegionToolMouseState.Dragging:
-                    {
-                        e.Handled = true;
-
-                        if (!DragLimit.IsEmpty)
-                        {
-                            delta.Clamp(DragLimit);
-                        }
-
-                        var newLocation = canvas.InverseTransformation.MapPoint(OffsetStart) + delta;
-
-                        if (items.Any())
-                        {
-                            // Apply to all selected elements.
-                            foreach (var id in canvas.SelectedElements)
-                            {
-                                var (_, element) = canvas.Elements[id];
-
-                                var deltaFromDraggedElement =
-                                    element.Bounds.Location - canvas.CanvasSelection.Bounds.Location;
-
-                                element.Bounds = element.Bounds with
-                                {
-                                    Location = newLocation + deltaFromDraggedElement
-                                };
-                            }
-
-                            // Apply to selection rect.
-                            canvas.CanvasSelection.Bounds = canvas.CanvasSelection.Bounds with
-                            {
-                                Location = newLocation
-                            };
-                        }
-
-                        break;
-                    }
-                    case RegionToolMouseState.None:
-                    case RegionToolMouseState.Resizing:
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(MouseMoveState));
+                    selection.ExceptWith(items);
                 }
+
+                canvas.OnSelectionChanged(
+                    new SelectionChangedEventArgs(Selector.SelectionChangedEvent, removed, selection.ToList())
+                );
+
+                return true;
             }
-        );
-    }
+        ).ValueOr(false);
+
+    protected override bool OnDragSelection(DocumentCanvas canvas, SKPoint delta) =>
+        canvas.SelectedItems.Map(
+            items =>
+            {
+                if (!DragLimit.IsEmpty)
+                {
+                    delta.Clamp(DragLimit);
+                }
+
+                var newLocation = canvas.InverseTransformation.MapPoint(OffsetStart) + delta;
+
+                if (items.Any())
+                {
+                    // Apply to all selected elements.
+                    foreach (var id in canvas.SelectedElements)
+                    {
+                        var (_, element) = canvas.Elements[id];
+
+                        var deltaFromDraggedElement =
+                            element.Bounds.Location - canvas.CanvasSelection.Bounds.Location;
+
+                        element.Bounds = element.Bounds with
+                        {
+                            Location = newLocation + deltaFromDraggedElement
+                        };
+                    }
+
+                    // Apply to selection rect.
+                    canvas.CanvasSelection.Bounds = canvas.CanvasSelection.Bounds with
+                    {
+                        Location = newLocation
+                    };
+                }
+
+                return true;
+            }
+        ).ValueOr(false);
 
     private void OnDocumentCanvasViewModelChanged(object? sender, EventArgs e)
     {

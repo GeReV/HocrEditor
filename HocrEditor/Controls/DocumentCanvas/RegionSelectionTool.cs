@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows;
 using System.Windows.Input;
 using HocrEditor.Helpers;
 using Optional.Unsafe;
@@ -66,43 +67,31 @@ public sealed class RegionSelectionTool : RegionToolBase
         }
     }
 
-    protected override void OnMouseMove(DocumentCanvas canvas, MouseEventArgs e, SKPoint delta)
+    protected override bool OnSelectSelection(DocumentCanvas canvas, SKPoint delta)
     {
-        switch (MouseMoveState)
+        var newLocation = canvas.InverseTransformation.MapPoint(DragStart) + delta;
+
+        newLocation.Clamp(DragLimit);
+
+        canvas.CanvasSelection.Right = newLocation.X;
+        canvas.CanvasSelection.Bottom = newLocation.Y;
+
+        return true;
+    }
+
+    protected override bool OnDragSelection(DocumentCanvas canvas, SKPoint delta)
+    {
+        var newLocation = canvas.InverseTransformation.MapPoint(OffsetStart) + delta;
+
+        newLocation.Clamp(DragLimit);
+
+        var newBounds = canvas.CanvasSelection.Bounds with
         {
-            case RegionToolMouseState.Selecting:
-            {
-                var newLocation = canvas.InverseTransformation.MapPoint(DragStart) + delta;
+            Location = newLocation
+        };
 
-                newLocation.Clamp(DragLimit);
+        canvas.CanvasSelection.Bounds = newBounds;
 
-                canvas.CanvasSelection.Right = newLocation.X;
-                canvas.CanvasSelection.Bottom = newLocation.Y;
-
-                break;
-            }
-            case RegionToolMouseState.Dragging:
-            {
-                e.Handled = true;
-
-                var newLocation = canvas.InverseTransformation.MapPoint(OffsetStart) + delta;
-
-                newLocation.Clamp(DragLimit);
-
-                var newBounds = canvas.CanvasSelection.Bounds with
-                {
-                    Location = newLocation
-                };
-
-                canvas.CanvasSelection.Bounds = newBounds;
-
-                break;
-            }
-            case RegionToolMouseState.None:
-            case RegionToolMouseState.Resizing:
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(MouseMoveState));
-        }
+        return true;
     }
 }
