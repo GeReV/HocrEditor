@@ -11,12 +11,14 @@ public sealed class RegionSelectionTool : RegionToolBase
     {
         base.Mount(canvas);
 
-        canvas.Cursor = canvas.CurrentCursor = Cursors.Cross;
+        canvas.Cursor = Cursors.Cross;
     }
 
     protected override void Unmount(DocumentCanvas canvas)
     {
-        canvas.Cursor = canvas.CurrentCursor = null;
+        base.Unmount(canvas);
+
+        canvas.Cursor = null;
     }
 
     public override void Render(SKCanvas canvas)

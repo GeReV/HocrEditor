@@ -57,6 +57,8 @@ public sealed class SelectionTool : RegionToolBase
 
     protected override void Unmount(DocumentCanvas canvas)
     {
+        base.Unmount(canvas);
+
         ViewModelProperty
             .RemoveValueChanged(canvas, OnDocumentCanvasViewModelChanged);
 

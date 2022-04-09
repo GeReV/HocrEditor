@@ -4,7 +4,6 @@ using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 using HocrEditor.ViewModels;
-using Optional;
 using Optional.Collections;
 using Optional.Unsafe;
 using SkiaSharp;
@@ -12,34 +11,32 @@ using SkiaSharp.Views.WPF;
 
 namespace HocrEditor.Controls;
 
-public sealed class WordSplittingTool : ICanvasTool
+public sealed class WordSplittingTool : CanvasToolBase
 {
     private static readonly SKColor HighlightColor = new(0xffffff99);
-
-    private Option<DocumentCanvas> documentCanvas = Option.None<DocumentCanvas>();
 
     private bool isDraggingWordSplitter;
 
     private SKPoint dragStart = SKPoint.Empty;
 
-    private SKPoint wordSplitterPosition = SKPoint.Empty;
+    private SKPointI wordSplitterPosition = SKPointI.Empty;
     private string wordSplitterValue = string.Empty;
     private int wordSplitterValueSplitStart;
     private int wordSplitterValueSplitLength;
 
-    public bool CanMount(HocrPageViewModel page) => page.SelectedNodes.Count == 1 &&
-                                                    page.SelectedNodes.First().NodeType == HocrNodeType.Word;
+    public override bool CanMount(HocrPageViewModel page) => page.SelectedNodes.Count == 1 &&
+                                                             page.SelectedNodes.First().NodeType == HocrNodeType.Word;
 
-    public void Mount(DocumentCanvas canvas)
+    public override void Mount(DocumentCanvas canvas)
     {
-        documentCanvas = Option.Some(canvas);
+        base.Mount(canvas);
 
         canvas.MouseDown += DocumentCanvasOnMouseDown;
         canvas.MouseUp += DocumentCanvasOnMouseUp;
         canvas.MouseMove += DocumentCanvasOnMouseMove;
         canvas.KeyDown += DocumentCanvasOnKeyDown;
 
-        canvas.Cursor = canvas.CurrentCursor = null;
+        canvas.Cursor = null;
 
         if (canvas.IsEditing)
         {
@@ -60,24 +57,22 @@ public sealed class WordSplittingTool : ICanvasTool
         }
     }
 
-    public void Unmount()
+    protected override void Unmount(DocumentCanvas canvas)
     {
-        var canvas = documentCanvas.ValueOrFailure();
-
         canvas.MouseDown -= DocumentCanvasOnMouseDown;
         canvas.MouseUp -= DocumentCanvasOnMouseUp;
         canvas.MouseMove -= DocumentCanvasOnMouseMove;
         canvas.KeyDown -= DocumentCanvasOnKeyDown;
 
-        wordSplitterPosition = SKPoint.Empty;
+        wordSplitterPosition = SKPointI.Empty;
         wordSplitterValue = string.Empty;
         wordSplitterValueSplitStart = 0;
         wordSplitterValueSplitLength = 0;
     }
 
-    public void Render(SKCanvas canvas)
+    public override void Render(SKCanvas canvas)
     {
-        var control = documentCanvas.ValueOrFailure();
+        var control = Canvas.ValueOrFailure();
 
         control.CanvasSelection.Render(
             canvas,
@@ -112,16 +107,16 @@ public sealed class WordSplittingTool : ICanvasTool
             return;
         }
 
-        Mouse.Capture(canvas);
-
-        var position = e.GetPosition(canvas).ToSKPoint();
-
         if (e.ChangedButton != MouseButton.Left)
         {
             return;
         }
 
+        Mouse.Capture(canvas);
+
         e.Handled = true;
+
+        var position = e.GetPosition(canvas).ToSKPoint();
 
         dragStart = position;
 
@@ -152,7 +147,7 @@ public sealed class WordSplittingTool : ICanvasTool
         canvas.Refresh();
     }
 
-    private static void DocumentCanvasOnMouseUp(object sender, MouseButtonEventArgs e)
+    private void DocumentCanvasOnMouseUp(object sender, MouseButtonEventArgs e)
     {
         var canvas = (DocumentCanvas)sender;
 
@@ -160,6 +155,13 @@ public sealed class WordSplittingTool : ICanvasTool
         {
             return;
         }
+
+        if (e.ChangedButton != MouseButton.Left)
+        {
+            return;
+        }
+
+        isDraggingWordSplitter = false;
 
         canvas.ReleaseMouseCapture();
 
@@ -179,6 +181,12 @@ public sealed class WordSplittingTool : ICanvasTool
 
         var delta = canvas.InverseScaleTransformation.MapPoint(position - dragStart);
 
+        var hoveringOverSelection = canvas.Transformation.MapRect(canvas.CanvasSelection.Bounds).Contains(position);
+
+        canvas.Cursor = hoveringOverSelection
+            ? Cursors.SizeWE
+            : null;
+
         if (isDraggingWordSplitter)
         {
             var newLocation = canvas.InverseTransformation.MapPoint(dragStart) + delta;
@@ -187,7 +195,7 @@ public sealed class WordSplittingTool : ICanvasTool
 
             newLocation.Clamp(selectedElement.Bounds);
 
-            wordSplitterPosition = newLocation;
+            wordSplitterPosition = SKPointI.Truncate(newLocation);
         }
 
         canvas.Refresh();
@@ -197,16 +205,52 @@ public sealed class WordSplittingTool : ICanvasTool
     {
         var canvas = (DocumentCanvas)sender;
 
-        if (!ReferenceEquals(e.OriginalSource, this))
+        switch (e.Key)
+        {
+            case Key.Left or Key.Right:
+            {
+                e.Handled = true;
+
+                var delta = KeyboardDeltaMultiply();
+
+                MoveSplitterRelative(canvas, e.Key == Key.Left ? -delta : delta);
+                break;
+            }
+            case Key.Return:
+            {
+                e.Handled = true;
+
+                FinishEdit(canvas);
+                break;
+            }
+        }
+    }
+
+    private void MoveSplitterRelative(DocumentCanvas canvas, int delta)
+    {
+        if (!canvas.SelectedItems.HasValue)
         {
             return;
         }
 
-        if (e.Key != Key.Return)
+        var selectedElement = canvas.Elements[canvas.SelectedElements.First()].Item2;
+
+        if (wordSplitterPosition.IsEmpty)
         {
-            return;
+            var x = delta > 0 ? selectedElement.Bounds.Left : selectedElement.Bounds.Right;
+
+            wordSplitterPosition = new SKPointI(x, selectedElement.Bounds.Top);
         }
 
+        wordSplitterPosition.X += delta;
+
+        wordSplitterPosition.Clamp(selectedElement.Bounds);
+
+        canvas.Refresh();
+    }
+
+    private void FinishEdit(DocumentCanvas canvas)
+    {
         var first = wordSplitterValue;
         var second = first;
 
@@ -224,7 +268,7 @@ public sealed class WordSplittingTool : ICanvasTool
 
         Ensure.IsValid(nameof(node), node.NodeType == HocrNodeType.Word, "Expected node to be a word");
 
-        var splitPosition = (int)wordSplitterPosition.X;
+        var splitPosition = wordSplitterPosition.X;
 
         // Reset tool, which will clear selection.
         canvas.ActiveTool = DocumentCanvasTools.SelectionTool;

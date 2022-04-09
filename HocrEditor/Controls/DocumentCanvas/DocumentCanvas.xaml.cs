@@ -253,8 +253,6 @@ public sealed partial class DocumentCanvas
     private SKPoint dragStart;
     private SKPoint offsetStart;
 
-    internal Cursor? CurrentCursor;
-
     internal readonly CanvasSelection CanvasSelection = new();
     // private ResizeHandle? selectedResizeHandle;
 

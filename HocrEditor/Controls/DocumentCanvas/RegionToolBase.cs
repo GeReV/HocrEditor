@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
 using HocrEditor.Helpers;
-using HocrEditor.ViewModels;
 using Optional;
 using Optional.Unsafe;
 using SkiaSharp;
@@ -12,13 +11,8 @@ using Rect = HocrEditor.Models.Rect;
 
 namespace HocrEditor.Controls;
 
-public abstract class RegionToolBase : ICanvasTool
+public abstract class RegionToolBase : CanvasToolBase
 {
-    private const int KEYBOARD_MOVE_CTRL_MULTIPLIER = 10;
-    private const int KEYBOARD_MOVE_CTRL_SHIFT_MULTIPLIER = 30;
-
-    protected Option<DocumentCanvas> Canvas { get; private set; } = Option.None<DocumentCanvas>();
-
     protected RegionToolMouseState MouseMoveState;
 
     protected SKPoint DragStart;
@@ -31,11 +25,9 @@ public abstract class RegionToolBase : ICanvasTool
 
     private Option<ResizeHandle> selectedResizeHandle = Option.None<ResizeHandle>();
 
-    public virtual bool CanMount(HocrPageViewModel page) => true;
-
-    public virtual void Mount(DocumentCanvas canvas)
+    public override void Mount(DocumentCanvas canvas)
     {
-        Canvas = Option.Some(canvas);
+        base.Mount(canvas);
 
         canvas.MouseDown += DocumentCanvasOnMouseDown;
         canvas.MouseUp += DocumentCanvasOnMouseUp;
@@ -46,24 +38,14 @@ public abstract class RegionToolBase : ICanvasTool
         canvas.UpdateCanvasSelection();
     }
 
-    public void Unmount()
+    protected override void Unmount(DocumentCanvas canvas)
     {
-        var canvas = Canvas.ValueOrFailure();
-
         canvas.MouseDown -= DocumentCanvasOnMouseDown;
         canvas.MouseUp -= DocumentCanvasOnMouseUp;
         canvas.MouseMove -= DocumentCanvasOnMouseMove;
         canvas.MouseWheel -= DocumentCanvasOnMouseWheel;
         canvas.KeyDown -= DocumentCanvasOnKeyDown;
-
-        Unmount(canvas);
     }
-
-    protected virtual void Unmount(DocumentCanvas canvas)
-    {
-    }
-
-    public abstract void Render(SKCanvas canvas);
 
     private void DocumentCanvasOnMouseDown(object sender, MouseButtonEventArgs e)
     {
@@ -76,6 +58,7 @@ public abstract class RegionToolBase : ICanvasTool
 
         if (MouseMoveState != RegionToolMouseState.None)
         {
+
             return;
         }
 
@@ -240,7 +223,7 @@ public abstract class RegionToolBase : ICanvasTool
 
                 if (!hoveringOnSelection)
                 {
-                    canvas.Cursor = canvas.CurrentCursor;
+                    canvas.Cursor = null;
                 }
 
                 // Skip refreshing.
@@ -287,27 +270,16 @@ public abstract class RegionToolBase : ICanvasTool
 
         e.Handled = true;
 
+        var stepSize = KeyboardDeltaMultiply();
+
         var delta = e.Key switch
         {
-            Key.Up => new SKPointI(0, -1),
-            Key.Down => new SKPointI(0, 1),
-            Key.Left => new SKPointI(-1, 0),
-            Key.Right => new SKPointI(1, 0),
+            Key.Up => new SKPointI(0, -stepSize),
+            Key.Down => new SKPointI(0, stepSize),
+            Key.Left => new SKPointI(-stepSize, 0),
+            Key.Right => new SKPointI(stepSize, 0),
             _ => throw new ArgumentOutOfRangeException()
         };
-
-        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
-        {
-            var multiplier = KEYBOARD_MOVE_CTRL_MULTIPLIER;
-
-            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
-            {
-                multiplier = KEYBOARD_MOVE_CTRL_SHIFT_MULTIPLIER;
-            }
-
-            delta.X *= multiplier;
-            delta.Y *= multiplier;
-        }
 
         var canvas = (DocumentCanvas)sender;
 
