@@ -394,10 +394,9 @@ public abstract class RegionToolBase : CanvasToolBase
         );
 
         // If more than one element selected, or exactly one element selected _and_ Ctrl is pressed, resize together with children.
-        var resizeWithChildren = canvas.SelectedItems.Exists(items => items.Count > 1) ||
-                                 Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+        var resizeWithChildren = IsResizeWithChildren(canvas);
 
-        var resizeSymmetrical = Keyboard.Modifiers.HasFlag(ModifierKeys.Alt);
+        var resizeSymmetrical = IsResizeSymmetrical();
 
         // Reset the selection bounds so changing keyboard modifiers works off of the initial bounds.
         // This achieves a more "Photoshop-like" behavior for the selection.
@@ -562,6 +561,12 @@ public abstract class RegionToolBase : CanvasToolBase
             canvas.Elements[id].Item2.Bounds = bounds;
         }
     }
+
+    private static bool IsResizeWithChildren(DocumentCanvas canvas) =>
+        canvas.SelectedItems.Exists(items => items.Count > 1) ||
+        Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+
+    private static bool IsResizeSymmetrical() => Keyboard.Modifiers.HasFlag(ModifierKeys.Alt);
 
     private void CaptureKeyDownEvents(DocumentCanvas canvas)
     {
