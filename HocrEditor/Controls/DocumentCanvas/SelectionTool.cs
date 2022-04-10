@@ -41,6 +41,8 @@ public sealed class SelectionTool : RegionToolBase
         typeof(DocumentCanvas)
     );
 
+    private static bool IgnoreDragLimit => Keyboard.Modifiers.HasFlag(ModifierKeys.Alt);
+
     public override void Mount(DocumentCanvas canvas)
     {
         base.Mount(canvas);
@@ -228,7 +230,7 @@ public sealed class SelectionTool : RegionToolBase
         canvas.SelectedItems.Map(
                 items =>
                 {
-                    if (!DragLimit.IsEmpty)
+                    if (!DragLimit.IsEmpty && !IgnoreDragLimit)
                     {
                         delta.Clamp(DragLimit);
                     }
