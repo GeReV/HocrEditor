@@ -629,6 +629,8 @@ public sealed partial class DocumentCanvas
                 throw new ArgumentOutOfRangeException("e.Action");
         }
 
+        ActiveTool = DocumentCanvasTools.SelectionTool;
+
         Refresh();
     }
 
