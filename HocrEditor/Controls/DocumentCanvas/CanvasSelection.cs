@@ -106,18 +106,8 @@ internal sealed class CanvasSelection : IDisposable
                 throw new InvalidOperationException("BeginResize has not been called.");
             }
 
-            var w = bounds.Width / InitialBounds.Width;
-            var h = bounds.Height / InitialBounds.Height;
-
-            if (Math.Abs(InitialBounds.Width) < float.Epsilon)
-            {
-                w = 0;
-            }
-
-            if (Math.Abs(InitialBounds.Height) < float.Epsilon)
-            {
-                h = 0;
-            }
+            var w = bounds.Width / (float)InitialBounds.Width;
+            var h = bounds.Height / (float)InitialBounds.Height;
 
             return new SKPoint(w, h);
         }
