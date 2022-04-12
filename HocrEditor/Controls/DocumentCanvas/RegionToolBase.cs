@@ -25,6 +25,8 @@ public abstract class RegionToolBase : CanvasToolBase
 
     private Option<ResizeHandle> selectedResizeHandle = Option.None<ResizeHandle>();
 
+    protected static bool IgnoreDragLimits => Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+
     public override void Mount(DocumentCanvas canvas)
     {
         base.Mount(canvas);
@@ -324,8 +326,10 @@ public abstract class RegionToolBase : CanvasToolBase
     private void ClearCanvasResizeLimit(DocumentCanvas canvas)
     {
         resizeLimitInside = SKRectI.Empty;
-        resizeLimitOutside = canvas.RootCanvasElement.Bounds;
+        resizeLimitOutside = DefaultResizeLimitOutside(canvas);
     }
+
+    private static SKRectI DefaultResizeLimitOutside(DocumentCanvas canvas) => canvas.RootCanvasElement.Bounds;
 
     private void UpdateCanvasResizeLimits(DocumentCanvas canvas)
     {
@@ -339,21 +343,9 @@ public abstract class RegionToolBase : CanvasToolBase
 
             resizeLimitInside = NodeHelpers.CalculateUnionRect(containedChildren).ToSKRectI();
 
-            // TODO: This fails when merging.
-            // Debug.Assert(
-            //     resizeLimitInside.IsEmpty || canvasSelection.Bounds.Contains(resizeLimitInside),
-            //     "Expected inner resize limit to be contained in the canvas selection bounds."
-            // );
-
             if (node.ParentId >= 0)
             {
                 resizeLimitOutside = canvas.Elements[node.ParentId].Item2.Bounds;
-
-                // TODO: This fails when merging.
-                // Debug.Assert(
-                //     resizeLimitOutside.Contains(canvasSelection.Bounds),
-                //     "Expected outer resize limit to contain the canvas selection bounds."
-                // );
             }
         }
         else
@@ -398,6 +390,8 @@ public abstract class RegionToolBase : CanvasToolBase
 
         var resizeSymmetrical = IsResizeSymmetrical();
 
+        var currentResizeLimitOutside = IgnoreDragLimits ? DefaultResizeLimitOutside(canvas) : resizeLimitOutside;
+
         // Reset the selection bounds so changing keyboard modifiers works off of the initial bounds.
         // This achieves a more "Photoshop-like" behavior for the selection.
         canvas.CanvasSelection.Bounds = canvas.CanvasSelection.InitialBounds;
@@ -407,9 +401,9 @@ public abstract class RegionToolBase : CanvasToolBase
             // Calculate next left position for bounds while clamping within the limits.
             var nextLeft = Math.Clamp(
                 newLocation.X,
-                resizeLimitOutside.Left,
+                currentResizeLimitOutside.Left,
                 resizeLimitInside.IsEmpty || resizeWithChildren
-                    ? resizeLimitOutside.Right
+                    ? currentResizeLimitOutside.Right
                     : resizeLimitInside.Left
             );
 
@@ -422,9 +416,9 @@ public abstract class RegionToolBase : CanvasToolBase
                 canvas.CanvasSelection.Right = (int)Math.Clamp(
                     nextLeft + 2 * deltaX,
                     resizeLimitInside.IsEmpty || resizeWithChildren
-                        ? resizeLimitOutside.Left
+                        ? currentResizeLimitOutside.Left
                         : resizeLimitInside.Right,
-                    resizeLimitOutside.Right
+                    currentResizeLimitOutside.Right
                 );
 
                 // Calculate delta to pivot from the opposite side of the symmetry.
@@ -445,9 +439,9 @@ public abstract class RegionToolBase : CanvasToolBase
         {
             var nextTop = Math.Clamp(
                 newLocation.Y,
-                resizeLimitOutside.Top,
+                currentResizeLimitOutside.Top,
                 resizeLimitInside.IsEmpty || resizeWithChildren
-                    ? resizeLimitOutside.Bottom
+                    ? currentResizeLimitOutside.Bottom
                     : resizeLimitInside.Top
             );
 
@@ -458,9 +452,9 @@ public abstract class RegionToolBase : CanvasToolBase
                 canvas.CanvasSelection.Bottom = (int)Math.Clamp(
                     nextTop + 2 * deltaY,
                     resizeLimitInside.IsEmpty || resizeWithChildren
-                        ? resizeLimitOutside.Top
+                        ? currentResizeLimitOutside.Top
                         : resizeLimitInside.Bottom,
-                    resizeLimitOutside.Bottom
+                    currentResizeLimitOutside.Bottom
                 );
 
                 deltaY = canvas.CanvasSelection.Bottom - resizePivot.Y;
@@ -480,9 +474,9 @@ public abstract class RegionToolBase : CanvasToolBase
             var nextRight = Math.Clamp(
                 newLocation.X,
                 resizeLimitInside.IsEmpty || resizeWithChildren
-                    ? resizeLimitOutside.Left
+                    ? currentResizeLimitOutside.Left
                     : resizeLimitInside.Right,
-                resizeLimitOutside.Right
+                currentResizeLimitOutside.Right
             );
 
             if (resizeSymmetrical)
@@ -491,9 +485,9 @@ public abstract class RegionToolBase : CanvasToolBase
 
                 canvas.CanvasSelection.Left = (int)Math.Clamp(
                     nextRight - 2 * deltaX,
-                    resizeLimitOutside.Left,
+                    currentResizeLimitOutside.Left,
                     resizeLimitInside.IsEmpty || resizeWithChildren
-                        ? resizeLimitOutside.Right
+                        ? currentResizeLimitOutside.Right
                         : resizeLimitInside.Left
                 );
 
@@ -514,9 +508,9 @@ public abstract class RegionToolBase : CanvasToolBase
             var nextBottom = Math.Clamp(
                 newLocation.Y,
                 resizeLimitInside.IsEmpty || resizeWithChildren
-                    ? resizeLimitOutside.Top
+                    ? currentResizeLimitOutside.Top
                     : resizeLimitInside.Bottom,
-                resizeLimitOutside.Bottom
+                currentResizeLimitOutside.Bottom
             );
 
             if (resizeSymmetrical)
@@ -525,9 +519,9 @@ public abstract class RegionToolBase : CanvasToolBase
 
                 canvas.CanvasSelection.Top = (int)Math.Clamp(
                     nextBottom - 2 * deltaY,
-                    resizeLimitOutside.Top,
+                    currentResizeLimitOutside.Top,
                     resizeLimitInside.IsEmpty || resizeWithChildren
-                        ? resizeLimitOutside.Bottom
+                        ? currentResizeLimitOutside.Bottom
                         : resizeLimitInside.Top
                 );
 
@@ -564,7 +558,7 @@ public abstract class RegionToolBase : CanvasToolBase
 
     private static bool IsResizeWithChildren(DocumentCanvas canvas) =>
         canvas.SelectedItems.Exists(items => items.Count > 1) ||
-        Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+        Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
 
     private static bool IsResizeSymmetrical() => Keyboard.Modifiers.HasFlag(ModifierKeys.Alt);
 
