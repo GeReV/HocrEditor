@@ -348,31 +348,46 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="170" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="300" />
             </Grid.ColumnDefinitions>
             <controls:DocumentPageList DataContext="{Binding Document}"
                                        Grid.Column="0"
                                        ItemsSource="{Binding PagesCollectionView}" />
-            <controls:DocumentCanvas Grid.Column="1"
-                                     ActiveTool="{Binding Document.CanvasTool}"
-                                     IsShowThresholdedImage="{Binding Document.ShowThresholdedImage}"
-                                     IsShowText="{Binding Document.ShowText}"
-                                     IsShowNumbering="{Binding Document.ShowNumbering}"
-                                     ViewModel="{Binding Document.CurrentPage}"
-                                     Margin="-1,0"
-                                     NodeVisibility="{Binding Document.NodeVisibility}"
-                                     NodesChanged="Canvas_OnNodesChanged"
-                                     NodesEdited="Canvas_OnNodeEdited"
-                                     WordSplit="Canvas_OnWordSplit"
-                                     SelectionBounds="{Binding Document.SelectionBounds}"
-                                     SelectionChanged="Canvas_OnSelectionChanged" />
-            <controls:DocumentTreeView
-                FlowDirection="{Binding Document.CurrentPage.FlowDirection, FallbackValue={x:Static models:Direction.Ltr}}"
-                Grid.Column="2"
-                ItemsSource="{Binding Document.CurrentPage.Nodes[0].Children, FallbackValue={x:Null}}"
-                NodesEdited="Canvas_OnNodeEdited"
-                NodesMoved="DocumentTreeView_OnNodesMoved"
-                SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
+            <TabControl Grid.Column="1">
+                <TabItem Header="Document">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="300" />
+                        </Grid.ColumnDefinitions>
+                        <controls:DocumentCanvas Grid.Column="0"
+                                                 ActiveTool="{Binding Document.CanvasTool}"
+                                                 IsShowThresholdedImage="{Binding Document.ShowThresholdedImage}"
+                                                 IsShowText="{Binding Document.ShowText}"
+                                                 IsShowNumbering="{Binding Document.ShowNumbering}"
+                                                 ViewModel="{Binding Document.CurrentPage}"
+                                                 Margin="-1,0"
+                                                 NodeVisibility="{Binding Document.NodeVisibility}"
+                                                 NodesChanged="Canvas_OnNodesChanged"
+                                                 NodesEdited="Canvas_OnNodeEdited"
+                                                 WordSplit="Canvas_OnWordSplit"
+                                                 SelectionBounds="{Binding Document.SelectionBounds}"
+                                                 SelectionChanged="Canvas_OnSelectionChanged" />
+                        <controls:DocumentTreeView
+                            FlowDirection="{Binding Document.CurrentPage.FlowDirection, FallbackValue={x:Static models:Direction.Ltr}}"
+                            Grid.Column="1"
+                            ItemsSource="{Binding Document.CurrentPage.Nodes[0].Children, FallbackValue={x:Null}}"
+                            NodesEdited="Canvas_OnNodeEdited"
+                            NodesMoved="DocumentTreeView_OnNodesMoved"
+                            SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Adjustments">
+                    <controls:AdjustmentsControl
+                        ViewModel="{Binding Document.CurrentPage}"
+                        />
+                </TabItem>
+            </TabControl>
+
         </Grid>
     </DockPanel>
 </core:WindowBase>
