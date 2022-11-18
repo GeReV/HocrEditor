@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics;
+using System.Drawing;
 using SkiaSharp;
 
 namespace HocrEditor.Tesseract;
@@ -15,6 +16,8 @@ public sealed class TesseractService : IDisposable
 
         tesseractApi.Init(string.Join('+', languages));
         tesseractApi.SetVariable("hocr_font_info", "1");
+        tesseractApi.SetVariable("thresholding_method", "1");
+        tesseractApi.SetVariable("thresholding_smooth_kernel_size", "5.0");
         tesseractApi.SetPageSegMode(PageSegmentationMode.SegmentationOcr);
     }
 
@@ -90,7 +93,7 @@ public sealed class TesseractService : IDisposable
                     return tesseractApi.GetHocrText();
                 }
             }
-        );
+        ).ConfigureAwait(false);
     }
 
     private static byte[] GetBitmapBytes(SKBitmap image) => image.GetPixelSpan().ToArray();

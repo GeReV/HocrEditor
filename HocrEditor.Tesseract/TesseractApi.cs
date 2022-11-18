@@ -105,6 +105,34 @@ public sealed class TesseractApi : IDisposable
     public string GetTsvText(int pageNumber = 0) =>
         GetText(tesseractDllHandle.TessBaseAPIGetTsvText(apiHandle.DangerousGetHandle(), pageNumber));
 
+    public bool GetIntVariable(string name, out int value)
+    {
+        value = 0;
+
+        return tesseractDllHandle.TessBaseAPIGetIntVariable(apiHandle.DangerousGetHandle(), name, ref value);
+    }
+
+    public bool GetBoolValue(string name, out bool value)
+    {
+        value = false;
+
+        return tesseractDllHandle.TessBaseAPIGetBoolVariable(apiHandle.DangerousGetHandle(), name, ref value);
+    }
+
+    public bool GetDoubleVariable(string name, out double value)
+    {
+        value = 0;
+
+        return tesseractDllHandle.TessBaseAPIGetDoubleVariable(apiHandle.DangerousGetHandle(), name, ref value);
+    }
+
+    public string? GetStringVariable(string name)
+    {
+        var ptr = tesseractDllHandle.TessBaseAPIGetStringVariable(apiHandle.DangerousGetHandle(), name);
+
+        return Marshal.PtrToStringAuto(ptr);
+    }
+
     public void SetInputName(string name) =>
         tesseractDllHandle.TessBaseAPISetInputName(apiHandle.DangerousGetHandle(), name);
 
