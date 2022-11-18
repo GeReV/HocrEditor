@@ -244,8 +244,8 @@ public sealed partial class DocumentCanvas
     public bool IsEditing => editingNode.HasValue;
 
     internal SKMatrix Transformation { get; private set; } = SKMatrix.Identity;
-    internal SKMatrix InverseTransformation { get; private set; } = SKMatrix.Identity;
     internal SKMatrix InverseScaleTransformation { get; private set; } = SKMatrix.Identity;
+    internal SKMatrix InverseTransformation { get; private set; } = SKMatrix.Identity;
     private SKMatrix scaleTransformation = SKMatrix.Identity;
 
     private bool isPanning;
