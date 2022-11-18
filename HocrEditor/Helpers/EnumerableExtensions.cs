@@ -57,4 +57,32 @@ public static class EnumerableExtensions
 
         return dictionary;
     }
+
+    public static IEnumerable<float> CumulativeSum(this IList<float> source)
+    {
+        var result = new float[source.Count];
+
+        result[0] = source[0];
+
+        for (var i = 1; i < source.Count; i++)
+        {
+            result[i] = result[i - 1] + source[i];
+        }
+
+        return result;
+    }
+
+    public static IEnumerable<int> CumulativeSum(this IList<int> source)
+    {
+        var result = new int[source.Count];
+
+        result[0] = source[0];
+
+        for (var i = 1; i < source.Count; i++)
+        {
+            result[i] = result[i - 1] + source[i];
+        }
+
+        return result;
+    }
 }
