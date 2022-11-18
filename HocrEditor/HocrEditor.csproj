@@ -21,6 +21,7 @@
         <PackageLicenseExpression>lgpl-3.0</PackageLicenseExpression>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <Product>hOCR Editor</Product>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
