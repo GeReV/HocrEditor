@@ -1,11 +1,9 @@
-﻿using System.Diagnostics;
+﻿using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
 using HocrEditor.ImageProcessing;
 using HocrEditor.Shaders;
 using HocrEditor.ViewModels;
 using SkiaSharp;
-using SkiaSharp.Views.Desktop;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace HocrEditor.Controls;
@@ -18,16 +16,10 @@ public partial class AdjustmentsControl : UserControl
             typeof(HocrPageViewModel),
             typeof(AdjustmentsControl),
             new PropertyMetadata(
-                null,
+                defaultValue: null,
                 ViewModelChanged
             )
         );
-
-    private GRContext grContext;
-    private SKSize screenCanvasSize;
-
-    private SKImage? blurred;
-    private SKSurface surface;
 
     public HocrPageViewModel? ViewModel
     {
@@ -45,6 +37,11 @@ public partial class AdjustmentsControl : UserControl
         }
     }
 
+    private GRContext grContext;
+
+    private SKImage? blurred;
+    private SKSurface surface;
+
     public AdjustmentsControl()
     {
         grContext = GRContext.CreateGl();
@@ -57,10 +54,11 @@ public partial class AdjustmentsControl : UserControl
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
-        blurred?.Dispose();
-
-        surface.Dispose();
-        grContext.Dispose();
+        // TODO: Figure out proper disposal event.
+        // blurred?.Dispose();
+        //
+        // surface.Dispose();
+        // grContext.Dispose();
     }
 
     private static void ViewModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -72,57 +70,43 @@ public partial class AdjustmentsControl : UserControl
             return;
         }
 
-        view.Dispatcher.BeginInvoke(
-            async () =>
-            {
-                var bitmap = await viewModel.Image.GetBitmap();
+        viewModel.Image.GetBitmap()
+            .ContinueWith(
+                async bitmapTask =>
+                {
+                    var bitmap = await bitmapTask;
 
-                view.blurred?.Dispose();
-                view.blurred = view.CreateBlurredImage(SKImage.FromBitmap(bitmap));
+                    view.surface.Dispose();
+                    view.grContext.Dispose();
 
-                view.Surface.InvalidateVisual();
-            },
-            DispatcherPriority.Normal
-        );
+                    view.grContext = GRContext.CreateGl();
+                    view.surface = SKSurface.Create(
+                        view.grContext,
+                        budgeted: true,
+                        new SKImageInfo(bitmap.Width, bitmap.Height)
+                    );
+
+                    view.blurred?.Dispose();
+                    view.blurred = CreateBlurredImage(view.surface, SKImage.FromBitmap(bitmap));
+
+                    var thresholder = new Thresholder(view.blurred);
+                    var threshold = thresholder.OtsuBinarization();
+
+                    view.Histogram.MarkerPosition = view.Histogram.Value = (int)(threshold * 255);
+                    view.Histogram.Values = thresholder.Histogram.Values.ToArray();
+
+                    view.Canvas.InvalidateVisual();
+                },
+                TaskScheduler.FromCurrentSynchronizationContext()
+            );
     }
 
-    private void Canvas_OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
+    private void Canvas_OnPaint(object? sender, ZoomPanPaintEventArgs e)
     {
-        if (ViewModel is null || blurred is null)
+        if (ViewModel is null)
         {
             return;
         }
-
-        var size = e.Info.Size;
-
-        if (screenCanvasSize != size)
-        {
-            surface.Dispose();
-            grContext.Dispose();
-
-            grContext = GRContext.CreateGl();
-            surface = SKSurface.Create(grContext, budgeted: true, new SKImageInfo(size.Width, size.Height));
-
-            var bitmap = ViewModel.Image.GetBitmap().GetAwaiter().GetResult();
-            var image = SKImage.FromPixelCopy(bitmap.Info, bitmap.GetPixelSpan());
-
-            blurred?.Dispose();
-            blurred = CreateBlurredImage(image);
-
-            var thresholder = new Thresholder(blurred);
-            var threshold = thresholder.OtsuBinarization();
-
-            Histogram.MarkerPosition = Histogram.Value = (int)(threshold * 255);
-            Histogram.Values = thresholder.Histogram.Values.ToArray();
-
-            screenCanvasSize = e.Info.Size;
-        }
-
-        using var thresholdEffect = new ThresholdEffect(blurred.ToShader(), Histogram.Value / 255.0f);
-
-        using var paintThreshold = new SKPaint { Shader = thresholdEffect.ToShader() };
-
-        surface.Canvas.DrawPaint(paintThreshold);
 
         using var snapshot = surface.Snapshot();
 
@@ -131,10 +115,32 @@ public partial class AdjustmentsControl : UserControl
 
     private void Slider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        Surface.InvalidateVisual();
+        UpdateImage();
     }
 
-    private SKImage CreateBlurredImage(SKImage source)
+    private void UpdateImage()
+    {
+        if (blurred is null)
+        {
+            return;
+        }
+
+        using var thresholdEffect = new ThresholdEffect(blurred.ToShader(), Histogram.Value / 255.0f);
+
+        using var paintThreshold = new SKPaint { Shader = thresholdEffect.ToShader() };
+
+        surface.Canvas.DrawPaint(paintThreshold);
+
+        Refresh();
+    }
+
+    private void Refresh()
+    {
+        Canvas.InvalidateVisual();
+        Canvas.UpdateLayout();
+    }
+
+    private static SKImage CreateBlurredImage(SKSurface surface, SKImage source)
     {
         using var gaussianBlur = new GaussianBlurEffect(source);
         using var grayscale = new GrayscaleEffect(gaussianBlur.ToShader());

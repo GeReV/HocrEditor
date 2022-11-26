@@ -170,7 +170,7 @@ public partial class HistogramControl : UserControl
 
         using var paint = new SKPaint(new SKFont(SKTypeface.Default, 10.0f))
         {
-            StrokeWidth = 1.0f,
+            StrokeWidth = 0,
         };
 
         var x = Math.Max((int)HistogramMargin.Left, (info.Width - HISTOGRAM_WIDTH) / 2);
