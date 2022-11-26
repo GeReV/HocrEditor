@@ -6,24 +6,24 @@ namespace HocrEditor.Shaders;
 
 public class GaussianBlurEffect : IShader
 {
-    private readonly SKImage image;
+    private SKShader image = SKShader.CreateEmpty();
+    private uint kernelSize = 3;
 
-    private readonly RuntimeEffect horizontalPass;
-    private readonly RuntimeEffect verticalPass;
+    private readonly RuntimeEffect horizontalPass = new(HorizontalPassSource);
+    private readonly RuntimeEffect verticalPass = new(VerticalPassSource);
 
-    private const uint KERNEL_SIZE = 3;
+    private const uint MAX_KERNEL_SIZE = 63;
 
     private static readonly string HorizontalPassSource = $@"
 uniform shader image;
-uniform vec2 imageResolution;
 uniform float kernelSize;
-uniform float[{KERNEL_SIZE}] kernel;
+uniform float[{MAX_KERNEL_SIZE}] kernel;
 
 vec4 main(vec2 coord) {{
     vec4 sum = vec4(0.0);
 
     for (int i = 0; i < kernelSize; i++) {{
-        float offset = i + (kernelSize - 1);
+        float offset = i - (kernelSize - 1) * 0.5;
         sum += sample(image, vec2(coord.x + offset, coord.y)) * kernel[i];
     }}
 
@@ -33,15 +33,14 @@ vec4 main(vec2 coord) {{
 
     private static readonly string VerticalPassSource = $@"
 uniform shader image;
-uniform vec2 imageResolution;
 uniform float kernelSize;
-uniform float[{KERNEL_SIZE}] kernel;
+uniform float[{MAX_KERNEL_SIZE}] kernel;
 
 vec4 main(vec2 coord) {{
     vec4 sum = vec4(0.0);
 
     for (int i = 0; i < kernelSize; i++) {{
-        float offset = i + (kernelSize - 1);
+        float offset = i - (kernelSize - 1) * 0.5;
         sum += sample(image, vec2(coord.x, coord.y + offset)) * kernel[i];
     }}
 
@@ -78,26 +77,49 @@ vec4 main(vec2 coord) {{
         return coefficients;
     }
 
-    public GaussianBlurEffect(SKImage image)
+    public GaussianBlurEffect()
     {
-        this.image = image;
-
-        var coefficients = GetGaussianKernel(KERNEL_SIZE);
-
-        horizontalPass = new RuntimeEffect(HorizontalPassSource);
-        verticalPass = new RuntimeEffect(VerticalPassSource);
-
-        horizontalPass.Children["image"] = image.ToShader(SKShaderTileMode.Repeat, SKShaderTileMode.Repeat);
-
-        verticalPass.Uniforms["imageResolution"] =
-            horizontalPass.Uniforms["imageResolution"] = new float[] { image.Width, image.Height };
-        verticalPass.Uniforms["kernel"] = horizontalPass.Uniforms["kernel"] = coefficients;
-        verticalPass.Uniforms["kernelSize"] = horizontalPass.Uniforms["kernelSize"] = coefficients.Length;
-
-        verticalPass.Children["image"] = horizontalPass.ToShader();
     }
 
-    public SKShader ToShader() => verticalPass.ToShader();
+    public GaussianBlurEffect(SKShader image, uint kernelSize = 3)
+    {
+        Image = image;
+        KernelSize = kernelSize;
+    }
+
+    public SKShader Image
+    {
+        get => image;
+        set
+        {
+            image = value;
+            horizontalPass.Children["image"] = value;
+        }
+    }
+
+    public uint KernelSize
+    {
+        get => kernelSize;
+        set
+        {
+            kernelSize = Math.Clamp(value, 1, MAX_KERNEL_SIZE);
+
+            var kernel = new float[MAX_KERNEL_SIZE];
+            var coefficients = GetGaussianKernel(kernelSize);
+
+            Array.Copy(coefficients, kernel, coefficients.Length);
+
+            verticalPass.Uniforms["kernel"] = horizontalPass.Uniforms["kernel"] = kernel;
+            verticalPass.Uniforms["kernelSize"] = horizontalPass.Uniforms["kernelSize"] = kernelSize;
+        }
+    }
+
+    public SKShader ToShader()
+    {
+        verticalPass.Children["image"] = horizontalPass.ToShader();
+
+        return verticalPass.ToShader();
+    }
 
     public void Dispose()
     {
