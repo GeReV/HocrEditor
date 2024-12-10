@@ -107,15 +107,16 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
     {
         var nextBounds = bounds;
         var pixels = binaryImage.GetPixelSpan();
+        var bytesPerPixel = binaryImage.BytesPerPixel;
         var width = binaryImage.RowBytes;
-        var cornerColor = pixels[nextBounds.Top * width + nextBounds.Left];
+        var cornerColor = pixels[bounds.Top * width + bounds.Left * bytesPerPixel];
 
         // Horizontal lines from top.
         for (var brk = false; nextBounds.Top <= nextBounds.Bottom;)
         {
             for (var x = nextBounds.Left; x <= nextBounds.Right; x++)
             {
-                if (pixels[nextBounds.Top * width + x] != cornerColor)
+                if (pixels[nextBounds.Top * width + x * bytesPerPixel] != cornerColor)
                 {
                     brk = true;
                     break;
@@ -135,7 +136,7 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
         {
             for (var x = nextBounds.Left; x <= nextBounds.Right; x++)
             {
-                if (pixels[nextBounds.Bottom * width + x] != cornerColor)
+                if (pixels[nextBounds.Bottom * width + x * bytesPerPixel] != cornerColor)
                 {
                     brk = true;
                     break;
@@ -155,7 +156,7 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
         {
             for (var y = nextBounds.Top; y <= nextBounds.Bottom; y++)
             {
-                if (pixels[y * width + nextBounds.Left] != cornerColor)
+                if (pixels[y * width + nextBounds.Left * bytesPerPixel] != cornerColor)
                 {
                     brk = true;
                     break;
@@ -175,7 +176,7 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
         {
             for (var y = nextBounds.Top; y <= nextBounds.Bottom; y++)
             {
-                if (pixels[y * width + nextBounds.Right] != cornerColor)
+                if (pixels[y * width + nextBounds.Right * bytesPerPixel] != cornerColor)
                 {
                     brk = true;
                     break;
