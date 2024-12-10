@@ -136,8 +136,8 @@ public sealed class TesseractApi : IDisposable
     public void SetInputName(string name) =>
         tesseractDllHandle.TessBaseAPISetInputName(apiHandle.DangerousGetHandle(), name);
 
-    public void SetImage(byte[] data, int width, int height, int bytesPerPixel, int bytesPerLine) =>
-        tesseractDllHandle.TessBaseAPISetImage(apiHandle.DangerousGetHandle(), data, width, height, bytesPerPixel, bytesPerLine);
+    public void SetImage(ReadOnlySpan<byte> data, int width, int height, int bytesPerPixel, int bytesPerLine) =>
+        tesseractDllHandle.TessBaseAPISetImage(apiHandle.DangerousGetHandle(), MemoryMarshal.GetReference(data), width, height, bytesPerPixel, bytesPerLine);
 
     public void SetSourceResolution(int ppi) =>
         tesseractDllHandle.TessBaseAPISetSourceResolution(apiHandle.DangerousGetHandle(), ppi);

@@ -126,7 +126,7 @@ internal class TesseractDllHandle : SafeDllHandle
 
         internal delegate void TessBaseAPISetImage(
             IntPtr handle,
-            byte[] data,
+            in byte data,
             int width,
             int height,
             int bytesPerPixel,
