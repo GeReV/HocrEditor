@@ -2,24 +2,14 @@
 using System.Linq;
 using HocrEditor.ViewModels;
 using Optional;
-using Optional.Collections;
 
 namespace HocrEditor.Helpers;
 
 public static class SelectionHelper
 {
-    public static Option<HocrNodeViewModel> SelectEditable(IEnumerable<HocrNodeViewModel> items)
+    public static Option<HocrNodeViewModel> SelectEditable(ICollection<HocrNodeViewModel> items)
     {
-        var list = items.ToList();
-
-        var editableNode = list.FirstOrNone();
-
-        if (editableNode.HasValue)
-        {
-            return editableNode;
-        }
-
-        foreach (var node in list)
+        foreach (var node in items)
         {
             var iter = node;
             while (iter.Children.Count == 1 && !iter.IsEditable)
