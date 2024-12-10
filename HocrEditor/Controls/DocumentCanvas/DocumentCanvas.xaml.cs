@@ -60,16 +60,6 @@ public sealed partial class DocumentCanvas
             )
         );
 
-    public static readonly DependencyProperty IsShowThresholdedImageProperty = DependencyProperty.Register(
-        nameof(IsShowThresholdedImage),
-        typeof(bool),
-        typeof(DocumentCanvas),
-        new PropertyMetadata(
-            false,
-            IsShowThresholdedImageChanged
-        )
-    );
-
     public static readonly DependencyProperty IsShowTextProperty = DependencyProperty.Register(
         nameof(IsShowText),
         typeof(bool),
@@ -164,12 +154,6 @@ public sealed partial class DocumentCanvas
     {
         get => (ReadOnlyObservableCollection<NodeVisibility>)GetValue(NodeVisibilityProperty);
         set => SetValue(NodeVisibilityProperty, value);
-    }
-
-    public bool IsShowThresholdedImage
-    {
-        get => (bool)GetValue(IsShowThresholdedImageProperty);
-        set => SetValue(IsShowThresholdedImageProperty, value);
     }
 
     public bool IsShowText
@@ -345,8 +329,7 @@ public sealed partial class DocumentCanvas
         {
             documentCanvas.backgroundLoadCancellationTokenSource = new CancellationTokenSource();
 
-            documentCanvas.background =
-                documentCanvas.IsShowThresholdedImage ? newPage.ThresholdedImage : newPage.Image;
+            documentCanvas.background = newPage.Image;
 
             newPage.Nodes.SubscribeItemPropertyChanged(documentCanvas.NodesOnItemPropertyChanged);
 
@@ -430,16 +413,6 @@ public sealed partial class DocumentCanvas
         NodeVisibilityDictionary[nodeVisibility.NodeTypeViewModel.NodeType] = nodeVisibility.Visible;
 
         Refresh();
-    }
-
-    private static void IsShowThresholdedImageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        var documentCanvas = (DocumentCanvas)d;
-
-        documentCanvas.background =
-            (bool)e.NewValue ? documentCanvas.ViewModel?.ThresholdedImage : documentCanvas.ViewModel?.Image;
-
-        documentCanvas.Refresh();
     }
 
     private static void IsShowInfoChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
