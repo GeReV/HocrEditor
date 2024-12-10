@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0-windows</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <LangVersion>13</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,7 +13,8 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="SkiaSharp" Version="2.88.3" />
+      <PackageReference Include="Optional" Version="4.0.0" />
+      <PackageReference Include="SkiaSharp" Version="3.116.0" />
     </ItemGroup>
 
 </Project>

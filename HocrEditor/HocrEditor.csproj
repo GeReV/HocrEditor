@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net6.0-windows</TargetFramework>
+        <TargetFramework>net9.0-windows</TargetFramework>
         <Nullable>enable</Nullable>
         <UseWPF>true</UseWPF>
         <!-- Used for FolderBrowserDialog -->
@@ -22,27 +22,28 @@
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <Product>hOCR Editor</Product>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <LangVersion>13</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="gong-wpf-dragdrop" Version="3.0.0" />
-        <PackageReference Include="HtmlAgilityPack" Version="1.11.39" />
-        <PackageReference Include="icu.net" Version="2.7.1" />
+        <PackageReference Include="gong-wpf-dragdrop" Version="4.0.0" />
+        <PackageReference Include="HtmlAgilityPack" Version="1.11.71" />
+        <PackageReference Include="icu.net" Version="3.0.0" />
         <PackageReference Include="Icu4c.Win.Full.Lib" Version="59.1.15" />
         <PackageReference Include="Iso639" Version="1.0.0" />
-        <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
-        <PackageReference Include="Meziantou.Analyzer" Version="1.0.698">
+        <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
+        <PackageReference Include="Meziantou.Analyzer" Version="2.0.182">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="6.0.1" />
+        <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="9.0.0" />
         <PackageReference Include="Microsoft.Toolkit.Mvvm" Version="7.1.2" />
-        <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
+        <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
         <PackageReference Include="Optional" Version="4.0.0" />
-        <PackageReference Include="PropertyChanged.Fody" Version="3.4.0" PrivateAssets="All" />
-        <PackageReference Include="SkiaSharp" Version="2.88.3" />
-        <PackageReference Include="SkiaSharp.Views.WPF" Version="2.80.3" />
-        <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
+        <PackageReference Include="PropertyChanged.Fody" Version="4.1.0" PrivateAssets="All" />
+        <PackageReference Include="SkiaSharp" Version="3.116.1" />
+        <PackageReference Include="SkiaSharp.Views.WPF" Version="3.116.1" />
+        <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -122,6 +123,9 @@
         <Resource Include="Icons\clipboard-paste.png" />
         <None Remove="Icons\document-copy.png" />
         <Resource Include="Icons\document-copy.png" />
+        <None Remove="Icons\control.png" />
+        <Resource Include="Icons\control.png" />
+        <None Remove="Icons\ruler.png" />
     </ItemGroup>
 
     <ItemGroup>
