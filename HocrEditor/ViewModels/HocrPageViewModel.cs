@@ -1,16 +1,15 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using HocrEditor.Commands;
 using HocrEditor.Controls;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
-using HocrEditor.Tesseract;
 using Microsoft.Toolkit.Mvvm.Input;
 using SkiaSharp;
 using Rect = HocrEditor.Models.Rect;
@@ -31,11 +30,12 @@ namespace HocrEditor.ViewModels
 
         public IEnumerable<HocrNodeViewModel> SelectableNodes => Nodes.Where(n => !n.IsRoot);
 
-        public bool IsProcessing => HocrPage == null;
+        public bool IsProcessing { get; set; }
 
         public string ImageFilename { get; private set; }
 
-        public SKBitmapManager.SKBitmapReference Image => ImageCache.Get(ImageFilename, () => SKBitmap.Decode(ImageFilename));
+        public SKBitmapManager.SKBitmapReference Image =>
+            ImageCache.Get(ImageFilename, () => SKBitmap.Decode(ImageFilename));
 
         public SKBitmapManager.SKBitmapReference ThresholdedImage =>
             ImageCache.Get(
@@ -61,6 +61,8 @@ namespace HocrEditor.ViewModels
 
         public FlowDirection FlowDirection =>
             Direction == Direction.Ltr ? FlowDirection.LeftToRight : FlowDirection.RightToLeft;
+
+        public SKMatrix PageTransformation { get; set; } = SKMatrix.Identity;
 
         private Rect selectionBounds;
 

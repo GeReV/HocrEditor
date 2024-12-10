@@ -32,7 +32,7 @@ namespace HocrEditor.ViewModels
                 ParagraphSeparator,
                 Children
             ),
-            _ => throw new ArgumentOutOfRangeException("this")
+            _ => throw new InvalidOperationException($"Node type {NodeType} does not support inner text"),
         };
 
         public HocrNodeViewModel(HocrNode node)

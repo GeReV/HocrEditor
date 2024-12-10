@@ -19,7 +19,7 @@ public class HocrNodeTypeViewModel
             HocrNodeType.Caption,
             HocrNodeType.TextFloat,
             HocrNodeType.Word,
-            HocrNodeType.Image
+            HocrNodeType.Image,
         }
         .Select(type => new HocrNodeTypeViewModel(type))
         .ToList()
