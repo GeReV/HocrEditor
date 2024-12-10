@@ -66,7 +66,7 @@ public abstract class RegionToolBase : CanvasToolBase
 
         Mouse.Capture(canvas);
 
-        var position = e.GetPosition(canvas).ToSKPoint();
+        var normalizedPosition = SKPointI.Truncate(canvas.Surface.InverseTransformation.MapPoint(e.GetPosition(canvas).ToSKPoint()));
 
         if (e.ChangedButton != MouseButton.Left)
         {
@@ -75,7 +75,7 @@ public abstract class RegionToolBase : CanvasToolBase
 
         e.Handled = true;
 
-        DragStart = position;
+        DragStart = normalizedPosition;
 
         Keyboard.Focus(canvas);
 
@@ -85,7 +85,7 @@ public abstract class RegionToolBase : CanvasToolBase
         if (canvas.CanvasSelection.ShouldShowCanvasSelection)
         {
             var selectedHandle = canvas.CanvasSelection.ResizeHandles
-                .FirstOrDefault(handle => handle.GetRect(canvas.Transformation).Contains(position));
+                .FirstOrDefault(handle => handle.GetRect().Contains(normalizedPosition));
 
             if (selectedHandle != null)
             {
@@ -104,8 +104,6 @@ public abstract class RegionToolBase : CanvasToolBase
                 return;
             }
         }
-
-        var normalizedPosition = SKPointI.Truncate(canvas.InverseTransformation.MapPoint(position));
 
         OnMouseDown(canvas, e, normalizedPosition);
 
@@ -158,8 +156,7 @@ public abstract class RegionToolBase : CanvasToolBase
                 throw new ArgumentOutOfRangeException(nameof(MouseMoveState));
         }
 
-        var position = e.GetPosition(canvas).ToSKPoint();
-        var normalizedPosition = SKPointI.Truncate(canvas.InverseTransformation.MapPoint(position));
+        var normalizedPosition = SKPointI.Truncate(canvas.Surface.InverseTransformation.MapPoint(e.GetPosition(canvas).ToSKPoint()));
 
         OnMouseUp(canvas, e, normalizedPosition);
 
@@ -173,9 +170,9 @@ public abstract class RegionToolBase : CanvasToolBase
     {
         var canvas = (DocumentCanvas)sender;
 
-        var position = e.GetPosition(canvas).ToSKPoint();
+        var normalizedPosition = canvas.Surface.InverseTransformation.MapPoint(e.GetPosition(canvas).ToSKPoint());
 
-        var delta = canvas.InverseScaleTransformation.MapPoint(position - DragStart);
+        var delta = normalizedPosition - DragStart;
 
         switch (MouseMoveState)
         {
@@ -194,9 +191,9 @@ public abstract class RegionToolBase : CanvasToolBase
 
                 foreach (var handle in resizeHandles)
                 {
-                    var handleRect = handle.GetRect(canvas.Transformation);
+                    var handleRect = handle.GetRect();
 
-                    if (!handleRect.Contains(position))
+                    if (!handleRect.Contains(normalizedPosition))
                     {
                         continue;
                     }
@@ -216,7 +213,7 @@ public abstract class RegionToolBase : CanvasToolBase
                 }
 
                 if (!hoveringOnSelection &&
-                    canvas.Transformation.MapRect(canvas.CanvasSelection.Bounds).Contains(position))
+                    canvas.Surface.Transform.MapRect(canvas.CanvasSelection.Bounds).Contains(normalizedPosition))
                 {
                     hoveringOnSelection = true;
 
@@ -301,7 +298,7 @@ public abstract class RegionToolBase : CanvasToolBase
     {
     }
 
-    protected virtual void OnMouseUp(DocumentCanvas canvas, MouseButtonEventArgs e, SKPoint normalizedPosition)
+    protected virtual void OnMouseUp(DocumentCanvas canvas, MouseButtonEventArgs e, SKPointI normalizedPosition)
     {
     }
 
@@ -362,7 +359,7 @@ public abstract class RegionToolBase : CanvasToolBase
     {
         MouseMoveState = RegionToolMouseState.Dragging;
 
-        OffsetStart = canvas.Transformation.MapPoint(canvas.CanvasSelection.Bounds.Location);
+        OffsetStart = canvas.CanvasSelection.Bounds.Location;
 
         DragLimit = CalculateDragLimitBounds(canvas);
     }
@@ -584,9 +581,9 @@ public abstract class RegionToolBase : CanvasToolBase
             return;
         }
 
-        var position = Mouse.GetPosition(canvas).ToSKPoint();
+        var normalizedPosition = canvas.Surface.InverseTransformation.MapPoint(Mouse.GetPosition(canvas).ToSKPoint());
 
-        var delta = canvas.InverseScaleTransformation.MapPoint(position - DragStart);
+        var delta = normalizedPosition - DragStart;
 
         PerformResize(canvas, delta);
 

@@ -27,7 +27,6 @@ public sealed class RegionSelectionTool : RegionToolBase
 
         control.CanvasSelection.Render(
             canvas,
-            control.Transformation,
             SKColor.Empty
         );
     }
@@ -60,7 +59,7 @@ public sealed class RegionSelectionTool : RegionToolBase
 
     protected override bool OnSelectSelection(DocumentCanvas canvas, SKPoint delta)
     {
-        var newLocation = SKPointI.Truncate(canvas.InverseTransformation.MapPoint(DragStart) + delta);
+        var newLocation = SKPointI.Truncate(DragStart + delta);
 
         newLocation.Clamp(DragLimit);
 
@@ -72,7 +71,7 @@ public sealed class RegionSelectionTool : RegionToolBase
 
     protected override bool OnDragSelection(DocumentCanvas canvas, SKPoint delta)
     {
-        var newLocation = SKPointI.Truncate(canvas.InverseTransformation.MapPoint(OffsetStart) + delta);
+        var newLocation = SKPointI.Truncate(OffsetStart + delta);
 
         newLocation.Clamp(DragLimit);
 

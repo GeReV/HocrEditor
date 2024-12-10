@@ -74,7 +74,6 @@ public sealed class SelectionTool : RegionToolBase
 
         control.CanvasSelection.Render(
             canvas,
-            control.Transformation,
             NodeSelectionColor
         );
 
@@ -83,8 +82,7 @@ public sealed class SelectionTool : RegionToolBase
             return;
         }
 
-
-        var bbox = control.Transformation.MapRect(nodeSelection);
+        var bbox = nodeSelection;
 
         var paint = new SKPaint
         {
@@ -142,19 +140,19 @@ public sealed class SelectionTool : RegionToolBase
         }
     }
 
-    protected override void OnMouseUp(DocumentCanvas canvas, MouseButtonEventArgs e, SKPoint normalizedPosition)
+    protected override void OnMouseUp(DocumentCanvas canvas, MouseButtonEventArgs e, SKPointI normalizedPosition)
     {
+        if (e.ChangedButton != MouseButton.Left)
+        {
+            return;
+        }
+
         canvas.SelectedItems.MatchSome(
             items =>
             {
-                if (e.ChangedButton != MouseButton.Left)
-                {
-                    return;
-                }
-
                 e.Handled = true;
 
-                var mouseMoved = e.GetPosition(canvas).ToSKPoint() != DragStart;
+                var mouseMoved = normalizedPosition != DragStart;
 
                 switch (MouseMoveState)
                 {
@@ -180,7 +178,7 @@ public sealed class SelectionTool : RegionToolBase
                         throw new ArgumentOutOfRangeException(nameof(MouseMoveState));
                 }
 
-                if (canvas.SelectedElements.Any() && mouseMoved)
+                if (canvas.SelectedElements.Count > 0 && mouseMoved)
                 {
                     UpdateNodes(canvas);
 
@@ -197,7 +195,7 @@ public sealed class SelectionTool : RegionToolBase
         canvas.SelectedItems.Map(
                 items =>
                 {
-                    var newLocation = canvas.InverseTransformation.MapPoint(DragStart) + delta;
+                    var newLocation = DragStart + delta;
 
                     newLocation.Clamp(DragLimit);
 
@@ -233,30 +231,32 @@ public sealed class SelectionTool : RegionToolBase
                         delta.Clamp(DragLimit);
                     }
 
-                    var newLocation = canvas.InverseTransformation.MapPoint(OffsetStart) + delta;
+                    var newLocation = OffsetStart + delta;
 
-                    if (items.Any())
+                    if (items.Count == 0)
                     {
-                        // Apply to all selected elements.
-                        foreach (var id in canvas.SelectedElements)
+                        return true;
+                    }
+
+                    // Apply to all selected elements.
+                    foreach (var id in canvas.SelectedElements)
+                    {
+                        var (_, element) = canvas.Elements[id];
+
+                        var deltaFromDraggedElement =
+                            element.Bounds.Location - canvas.CanvasSelection.Bounds.Location;
+
+                        element.Bounds = element.Bounds with
                         {
-                            var (_, element) = canvas.Elements[id];
-
-                            var deltaFromDraggedElement =
-                                element.Bounds.Location - canvas.CanvasSelection.Bounds.Location;
-
-                            element.Bounds = element.Bounds with
-                            {
-                                Location = SKPointI.Truncate(newLocation + deltaFromDraggedElement)
-                            };
-                        }
-
-                        // Apply to selection rect.
-                        canvas.CanvasSelection.Bounds = canvas.CanvasSelection.Bounds with
-                        {
-                            Location = SKPointI.Truncate(newLocation)
+                            Location = SKPointI.Truncate(newLocation + deltaFromDraggedElement)
                         };
                     }
+
+                    // Apply to selection rect.
+                    canvas.CanvasSelection.Bounds = canvas.CanvasSelection.Bounds with
+                    {
+                        Location = SKPointI.Truncate(newLocation)
+                    };
 
                     return true;
                 }
@@ -264,7 +264,7 @@ public sealed class SelectionTool : RegionToolBase
             .ValueOr(false);
 
     protected override SKRectI CalculateDragLimitBounds(DocumentCanvas canvas) =>
-        NodeHelpers.CalculateDragLimitBounds(canvas.SelectedItems.ValueOrFailure());
+        canvas.SelectedItems.Match(NodeHelpers.CalculateDragLimitBounds, () => SKRectI.Empty);
 
     private void OnDocumentCanvasViewModelChanged(object? sender, EventArgs e)
     {
@@ -297,7 +297,7 @@ public sealed class SelectionTool : RegionToolBase
             throw new InvalidOperationException($"Expected {canvas.RootId} to be greater or equal to 0.");
         }
 
-        selection = canvas.Transformation.MapRect(selection);
+        selection = canvas.Surface.Transform.MapRect(selection);
 
         var selectedNodes = new HashSet<HocrNodeViewModel>();
 
@@ -305,7 +305,7 @@ public sealed class SelectionTool : RegionToolBase
         {
             var (node, element) = canvas.Elements[key];
 
-            var bounds = canvas.Transformation.MapRect(element.Bounds);
+            var bounds = canvas.Surface.Transform.MapRect(element.Bounds);
 
             if (!selection.IntersectsWithInclusive(bounds))
             {
