@@ -10,10 +10,16 @@
              xmlns:dd="urn:gong-wpf-dragdrop"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             d:DesignHeight="300"
+             d:DesignWidth="300">
     <Grid>
-        <TreeView ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
+        <TreeView
                   Name="TreeView"
+                  BorderThickness="0"
+                  Background="{x:Static SystemColors.ControlLightLightBrush}"
+                  ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                  VerticalAlignment="Stretch"
                   dd:DragDrop.DragHandler="{Binding DragHandler, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   dd:DragDrop.DropHandler="{Binding DropHandler, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   dd:DragDrop.IsDragSource="True"
