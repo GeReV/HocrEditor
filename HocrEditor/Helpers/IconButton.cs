@@ -122,7 +122,10 @@ public class IconButton
 
         var border = button.FindVisualChild<Border>();
 
-        Ensure.IsNotNull(border);
+        if (border is null)
+        {
+            return;
+        }
 
         var borderChild = border.Child;
 
