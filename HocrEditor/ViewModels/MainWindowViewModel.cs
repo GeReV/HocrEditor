@@ -40,6 +40,7 @@ namespace HocrEditor.ViewModels
             TesseractLanguages.SubscribeItemPropertyChanged(TesseractLanguagesChanged);
 
             ImportCommand = new RelayCommand(Import);
+            ProcessCommand = new RelayCommand(Process);
 
             SaveCommand = new RelayCommand<bool>(forceSaveAs => Save(forceSaveAs), CanSave);
             OpenCommand = new RelayCommand(Open);
@@ -93,6 +94,7 @@ namespace HocrEditor.ViewModels
         public IRelayCommand<bool> SaveCommand { get; }
         public IRelayCommand OpenCommand { get; }
         public IRelayCommand ImportCommand { get; }
+        public IRelayCommand ProcessCommand { get; }
 
         [UsedImplicitly]
         private void OnDocumentChanged(HocrDocumentViewModel oldValue, HocrDocumentViewModel newValue)
@@ -258,21 +260,34 @@ namespace HocrEditor.ViewModels
             foreach (var page in pages)
             {
                 Document.Pages.Add(page);
+            }
+        }
 
-                Task.Run(
+        private void Process()
+        {
+            var tesseractPath = GetTesseractPath();
+
+            if (!tesseractPath.HasValue)
+            {
+                return;
+            }
+
+            foreach (var page in Document.Pages)
+            {
+                page.IsProcessing = true;
+
+                _ = Task.Run(
                         async () =>
                         {
                             var languages = TesseractLanguages.Where(l => l.IsSelected)
                                 .Select(l => l.Language);
 
-                            using var service = new TesseractService(tesseractPath, languages);
+                            using var service = new TesseractService(tesseractPath.ValueOrFailure(), languages);
 
-                            var image = await page.Image.GetBitmap().ConfigureAwait(false);
+                            var image = await page.ThresholdedBitmap.ConfigureAwait(false);
 
                             var body = await service.Recognize(image, page.ImageFilename)
                                 .ConfigureAwait(false);
-
-                            // page.ThresholdedImage = service.GetThresholdedImage(page.Image);
 
                             var doc = new HtmlDocument();
                             doc.LoadHtml(body);
