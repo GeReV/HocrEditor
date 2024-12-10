@@ -34,24 +34,22 @@ public sealed class WordSplittingTool : CanvasToolBase
         canvas.MouseDown += DocumentCanvasOnMouseDown;
         canvas.MouseUp += DocumentCanvasOnMouseUp;
         canvas.MouseMove += DocumentCanvasOnMouseMove;
-        canvas.KeyDown += DocumentCanvasOnKeyDown;
+        canvas.PreviewKeyDown += DocumentCanvasOnPreviewKeyDown;
 
         canvas.Cursor = null;
 
         if (canvas.IsEditing)
         {
-            canvas.OnNodeEdited(canvas.TextBox.Text);
-
-            wordSplitterValue = canvas.TextBox.Text;
             wordSplitterValueSplitStart = canvas.TextBox.SelectionStart;
             wordSplitterValueSplitLength = canvas.TextBox.SelectionLength;
+            wordSplitterValue = canvas.EndEditing();
 
-            canvas.EndEditing();
+            canvas.OnNodeEdited(wordSplitterValue);
         }
         else
         {
-            wordSplitterValue = canvas.SelectedItems.ValueOrFailure()
-                .FirstOrNone()
+            wordSplitterValue = canvas.SelectedItems
+                .FlatMap(items => items.FirstOrNone())
                 .Map(node => node.InnerText)
                 .ValueOr(string.Empty);
         }
@@ -62,7 +60,7 @@ public sealed class WordSplittingTool : CanvasToolBase
         canvas.MouseDown -= DocumentCanvasOnMouseDown;
         canvas.MouseUp -= DocumentCanvasOnMouseUp;
         canvas.MouseMove -= DocumentCanvasOnMouseMove;
-        canvas.KeyDown -= DocumentCanvasOnKeyDown;
+        canvas.PreviewKeyDown -= DocumentCanvasOnPreviewKeyDown;
 
         wordSplitterPosition = SKPointI.Empty;
         wordSplitterValue = string.Empty;
@@ -76,7 +74,6 @@ public sealed class WordSplittingTool : CanvasToolBase
 
         control.CanvasSelection.Render(
             canvas,
-            control.Transformation,
             HighlightColor
         );
 
@@ -87,10 +84,13 @@ public sealed class WordSplittingTool : CanvasToolBase
 
         var selectedElement = control.Elements[control.SelectedElements.First()].Item2;
 
-        var bounds = control.Transformation.MapRect(selectedElement.Bounds);
-        var point = control.Transformation.MapPoint(wordSplitterPosition);
-
-        canvas.DrawDashedLine(point.X, bounds.Top, point.X, bounds.Bottom, HighlightColor);
+        canvas.DrawDashedLine(
+            wordSplitterPosition.X,
+            selectedElement.Bounds.Top,
+            wordSplitterPosition.X,
+            selectedElement.Bounds.Bottom,
+            HighlightColor
+        );
     }
 
     private void DocumentCanvasOnMouseDown(object sender, MouseButtonEventArgs e)
@@ -116,13 +116,13 @@ public sealed class WordSplittingTool : CanvasToolBase
 
         e.Handled = true;
 
-        var position = e.GetPosition(canvas).ToSKPoint();
+        var normalizedPosition = SKPointI.Truncate(
+            canvas.Surface.InverseTransformation.MapPoint(e.GetPosition(canvas).ToSKPoint())
+        );
 
-        dragStart = position;
+        dragStart = normalizedPosition;
 
         Keyboard.Focus(canvas);
-
-        var normalizedPosition = SKPointI.Truncate(canvas.InverseTransformation.MapPoint(position));
 
         Ensure.IsValid(
             nameof(canvas.SelectedItems),
@@ -131,7 +131,7 @@ public sealed class WordSplittingTool : CanvasToolBase
         );
         Ensure.IsValid(
             nameof(canvas.SelectedItems),
-            canvas.SelectedItems.ValueOrFailure().First().NodeType == HocrNodeType.Word,
+            canvas.SelectedItems.Exists(items => items.First().NodeType == HocrNodeType.Word),
             "Expected selected node to be a word"
         );
 
@@ -177,11 +177,14 @@ public sealed class WordSplittingTool : CanvasToolBase
             return;
         }
 
-        var position = e.GetPosition(canvas).ToSKPoint();
+        var normalizedPosition = SKPointI.Truncate(
+            canvas.Surface.InverseTransformation.MapPoint(e.GetPosition(canvas).ToSKPoint())
+        );
 
-        var delta = canvas.InverseScaleTransformation.MapPoint(position - dragStart);
+        var delta = normalizedPosition - dragStart;
 
-        var hoveringOverSelection = canvas.Transformation.MapRect(canvas.CanvasSelection.Bounds).Contains(position);
+        var hoveringOverSelection =
+            canvas.CanvasSelection.Bounds.Contains(normalizedPosition);
 
         canvas.Cursor = hoveringOverSelection
             ? Cursors.SizeWE
@@ -189,7 +192,7 @@ public sealed class WordSplittingTool : CanvasToolBase
 
         if (isDraggingWordSplitter)
         {
-            var newLocation = canvas.InverseTransformation.MapPoint(dragStart) + delta;
+            var newLocation = dragStart + delta;
 
             var selectedElement = canvas.Elements[canvas.SelectedElements.First()].Item2;
 
@@ -201,7 +204,7 @@ public sealed class WordSplittingTool : CanvasToolBase
         canvas.Refresh();
     }
 
-    private void DocumentCanvasOnKeyDown(object sender, KeyEventArgs e)
+    private void DocumentCanvasOnPreviewKeyDown(object sender, KeyEventArgs e)
     {
         var canvas = (DocumentCanvas)sender;
 

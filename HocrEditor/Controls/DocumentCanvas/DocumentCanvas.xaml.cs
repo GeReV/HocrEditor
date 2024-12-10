@@ -235,22 +235,29 @@ public sealed partial class DocumentCanvas
 
         ClipToBounds = true;
 
+        Loaded += OnLoaded;
         Unloaded += OnUnloaded;
     }
 
-    private static void OnUnloaded(object sender, RoutedEventArgs e)
+    private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        var documentCanvas = (DocumentCanvas)sender;
-
-        documentCanvas.CanvasSelection.Dispose();
-
-        documentCanvas.bidi.Dispose();
+        KeyDown += OnKeyDown;
     }
 
-    protected override void OnKeyDown(KeyEventArgs e)
+    private void OnUnloaded(object sender, RoutedEventArgs e)
     {
-        base.OnKeyDown(e);
+        KeyDown -= OnKeyDown;
 
+        // TODO: Figure out proper disposal event.
+        // var documentCanvas = (DocumentCanvas)sender;
+        //
+        // documentCanvas.CanvasSelection.Dispose();
+        //
+        // documentCanvas.bidi.Dispose();
+    }
+
+    private void OnKeyDown(object sender, KeyEventArgs e)
+    {
         if (!ReferenceEquals(e.OriginalSource, this))
         {
             return;
@@ -275,7 +282,6 @@ public sealed partial class DocumentCanvas
                 e.Handled = true;
 
                 CenterTransformationDocument();
-                Refresh();
 
                 break;
             }
@@ -290,10 +296,10 @@ public sealed partial class DocumentCanvas
 
                 CenterTransformationSelection();
 
-                Refresh();
-
                 break;
             }
+            default:
+                return;
         }
     }
 
@@ -337,7 +343,7 @@ public sealed partial class DocumentCanvas
 
             newPage.SelectedNodes.CollectionChanged += documentCanvas.SelectedNodesOnCollectionChanged;
 
-            if (newPage.Nodes.Any())
+            if (newPage.Nodes.Count > 0)
             {
                 documentCanvas.BuildDocumentElements(newPage.Nodes);
 
@@ -484,14 +490,7 @@ public sealed partial class DocumentCanvas
             case NotifyCollectionChangedAction.Add:
                 if (e.NewItems != null)
                 {
-                    var isNewDocument = RootId < 0;
-
                     BuildDocumentElements(e.NewItems.Cast<HocrNodeViewModel>());
-
-                    if (isNewDocument)
-                    {
-                        CenterTransformationDocument();
-                    }
                 }
 
                 UpdateCanvasSelection();
@@ -541,7 +540,7 @@ public sealed partial class DocumentCanvas
                 ClearCanvasSelection();
                 break;
             default:
-                throw new ArgumentOutOfRangeException("e.Action");
+                throw new ArgumentOutOfRangeException();
         }
     }
 
@@ -584,7 +583,7 @@ public sealed partial class DocumentCanvas
                 ClearCanvasSelection();
                 break;
             default:
-                throw new ArgumentOutOfRangeException("e.Action");
+                throw new ArgumentOutOfRangeException();
         }
 
         ActiveTool = DocumentCanvasTools.SelectionTool;
@@ -797,12 +796,13 @@ public sealed partial class DocumentCanvas
 
     private void TextBox_OnLostFocus(object sender, RoutedEventArgs e)
     {
-        if (IsEditing)
-        {
-            OnNodeEdited(TextBox.Text);
-        }
+        var wasEditing = IsEditing;
+        var text = EndEditing();
 
-        EndEditing();
+        if (wasEditing)
+        {
+            OnNodeEdited(text);
+        }
     }
 
     private void TextBox_OnKeyDown(object sender, KeyEventArgs e)
@@ -814,41 +814,38 @@ public sealed partial class DocumentCanvas
 
         e.Handled = true;
 
-        EndEditing();
+        var text = EndEditing();
 
         if (e.Key == Key.Escape)
         {
             return;
         }
 
-        OnNodeEdited(TextBox.Text);
+        OnNodeEdited(text);
     }
 
     private void BeginEditing()
     {
-        var enumerable = SelectedItems.Map(set => set.AsEnumerable())
-            .Or(Enumerable.Empty<HocrNodeViewModel>())
-            .FlatMap(SelectionHelper.SelectEditable);
+        SelectedItems
+            .FlatMap(SelectionHelper.SelectEditable)
+            .MatchSome(
+                selectedItem =>
+                {
+                    selectedItem.IsEditing = true;
 
-        enumerable.MatchSome(
-            selectedItem =>
-            {
-                selectedItem.IsEditing = true;
+                    var paragraph = (HocrParagraph?)selectedItem.FindParent(HocrNodeType.Paragraph)?.HocrNode;
 
+                    TextBox.Text = selectedItem.InnerText;
 
-                var paragraph = (HocrParagraph?)selectedItem.FindParent(HocrNodeType.Paragraph)?.HocrNode;
+                    editingNode = Option.Some(selectedItem);
 
-                TextBox.Text = selectedItem.InnerText;
+                    TextBox.Visibility = Visibility.Visible;
+                    TextBox.FlowDirection =
+                        paragraph?.Direction == Direction.Rtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
 
-                editingNode = Option.Some(selectedItem);
-
-                TextBox.Visibility = Visibility.Visible;
-                TextBox.FlowDirection =
-                    paragraph?.Direction == Direction.Rtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
-
-                UpdateTextBox();
-            }
-        );
+                    UpdateTextBox();
+                }
+            );
     }
 
     private void UpdateTextBox() => Dispatcher.BeginInvoke(
@@ -899,7 +896,7 @@ public sealed partial class DocumentCanvas
         DispatcherPriority.Render
     );
 
-    public void EndEditing()
+    public string EndEditing()
     {
         TextBox.Visibility = Visibility.Collapsed;
 
@@ -911,5 +908,7 @@ public sealed partial class DocumentCanvas
                 editingNode = Option.None<HocrNodeViewModel>();
             }
         );
+
+        return TextBox.Text;
     }
 }
