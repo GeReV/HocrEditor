@@ -12,13 +12,14 @@
              xmlns:skia="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
              xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:commands="clr-namespace:HocrEditor.Commands">
+             xmlns:commands="clr-namespace:HocrEditor.Commands"
+             xmlns:controls="clr-namespace:HocrEditor.Controls"
+             xmlns:skiaSharp="clr-namespace:SkiaSharp;assembly=SkiaSharp">
     <Grid>
-        <Border BorderBrush="{x:Static SystemColors.ControlDarkBrush}"
-                BorderThickness="1">
-            <skia:SKElement Name="Surface"
-                            PaintSurface="Canvas_OnPaintSurface" />
-        </Border>
+        <controls:ZoomPanControl
+            x:Name="Surface"
+            Transform="{Binding Document.CurrentPage.PageTransformation, FallbackValue={x:Static skiaSharp:SKMatrix.Identity}}"
+            Paint="Canvas_OnPaint" />
         <Canvas Name="TextBoxLayout">
             <TextBox KeyDown="TextBox_OnKeyDown"
                      LostFocus="TextBox_OnLostFocus"

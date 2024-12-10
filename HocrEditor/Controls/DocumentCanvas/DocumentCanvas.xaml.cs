@@ -18,8 +18,6 @@ using Microsoft.Extensions.ObjectPool;
 using Optional;
 using Optional.Unsafe;
 using SkiaSharp;
-using SkiaSharp.Views.Desktop;
-using SkiaSharp.Views.WPF;
 using Rect = HocrEditor.Models.Rect;
 using Size = System.Windows.Size;
 
@@ -27,9 +25,6 @@ namespace HocrEditor.Controls;
 
 public sealed partial class DocumentCanvas
 {
-    private static readonly SKSize CenterPadding = new(-10.0f, -10.0f);
-
-
     private static SKColor GetNodeColor(HocrNodeViewModel node) => node switch
     {
         // Node colors based on the D3 color category "Paired": https://observablehq.com/@d3/color-schemes
@@ -40,11 +35,8 @@ public sealed partial class DocumentCanvas
         _ when node.NodeType is HocrNodeType.Word => new SKColor(0xfffb9a99),
         _ when node.NodeType is HocrNodeType.Image => new SKColor(0xffcab2d6),
         _ when node.IsLineElement => new SKColor(0xfffdbf6f),
-        _ => throw new ArgumentOutOfRangeException(nameof(node))
+        _ => throw new ArgumentOutOfRangeException(nameof(node)),
     };
-
-    private readonly ObjectPool<CanvasElement> elementPool =
-        new DefaultObjectPool<CanvasElement>(new DefaultPooledObjectPolicy<CanvasElement>());
 
     public static readonly DependencyProperty ViewModelProperty
         = DependencyProperty.Register(
@@ -224,8 +216,11 @@ public sealed partial class DocumentCanvas
 
     public event SelectionChangedEventHandler? SelectionChanged;
 
-    internal int RootId { get; set; } = -1;
+    internal int RootId { get; private set; } = -1;
     internal Dictionary<int, (HocrNodeViewModel, CanvasElement)> Elements { get; } = new();
+
+    private readonly ObjectPool<CanvasElement> elementPool =
+        new DefaultObjectPool<CanvasElement>(new DefaultPooledObjectPolicy<CanvasElement>());
 
     private CancellationTokenSource backgroundLoadCancellationTokenSource = new();
     private SKBitmapManager.SKBitmapReference? background;
@@ -242,16 +237,6 @@ public sealed partial class DocumentCanvas
     private Option<HocrNodeViewModel> editingNode = Option.None<HocrNodeViewModel>();
 
     public bool IsEditing => editingNode.HasValue;
-
-    internal SKMatrix Transformation { get; private set; } = SKMatrix.Identity;
-    internal SKMatrix InverseScaleTransformation { get; private set; } = SKMatrix.Identity;
-    internal SKMatrix InverseTransformation { get; private set; } = SKMatrix.Identity;
-    private SKMatrix scaleTransformation = SKMatrix.Identity;
-
-    private bool isPanning;
-
-    private SKPoint dragStart;
-    private SKPoint offsetStart;
 
     internal readonly CanvasSelection CanvasSelection = new();
     // private ResizeHandle? selectedResizeHandle;
@@ -661,8 +646,6 @@ public sealed partial class DocumentCanvas
 
         Mouse.Capture(this);
 
-        var position = e.GetPosition(this).ToSKPoint();
-
         if (e.ChangedButton != MouseButton.Middle)
         {
             // Noop.
@@ -670,12 +653,6 @@ public sealed partial class DocumentCanvas
         }
 
         e.Handled = true;
-
-        dragStart = position;
-
-        isPanning = true;
-
-        offsetStart = Transformation.MapPoint(SKPoint.Empty);
 
         Refresh();
     }
@@ -695,57 +672,9 @@ public sealed partial class DocumentCanvas
             return;
         }
 
-        if (!isPanning)
-        {
-            return;
-        }
-
         e.Handled = true;
 
-        isPanning = false;
-
         ReleaseMouseCapture();
-
-        Refresh();
-    }
-
-    protected override void OnMouseMove(MouseEventArgs e)
-    {
-        base.OnMouseMove(e);
-
-        if (!SelectedItems.HasValue)
-        {
-            return;
-        }
-
-        var position = e.GetPosition(this).ToSKPoint();
-
-        var delta = InverseScaleTransformation.MapPoint(position - dragStart);
-
-        if (isPanning)
-        {
-            e.Handled = true;
-
-            var newLocation = InverseTransformation.MapPoint(offsetStart) + delta;
-
-            UpdateTransformation(SKMatrix.CreateTranslation(newLocation.X, newLocation.Y));
-        }
-
-        Refresh();
-    }
-
-    protected override void OnMouseWheel(MouseWheelEventArgs e)
-    {
-        base.OnMouseWheel(e);
-
-        var delta = Math.Sign(e.Delta) * 3;
-
-        var pointerP = e.GetPosition(this).ToSKPoint();
-        var p = InverseTransformation.MapPoint(pointerP);
-
-        var newScale = (float)Math.Pow(2, delta * 0.05f);
-
-        UpdateTransformation(SKMatrix.CreateScale(newScale, newScale, p.X, p.Y));
 
         Refresh();
     }
@@ -807,106 +736,15 @@ public sealed partial class DocumentCanvas
         CanvasSelection.Bounds = NodeHelpers.CalculateUnionRect(allNodes).ToSKRectI();
     }
 
-    private void ResetTransformation()
-    {
-        Transformation = InverseTransformation = scaleTransformation = InverseScaleTransformation = SKMatrix.Identity;
-    }
+    private void CenterTransformationDocument() =>
+        Surface.CenterTransformation(RootCanvasElement.Bounds);
 
-    private void UpdateTransformation(SKMatrix matrix)
-    {
-        const float transformationScaleMin = 1 / 32.0f;
-        const float transformationScaleMax = 8.0f;
-
-        var nextTransformation = Transformation.PreConcat(matrix);
-
-        // TODO: Clamping to the exact zoom limits is not as straightforward as setting the scale, as the translation
-        //  needs to adapt. Figure it out.
-        if (nextTransformation.ScaleX < Transformation.ScaleX &&
-            nextTransformation.ScaleX < transformationScaleMin)
-        {
-            return;
-        }
-
-        if (nextTransformation.ScaleX > Transformation.ScaleX &&
-            nextTransformation.ScaleX > transformationScaleMax)
-        {
-            return;
-        }
-
-        Transformation = nextTransformation;
-
-        InverseTransformation = Transformation.Invert();
-
-        scaleTransformation.ScaleX = Transformation.ScaleX;
-        scaleTransformation.ScaleY = Transformation.ScaleY;
-
-        InverseScaleTransformation = InverseScaleTransformation with
-        {
-            ScaleX = InverseTransformation.ScaleX,
-            ScaleY = InverseTransformation.ScaleY
-        };
-    }
-
-    private void CenterTransformationDocument()
-    {
-        var documentBounds = RootCanvasElement.Bounds;
-
-        var controlSize = SKRect.Create(RenderSize.ToSKSize());
-
-        controlSize.Inflate(CenterPadding);
-
-        var fitBounds = controlSize.AspectFit(documentBounds.Size);
-
-        var resizeFactor = Math.Min(
-            fitBounds.Width / documentBounds.Width,
-            fitBounds.Height / documentBounds.Height
-        );
-
-        CenterTransformation(documentBounds, resizeFactor);
-    }
-
-    private void CenterTransformationSelection()
-    {
-        var controlSize = SKRect.Create(RenderSize.ToSKSize());
-
-        controlSize.Inflate(CenterPadding);
-
-        var fitBounds = controlSize.AspectFit(CanvasSelection.Size);
-
-        var resizeFactor = Math.Min(
-            fitBounds.Width / CanvasSelection.Width,
-            fitBounds.Height / CanvasSelection.Height
-        );
-
-        resizeFactor = (float)Math.Log(1.0f + resizeFactor) * 0.33f;
-
-        CenterTransformation(CanvasSelection.Bounds, resizeFactor);
-    }
-
-    private void CenterTransformation(SKRect rect, float resizeFactor)
-    {
-        ResetTransformation();
-
-        var scaleMatrix = SKMatrix.CreateScale(
-            resizeFactor,
-            resizeFactor
-        );
-
-        var controlSize = SKRect.Create(RenderSize.ToSKSize());
-
-        controlSize.Inflate(CenterPadding);
-
-        rect = scaleMatrix.MapRect(rect);
-
-        UpdateTransformation(
-            SKMatrix.CreateTranslation(controlSize.MidX - rect.MidX, controlSize.MidY - rect.MidY)
-                .PreConcat(scaleMatrix)
-        );
-    }
+    private void CenterTransformationSelection() =>
+        Surface.CenterTransformation(CanvasSelection.Bounds);
 
     public void Refresh()
     {
-        Dispatcher.InvokeAsync(Surface.InvalidateVisual, DispatcherPriority.Render);
+        _ = Dispatcher.InvokeAsync(Surface.InvalidateVisual, DispatcherPriority.Render);
 
         UpdateTextBox();
 
@@ -929,13 +767,9 @@ public sealed partial class DocumentCanvas
         }
     }
 
-    private void Canvas_OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
+    private void Canvas_OnPaint(object? sender, ZoomPanPaintEventArgs e)
     {
-        var canvas = e.Surface.Canvas;
-
-        canvas.Clear(SKColors.LightGray);
-
-        RenderCanvas(canvas);
+        RenderCanvas(e.Surface.Canvas);
     }
 
     private static IEnumerable<int> GetHierarchy(
@@ -944,7 +778,6 @@ public sealed partial class DocumentCanvas
         node.Descendants
             .Prepend(node)
             .Select(n => n.Id);
-
 
     internal void OnNodesChanged(IList<NodesChangedEventArgs.NodeChange> changes)
     {
@@ -1051,9 +884,13 @@ public sealed partial class DocumentCanvas
                 node =>
                 {
                     var element = Elements[node.Id].Item2;
-                    var rect = Transformation.MapRect(element.Bounds);
+                    var rect = Surface.Transform.MapRect(element.Bounds);
 
-                    var word = (HocrWord)node.HocrNode;
+                    if (node.HocrNode is not HocrWord word)
+                    {
+                        return;
+                    }
+
                     var line = (HocrLine)Elements[word.ParentId].Item1.HocrNode;
 
                     Canvas.SetLeft(TextBox, (int)rect.Left);
@@ -1061,7 +898,7 @@ public sealed partial class DocumentCanvas
                     TextBox.Width = rect.Width;
                     TextBox.Height = rect.Height;
 
-                    var fontSize = Transformation.ScaleX * line.FontSize * 0.6f;
+                    var fontSize = Surface.Transform.ScaleX * line.FontSize * 0.6f;
 
                     TextBox.FontSize = fontSize;
                     TextBlock.SetLineHeight(TextBox, fontSize);
@@ -1076,7 +913,7 @@ public sealed partial class DocumentCanvas
     private void UpdateSelectionPopup() => Dispatcher.BeginInvoke(
         () =>
         {
-            var bounds = Transformation.MapRect(CanvasSelection.Bounds);
+            var bounds = Surface.Transform.MapRect(CanvasSelection.Bounds);
 
             SelectionPopup.Visibility =
                 CanvasSelection.ShouldShowCanvasSelection
