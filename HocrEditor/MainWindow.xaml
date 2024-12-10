@@ -16,7 +16,8 @@
                  xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:commands="clr-namespace:HocrEditor.Commands"
-                 xmlns:system="clr-namespace:System;assembly=System.Runtime">
+                 xmlns:system="clr-namespace:System;assembly=System.Runtime"
+                 xmlns:adjustments="clr-namespace:HocrEditor.Controls.Adjustments">
     <Window.Resources>
         <converters:RadioButtonCheckedConverter x:Key="RadioButtonCheckedConverter" />
         <converters:NullableToBooleanConverter x:Key="NullableToBooleanConverter" />
@@ -208,6 +209,9 @@
                 <Button Command="{Binding ImportCommand}"
                         ToolTip="Import"
                         helpers:IconButton.Source="/Icons/document--plus.png" />
+                <Button Command="{Binding ProcessCommand}"
+                        ToolTip="Process"
+                        helpers:IconButton.Source="/Icons/control.png" />
                 <Button Command="Open"
                         ToolTip="Open"
                         helpers:IconButton.Source="/Icons/folder-open-document.png" />
@@ -333,9 +337,6 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
                 <Separator />
-                <ToggleButton IsChecked="{Binding Document.ShowThresholdedImage}"
-                              ToolTip="Show thresholded image"
-                              helpers:IconButton.Source="/Icons/contrast.png" />
                 <ToggleButton IsChecked="{Binding Document.ShowText}"
                               ToolTip="Show text"
                               helpers:IconButton.Source="/Icons/edit.png" />
@@ -361,11 +362,9 @@
                         </Grid.ColumnDefinitions>
                         <controls:DocumentCanvas Grid.Column="0"
                                                  ActiveTool="{Binding Document.CanvasTool}"
-                                                 IsShowThresholdedImage="{Binding Document.ShowThresholdedImage}"
                                                  IsShowText="{Binding Document.ShowText}"
                                                  IsShowNumbering="{Binding Document.ShowNumbering}"
                                                  ViewModel="{Binding Document.CurrentPage}"
-                                                 Margin="-1,0"
                                                  NodeVisibility="{Binding Document.NodeVisibility}"
                                                  NodesChanged="Canvas_OnNodesChanged"
                                                  NodesEdited="Canvas_OnNodeEdited"
@@ -382,7 +381,7 @@
                     </Grid>
                 </TabItem>
                 <TabItem Header="Adjustments">
-                    <controls:AdjustmentsControl
+                    <adjustments:AdjustmentsControl
                         ViewModel="{Binding Document.CurrentPage}"
                         />
                 </TabItem>

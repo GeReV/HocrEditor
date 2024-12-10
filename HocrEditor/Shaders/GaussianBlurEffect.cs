@@ -4,52 +4,68 @@ using SkiaSharp;
 
 namespace HocrEditor.Shaders;
 
-public class GaussianBlurEffect : IShader
+public class GaussianBlurEffect(uint kernelSize = 3) : IShader
 {
-    private SKShader image = SKShader.CreateEmpty();
-    private uint kernelSize = 3;
-
-    private readonly RuntimeEffect horizontalPass = new(HorizontalPassSource);
-    private readonly RuntimeEffect verticalPass = new(VerticalPassSource);
-
     private const uint MAX_KERNEL_SIZE = 63;
 
-    private static readonly string HorizontalPassSource = $@"
-uniform shader image;
-uniform float kernelSize;
-uniform float[{MAX_KERNEL_SIZE}] kernel;
+    private uint kernelSize = kernelSize;
 
-vec4 main(vec2 coord) {{
-    vec4 sum = vec4(0.0);
+    private static string HorizontalPassSource(uint kernelSize) => $$"""
+                                                                     uniform shader child;
+                                                                     uniform float[{{kernelSize}}] kernel;
 
-    for (int i = 0; i < kernelSize; i++) {{
-        float offset = i - (kernelSize - 1) * 0.5;
-        sum += sample(image, vec2(coord.x + offset, coord.y)) * kernel[i];
-    }}
+                                                                     vec4 main(vec2 coord) {
+                                                                         vec4 sum = vec4(0.0);
 
-    return sum;
-}}
-";
+                                                                         for (int i = 0; i < {{kernelSize}}; i++) {
+                                                                             float offset = float(i) - float({{kernelSize - 1}}) * 0.5;
+                                                                             sum += child.eval(vec2(coord.x + offset, coord.y)) * kernel[i];
+                                                                         }
 
-    private static readonly string VerticalPassSource = $@"
-uniform shader image;
-uniform float kernelSize;
-uniform float[{MAX_KERNEL_SIZE}] kernel;
+                                                                         return sum;
+                                                                     }
+                                                                     """;
 
-vec4 main(vec2 coord) {{
-    vec4 sum = vec4(0.0);
+    private static string VerticalPassSource(uint kernelSize) => $$"""
+                                                                   uniform shader child;
+                                                                   uniform float[{{kernelSize}}] kernel;
 
-    for (int i = 0; i < kernelSize; i++) {{
-        float offset = i - (kernelSize - 1) * 0.5;
-        sum += sample(image, vec2(coord.x, coord.y + offset)) * kernel[i];
-    }}
+                                                                   vec4 main(vec2 coord) {
+                                                                       vec4 sum = vec4(0.0);
 
-    return sum;
-}}
-";
+                                                                       for (int i = 0; i < {{kernelSize}}; i++) {
+                                                                           float offset = float(i) - float({{kernelSize - 1}}) * 0.5;
+                                                                           sum += child.eval(vec2(coord.x, coord.y + offset)) * kernel[i];
+                                                                       }
+
+                                                                       return sum;
+                                                                   }
+                                                                   """;
+
+    private RuntimeEffect horizontalPass = new(HorizontalPassSource(kernelSize));
+    private RuntimeEffect verticalPass = new(VerticalPassSource(kernelSize));
+
+    public SKShader Image { get; set; } = SKShader.CreateEmpty();
+
+    public uint KernelSize
+    {
+        get => kernelSize;
+        set
+        {
+            var newSize = Math.Clamp(value, 1, MAX_KERNEL_SIZE);
+            if (kernelSize == newSize)
+            {
+                return;
+            }
+
+            kernelSize = newSize;
+
+            RebuildShaders();
+        }
+    }
 
     // https://docs.opencv.org/3.3.1/d4/d86/group__imgproc__filter.html#gac05a120c1ae92a6060dd0db190a61afa
-    public static float[] GetGaussianKernel(uint size)
+    private static float[] GetGaussianKernel(uint size)
     {
         if ((size & 1) == 0)
         {
@@ -77,46 +93,21 @@ vec4 main(vec2 coord) {{
         return coefficients;
     }
 
-    public GaussianBlurEffect()
+    private void RebuildShaders()
     {
-    }
+        horizontalPass.Dispose();
+        verticalPass.Dispose();
 
-    public GaussianBlurEffect(SKShader image, uint kernelSize = 3)
-    {
-        Image = image;
-        KernelSize = kernelSize;
-    }
-
-    public SKShader Image
-    {
-        get => image;
-        set
-        {
-            image = value;
-            horizontalPass.Children["image"] = value;
-        }
-    }
-
-    public uint KernelSize
-    {
-        get => kernelSize;
-        set
-        {
-            kernelSize = Math.Clamp(value, 1, MAX_KERNEL_SIZE);
-
-            var kernel = new float[MAX_KERNEL_SIZE];
-            var coefficients = GetGaussianKernel(kernelSize);
-
-            Array.Copy(coefficients, kernel, coefficients.Length);
-
-            verticalPass.Uniforms["kernel"] = horizontalPass.Uniforms["kernel"] = kernel;
-            verticalPass.Uniforms["kernelSize"] = horizontalPass.Uniforms["kernelSize"] = kernelSize;
-        }
+        horizontalPass = new RuntimeEffect(HorizontalPassSource(kernelSize));
+        verticalPass = new RuntimeEffect(VerticalPassSource(kernelSize));
     }
 
     public SKShader ToShader()
     {
-        verticalPass.Children["image"] = horizontalPass.ToShader();
+        verticalPass.Uniforms["kernel"] = horizontalPass.Uniforms["kernel"] = GetGaussianKernel(kernelSize);
+
+        horizontalPass.Children["child"] = Image;
+        verticalPass.Children["child"] = horizontalPass.ToShader();
 
         return verticalPass.ToShader();
     }
@@ -125,6 +116,8 @@ vec4 main(vec2 coord) {{
     {
         verticalPass.Dispose();
         horizontalPass.Dispose();
+
+        Image.Dispose();
 
         GC.SuppressFinalize(this);
     }

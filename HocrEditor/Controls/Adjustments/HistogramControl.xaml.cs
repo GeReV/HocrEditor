@@ -1,13 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using HocrEditor.Helpers;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
 using SkiaSharp.Views.WPF;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace HocrEditor.Controls;
 
@@ -17,14 +20,14 @@ public partial class HistogramControl : UserControl
 
     public static readonly DependencyProperty ValuesProperty = DependencyProperty.Register(
         nameof(Values),
-        typeof(int[]),
+        typeof(IReadOnlyList<int>),
         typeof(HistogramControl),
         new PropertyMetadata(Array.Empty<int>(), UpdateView, CoerceValues)
     );
 
-    public int[] Values
+    public IReadOnlyList<int> Values
     {
-        get => (int[])GetValue(ValuesProperty);
+        get => (IReadOnlyList<int>)GetValue(ValuesProperty);
         set => SetValue(ValuesProperty, value);
     }
 
@@ -32,7 +35,12 @@ public partial class HistogramControl : UserControl
         nameof(Value),
         typeof(int),
         typeof(HistogramControl),
-        new PropertyMetadata(default(int), UpdateView, CoerceValue)
+        new FrameworkPropertyMetadata(
+            HISTOGRAM_WIDTH / 2,
+            FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+            UpdateView,
+            CoerceValue
+        )
     );
 
     public int Value
@@ -58,7 +66,7 @@ public partial class HistogramControl : UserControl
         nameof(BorderColor),
         typeof(Color),
         typeof(HistogramControl),
-        new PropertyMetadata(Colors.Black, UpdateView)
+        new PropertyMetadata(Colors.DarkGray, UpdateView)
     );
 
     public Color BorderColor
@@ -128,7 +136,10 @@ public partial class HistogramControl : UserControl
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        Value = MarkerPosition;
+        foreach (var element in this.FindVisualChildren<TickBar>())
+        {
+            element.Visibility = Visibility.Collapsed;
+        }
     }
 
     private static void UpdateView(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -168,17 +179,17 @@ public partial class HistogramControl : UserControl
         var info = e.Info;
         var canvas = e.Surface.Canvas;
 
-        using var paint = new SKPaint(new SKFont(SKTypeface.Default, 10.0f))
-        {
-            StrokeWidth = 0,
-        };
+        using var font = new SKFont(SKTypeface.Default, 10.0f);
+
+        using var paint = new SKPaint();
+        paint.StrokeWidth = 0;
 
         var x = Math.Max((int)HistogramMargin.Left, (info.Width - HISTOGRAM_WIDTH) / 2);
         var histogramRect = new SKRectI(
             x,
             (int)HistogramMargin.Top,
             x + HISTOGRAM_WIDTH,
-            (int)(info.Height - HistogramMargin.Bottom - paint.TextSize)
+            (int)(info.Height - HistogramMargin.Bottom - font.Size)
         );
 
         canvas.Clear(SKColors.White);
@@ -195,10 +206,16 @@ public partial class HistogramControl : UserControl
         paint.Color = MarkerColor.ToSKColor();
         DrawMarker(canvas, histogramRect, MarkerPosition, paint);
 
-        paint.Color = BorderColor.ToSKColor();
+        paint.Color = LineColor.ToSKColor();
         var labelTop = (float)(histogramRect.Bottom + HistogramMargin.Bottom);
-        DrawLabel("0", histogramRect.Left - 1, labelTop, canvas, paint);
-        DrawLabel("255", histogramRect.Right + 1, labelTop, canvas, paint);
+
+        var text = "0";
+        font.MeasureText(text, out var textBounds, paint);
+        DrawLabel(text, histogramRect.Left - 1, labelTop + textBounds.Height, canvas, paint, font);
+
+        text = "255";
+        font.MeasureText(text, out textBounds, paint);
+        DrawLabel(text, histogramRect.Right + 1 - textBounds.Width, labelTop + textBounds.Height, canvas, paint, font);
     }
 
     private static void DrawMarker(SKCanvas canvas, SKRectI histogramRect, int markerPosition, SKPaint paint)
@@ -219,10 +236,15 @@ public partial class HistogramControl : UserControl
         }
     }
 
-    private static void DrawHistogramLines(SKCanvas canvas, SKRectI histogramRect, int[] values, SKPaint paint)
+    private static void DrawHistogramLines(
+        SKCanvas canvas,
+        SKRectI histogramRect,
+        IReadOnlyList<int> values,
+        SKPaint paint
+    )
     {
-        var max = values.Length > 0 ? values.Max() : 1.0f;
-        for (var i = 0; i < values.Length; i++)
+        var max = values.Count > 0 ? values.Max() : 1.0f;
+        for (var i = 0; i < values.Count; i++)
         {
             var position = histogramRect.Left + i;
             var top = histogramRect.Bottom - values[i] / max * histogramRect.Height;
@@ -240,26 +262,30 @@ public partial class HistogramControl : UserControl
             histogramRect.Bottom,
             paint
         );
-        canvas.DrawLine(histogramRect.Left - 1, histogramRect.Bottom, histogramRect.Left - 1, histogramRect.Top, paint);
+        canvas.DrawLine(
+            histogramRect.Left - 1,
+            histogramRect.Top,
+            histogramRect.Left - 1,
+            histogramRect.Bottom,
+            paint
+        );
         canvas.DrawLine(
             histogramRect.Right + 1,
-            histogramRect.Bottom,
-            histogramRect.Right + 1,
             histogramRect.Top,
+            histogramRect.Right + 1,
+            histogramRect.Bottom + 1,
             paint
         );
     }
 
-    private static void DrawLabel(string text, float centerX, float topY, SKCanvas canvas, SKPaint paint)
+    private static void DrawLabel(string text, float x, float y, SKCanvas canvas, SKPaint paint, SKFont font)
     {
-        var textBounds = SKRect.Empty;
-
-        paint.MeasureText(text, ref textBounds);
-
         canvas.DrawText(
             text,
-            centerX - textBounds.MidX,
-            topY + textBounds.Height,
+            x,
+            y,
+            SKTextAlign.Left,
+            font,
             paint
         );
     }

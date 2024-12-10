@@ -1,12 +1,15 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
-using HocrEditor.ImageProcessing;
-using HocrEditor.Shaders;
+using System.Windows.Threading;
+using HocrEditor.Helpers;
 using HocrEditor.ViewModels;
 using SkiaSharp;
 using UserControl = System.Windows.Controls.UserControl;
 
-namespace HocrEditor.Controls;
+namespace HocrEditor.Controls.Adjustments;
 
 public partial class AdjustmentsControl : UserControl
 {
@@ -15,7 +18,7 @@ public partial class AdjustmentsControl : UserControl
             nameof(ViewModel),
             typeof(HocrPageViewModel),
             typeof(AdjustmentsControl),
-            new PropertyMetadata(
+            new FrameworkPropertyMetadata(
                 defaultValue: null,
                 ViewModelChanged
             )
@@ -37,118 +40,130 @@ public partial class AdjustmentsControl : UserControl
         }
     }
 
-    private GRContext grContext;
+    private SKRectI clipRect = SKRectI.Empty;
 
-    private SKImage? blurred;
-    private SKSurface surface;
+    private SKShader shader = SKShader.CreateEmpty();
 
     public AdjustmentsControl()
     {
-        grContext = GRContext.CreateGl();
-        surface = SKSurface.Create(grContext, budgeted: true, new SKImageInfo(1, 1));
-
         InitializeComponent();
 
+        Loaded += OnLoaded;
         Unloaded += OnUnloaded;
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        UpdateImage();
     }
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
-        // TODO: Figure out proper disposal event.
-        // blurred?.Dispose();
-        //
-        // surface.Dispose();
-        // grContext.Dispose();
+        shader.Dispose();
     }
 
     private static void ViewModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var view = (AdjustmentsControl)d;
 
+        if (e.OldValue is HocrPageViewModel oldViewModel)
+        {
+            oldViewModel.PropertyChanged -= view.ViewModelOnPropertyChanged;
+            oldViewModel.AdjustmentFilters.CollectionChanged -= view.AdjustmentFiltersCollectionChanged;
+            oldViewModel.AdjustmentFilters.UnsubscribeItemPropertyChanged(view.AdjustmentFiltersChanged);
+        }
+
         if (e.NewValue is not HocrPageViewModel viewModel)
         {
             return;
         }
 
-        viewModel.Image.GetBitmap()
-            .ContinueWith(
-                async bitmapTask =>
-                {
-                    var bitmap = await bitmapTask;
+        viewModel.PropertyChanged += view.ViewModelOnPropertyChanged;
+        viewModel.AdjustmentFilters.CollectionChanged += view.AdjustmentFiltersCollectionChanged;
+        viewModel.AdjustmentFilters.SubscribeItemPropertyChanged(view.AdjustmentFiltersChanged);
 
-                    view.surface.Dispose();
-                    view.grContext.Dispose();
-
-                    view.grContext = GRContext.CreateGl();
-                    view.surface = SKSurface.Create(
-                        view.grContext,
-                        budgeted: true,
-                        new SKImageInfo(bitmap.Width, bitmap.Height)
-                    );
-
-                    view.blurred?.Dispose();
-                    view.blurred = CreateBlurredImage(view.surface, SKImage.FromBitmap(bitmap));
-
-                    var thresholder = new Thresholder(view.blurred);
-                    var threshold = thresholder.OtsuBinarization();
-
-                    view.Histogram.MarkerPosition = view.Histogram.Value = (int)(threshold * 255);
-                    view.Histogram.Values = thresholder.Histogram.Values.ToArray();
-
-                    view.Canvas.InvalidateVisual();
-                },
-                TaskScheduler.FromCurrentSynchronizationContext()
-            );
-    }
-
-    private void Canvas_OnPaint(object? sender, ZoomPanPaintEventArgs e)
-    {
-        if (ViewModel is null)
+        if (!view.IsVisible)
         {
             return;
         }
 
-        using var snapshot = surface.Snapshot();
-
-        e.Surface.Canvas.DrawImage(snapshot, SKPoint.Empty);
+        view.UpdateImage();
+        view.Refresh();
     }
 
-    private void Slider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+
+    private void ViewModelOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (string.Equals(e.PropertyName, nameof(HocrPageViewModel.Image), System.StringComparison.Ordinal))
+        {
+            UpdateImage();
+        }
+    }
+
+    private void AdjustmentFiltersCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         UpdateImage();
     }
 
+    private void AdjustmentFiltersChanged(object? sender, PropertyChangedEventArgs propertyChangedEventArgs)
+    {
+        var shouldUpdate = propertyChangedEventArgs.PropertyName switch
+        {
+            nameof(ViewModelBase.IsChanged) => false,
+            nameof(IImageFilter.IsEnabled) => true,
+            { } propertyName when sender is IImageFilter imageFilter => imageFilter.ShouldUpdateImageOnPropertyChange(propertyName),
+            _ => false,
+        };
+
+
+        if (shouldUpdate)
+        {
+            UpdateImage();
+        }
+    }
+
+    private void Canvas_OnPaint(object? sender, ZoomPanPaintEventArgs e)
+    {
+        using var paint = new SKPaint();
+        paint.Shader = shader;
+
+        e.Surface.Canvas.Clear(SKColors.LightGray);
+        e.Surface.Canvas.DrawRect(clipRect, paint);
+    }
+
     private void UpdateImage()
     {
-        if (blurred is null)
-        {
-            return;
-        }
+        Dispatcher.InvokeAsync(
+            () =>
+            {
 
-        using var thresholdEffect = new ThresholdEffect(blurred.ToShader(), Histogram.Value / 255.0f);
+                if (ViewModel == null)
+                {
+                    return;
+                }
 
-        using var paintThreshold = new SKPaint { Shader = thresholdEffect.ToShader() };
+                _ = ViewModel.Image.GetBitmap()
+                    .ContinueWith(
+                        bitmapTask =>
+                        {
+                            var bitmap = bitmapTask.Result;
 
-        surface.Canvas.DrawPaint(paintThreshold);
+                            clipRect = bitmap.Info.Rect;
 
-        Refresh();
+                            shader.Dispose();
+                            shader = ViewModel.AdjustmentFilters.ApplyFilters(bitmap);
+
+                            Refresh();
+                        },
+                        TaskScheduler.FromCurrentSynchronizationContext()
+                    );
+            },
+            DispatcherPriority.Render
+        );
     }
 
     private void Refresh()
     {
         Canvas.InvalidateVisual();
-        Canvas.UpdateLayout();
-    }
-
-    private static SKImage CreateBlurredImage(SKSurface surface, SKImage source)
-    {
-        using var gaussianBlur = new GaussianBlurEffect(source);
-        using var grayscale = new GrayscaleEffect(gaussianBlur.ToShader());
-
-        using var paintGrayscale = new SKPaint { Shader = grayscale.ToShader() };
-
-        surface.Canvas.DrawPaint(paintGrayscale);
-
-        return surface.Snapshot();
     }
 }

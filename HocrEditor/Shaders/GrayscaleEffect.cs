@@ -6,14 +6,16 @@ public class GrayscaleEffect : RuntimeEffect
 {
     private SKShader image = SKShader.CreateEmpty();
 
-    private const string SOURCE = @"
-uniform shader image;
+    private const string SOURCE = """
 
-vec4 main(vec2 coord) {
-    const vec3 luma = vec3(0.299, 0.587, 0.114);
+                                  uniform shader child;
 
-    return vec3(dot(sample(image, coord).rgb, luma)).rgb1;
-}";
+                                  vec4 main(vec2 coord) {
+                                      const vec3 luma = vec3(0.299, 0.587, 0.114);
+
+                                      return vec3(dot(child.eval(coord).rgb, luma)).rgb1;
+                                  }
+                                  """;
 
     public GrayscaleEffect() : base(SOURCE) {}
 
@@ -28,7 +30,7 @@ vec4 main(vec2 coord) {
         set
         {
             image = value;
-            Children["image"] = value;
+            Children["child"] = value;
         }
     }
 }

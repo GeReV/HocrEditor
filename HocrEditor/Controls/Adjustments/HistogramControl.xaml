@@ -8,83 +8,14 @@
              mc:Ignorable="d"
              d:DesignHeight="300"
              d:DesignWidth="300">
-    <UserControl.Resources>
-        <Style x:Key="SliderThumbStyle"
-               TargetType="{x:Type Thumb}"
-               BasedOn="{StaticResource {x:Type Thumb}}">
-            <Setter Property="SnapsToDevicePixels"
-                    Value="true" />
-            <Setter Property="UseLayoutRounding"
-                    Value="True" />
-            <!-- <Setter Property="Width" Value=""></Setter> -->
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Thumb">
-                        <Polygon Name="Thumb"
-                                 Points="1,5 6,0 12,6 12,19 1,19"
-                                 StrokeThickness="1"
-                                 RenderOptions.EdgeMode="Aliased">
-                            <Polygon.Fill>
-                                <SolidColorBrush Color="{x:Static SystemColors.ControlColor}" />
-                            </Polygon.Fill>
-                            <Polygon.Stroke>
-                                <SolidColorBrush Color="{x:Static SystemColors.ControlDarkColor}" />
-                            </Polygon.Stroke>
-                            <VisualStateManager.VisualStateGroups>
-                                <VisualStateGroup x:Name="CommonStates">
-                                    <VisualState x:Name="Normal" />
-                                    <VisualState x:Name="MouseOver">
-                                        <Storyboard>
-                                            <ColorAnimation Duration="0"
-                                                            Storyboard.TargetProperty="(Shape.Stroke).(SolidColorBrush.Color)"
-                                                            Storyboard.TargetName="Thumb"
-                                                            To="{x:Static SystemParameters.WindowGlassColor}" />
-                                            <!-- <ColorAnimation Duration="0" -->
-                                            <!--                 Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)" -->
-                                            <!--                 Storyboard.TargetName="Thumb" -->
-                                            <!--                 To="{x:Static SystemColors.HighlightColor}" /> -->
-                                        </Storyboard>
-                                    </VisualState>
-                                    <VisualState x:Name="Pressed">
-                                        <Storyboard>
-                                            <ColorAnimation Duration="0"
-                                                            Storyboard.TargetProperty="(Shape.Stroke).(SolidColorBrush.Color)"
-                                                            Storyboard.TargetName="Thumb"
-                                                            To="{x:Static SystemParameters.WindowGlassColor}" />
-                                            <ColorAnimation Duration="0"
-                                                            Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)"
-                                                            Storyboard.TargetName="Thumb"
-                                                            To="{x:Static SystemColors.ControlLightColor}" />
-                                        </Storyboard>
-                                    </VisualState>
-                                    <VisualState x:Name="Disabled">
-                                        <Storyboard>
-                                            <ColorAnimation Duration="0"
-                                                            Storyboard.TargetProperty="(Shape.Stroke).(SolidColorBrush.Color)"
-                                                            Storyboard.TargetName="Thumb"
-                                                            To="{x:Static SystemColors.ControlLightColor}" />
-                                            <ColorAnimation Duration="0"
-                                                            Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)"
-                                                            Storyboard.TargetName="Thumb"
-                                                            To="{x:Static SystemColors.ControlLightLightColor}" />
-                                        </Storyboard>
-                                    </VisualState>
-                                </VisualStateGroup>
-                            </VisualStateManager.VisualStateGroups>
-                        </Polygon>
-
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="120" />
-            <RowDefinition Height="20" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <wpf:SKElement Grid.Row="0"
                        Name="Surface"
+                       Margin="0,6,0,0"
                        PaintSurface="Canvas_OnPaintSurface" />
         <Slider Grid.Row="1"
                 x:Name="Slider"
@@ -96,49 +27,8 @@
                 Width="270"
                 IsSnapToTickEnabled="True"
                 TickFrequency="1"
+                TickPlacement="TopLeft"
                 IsEnabled="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                ValueChanged="Slider_OnValueChanged">
-            <Slider.Template>
-                <ControlTemplate TargetType="Slider">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"
-                                           MinHeight="{TemplateBinding MinHeight}" />
-                        </Grid.RowDefinitions>
-                        <Border x:Name="TrackBackground"
-                                Margin="0"
-                                Height="4"
-                                Grid.Row="0"
-                                BorderThickness="1">
-                            <Border.Style>
-                                <Style>
-                                    <Setter Property="Border.Background"
-                                            Value="{x:Static SystemColors.ControlBrush}" />
-                                    <Setter Property="Border.BorderBrush"
-                                            Value="{x:Static SystemColors.ControlDarkBrush}" />
-                                    <Style.Triggers>
-                                        <Trigger Property="Border.IsEnabled"
-                                                 Value="False">
-                                            <Trigger.Setters>
-                                                <Setter Property="Border.Background"
-                                                        Value="{x:Static SystemColors.ControlLightLightBrush}" />
-                                                <Setter Property="Border.BorderBrush"
-                                                        Value="{x:Static SystemColors.ControlLightBrush}" />
-                                            </Trigger.Setters>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                        </Border>
-                        <Track Grid.Row="0"
-                               x:Name="PART_Track">
-                            <Track.Thumb>
-                                <Thumb Style="{StaticResource SliderThumbStyle}" />
-                            </Track.Thumb>
-                        </Track>
-                    </Grid>
-                </ControlTemplate>
-            </Slider.Template>
-        </Slider>
+                ValueChanged="Slider_OnValueChanged" />
     </Grid>
 </UserControl>

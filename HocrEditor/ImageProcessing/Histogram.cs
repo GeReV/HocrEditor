@@ -9,13 +9,9 @@ public class Histogram
     private const int LENGTH = 256;
     private readonly int[] values = new int[LENGTH];
 
-    public Histogram(SKImage image)
+    public Histogram(ReadOnlySpan<byte> bytes, int bytesPerPixel)
     {
-        using var pixmap = image.ToRasterImage(ensurePixelData: true).PeekPixels();
-
-        var bytes = pixmap.GetPixelSpan();
-
-        for (var i = 0; i < bytes.Length; i += pixmap.BytesPerPixel)
+        for (var i = 0; i < bytes.Length; i += bytesPerPixel)
         {
             values[bytes[i]] += 1;
         }

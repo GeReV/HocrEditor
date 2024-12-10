@@ -1,18 +1,17 @@
 ﻿using System;
+using System.Diagnostics;
+using HocrEditor.Core;
 using SkiaSharp;
 
 namespace HocrEditor.Shaders;
 
 public class RuntimeEffect : IShader
 {
-    private readonly bool isOpaque;
     private readonly SKRuntimeEffect effect;
 
-    public RuntimeEffect(string source, bool isOpaque = false)
+    public RuntimeEffect(string source)
     {
-        this.isOpaque = isOpaque;
-
-        effect = SKRuntimeEffect.Create(source, out var errors);
+        effect = SKRuntimeEffect.CreateShader(source, out var errors);
 
         if (errors is not null)
         {
@@ -27,7 +26,7 @@ public class RuntimeEffect : IShader
 
     public SKRuntimeEffectChildren Children { get; }
 
-    public SKShader ToShader() => effect.ToShader(isOpaque, Uniforms, Children);
+    public SKShader ToShader() => effect.ToShader(Uniforms, Children);
 
     public void Dispose()
     {

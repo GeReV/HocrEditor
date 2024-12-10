@@ -2,22 +2,21 @@
 
 namespace HocrEditor.Shaders;
 
-public class ThresholdEffect : RuntimeEffect
+public class ThresholdEffect() : RuntimeEffect(SOURCE)
 {
     private SKShader image = SKShader.CreateEmpty();
     private float threshold;
 
-    private const string SOURCE = @"
-uniform shader image;
-uniform float threshold;
+    private const string SOURCE = """
+                                  uniform shader child;
+                                  uniform float threshold;
 
-vec4 main(vec2 coord) {
-    float binary = sample(image, coord).r >= threshold ? 1.0 : 0.0;
+                                  vec4 main(vec2 coord) {
+                                      float binary = child.eval(coord).r >= threshold ? 1.0 : 0.0;
 
-    return vec4(binary).rgb1;
-}";
-
-    public ThresholdEffect() : base(SOURCE) {}
+                                      return vec4(binary).rgb1;
+                                  }
+                                  """;
 
     public ThresholdEffect(SKShader image, float threshold = 0.5f) : this()
     {
@@ -31,7 +30,7 @@ vec4 main(vec2 coord) {
         set
         {
             image = value;
-            Children["image"] = value;
+            Children["child"] = value;
         }
     }
 

@@ -1,17 +1,14 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using HocrEditor.Helpers;
 using SkiaSharp;
 
 namespace HocrEditor.ImageProcessing;
 
-public class Thresholder
+public class Thresholder(ReadOnlySpan<byte> bytes, int bytesPerPixel)
 {
-    public readonly Histogram Histogram;
+    public readonly Histogram Histogram = new(bytes, bytesPerPixel);
 
-    public Thresholder(SKImage snapshot)
-    {
-        Histogram = new Histogram(snapshot);
-    }
     public float OtsuBinarization()
     {
         var bins = Enumerable.Range(0, 256).ToArray();
@@ -76,6 +73,6 @@ public class Thresholder
             }
         }
 
-        return thresh / 256.0f;
+        return thresh / 255.0f;
     }
 }

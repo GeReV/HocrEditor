@@ -37,21 +37,9 @@ namespace HocrEditor.ViewModels
         public SKBitmapManager.SKBitmapReference Image =>
             ImageCache.Get(ImageFilename, () => SKBitmap.Decode(ImageFilename));
 
-        public SKBitmapManager.SKBitmapReference ThresholdedImage =>
-            ImageCache.Get(
-                $"{ImageFilename}-thresholded",
-                async () =>
-                {
-                    using var service = new TesseractService(
-                        Settings.TesseractPath ?? string.Empty,
-                        Enumerable.Empty<string>()
-                    );
-
-                    var originalBitmap = await Image.GetBitmap().ConfigureAwait(false);
-
-                    return service.GetThresholdedImage(originalBitmap);
-                }
-            );
+        public Task<SKBitmap> ThresholdedBitmap =>
+            Image.GetBitmap()
+                .ContinueWith(bitmap => AdjustmentFilters.GenerateThresholdedImage(bitmap.Result));
 
         public Direction Direction
         {
@@ -79,6 +67,8 @@ namespace HocrEditor.ViewModels
         }
 
         public ClipboardViewModel Clipboard { get; } = new();
+
+        public AdjustmentFilters AdjustmentFilters { get; } = new();
 
         public HocrPageViewModel(HocrPage page) :
             this(page.ImageFilename)
@@ -240,9 +230,10 @@ namespace HocrEditor.ViewModels
 
             SelectedNodes.CollectionChanged -= HandleSelectedNodesChanged;
 
+            AdjustmentFilters.Dispose();
+
             Nodes.CollectionChanged -= HandleNodesChanged;
             Nodes.UnsubscribeItemPropertyChanged(HandleNodePropertyChanged);
-
             Nodes.Dispose();
         }
     }

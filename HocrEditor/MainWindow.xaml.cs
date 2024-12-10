@@ -54,7 +54,7 @@ namespace HocrEditor
 
             var languages = TesseractService.GetLanguages(tesseractPath);
 
-            if (!languages.Any())
+            if (languages.Length == 0)
             {
                 throw new InvalidOperationException("Tesseract returned no available languages.");
             }
@@ -89,7 +89,7 @@ namespace HocrEditor
                         // Selected languages rise up.
                         (-1, _) => 1,
                         (_, -1) => -1,
-                        _ => indexA.CompareTo(indexB)
+                        _ => indexA.CompareTo(indexB),
                     };
                 }
             );
@@ -159,7 +159,7 @@ namespace HocrEditor
 
             var otherVisibilities = ViewModel.Document.NodeVisibility.Where(nv => nv != currentNodeVisibility).ToList();
 
-            if (otherVisibilities.All(v => v.Visible == isChecked))
+            if (otherVisibilities.TrueForAll(v => v.Visible == isChecked))
             {
                 isChecked = !isChecked;
             }
