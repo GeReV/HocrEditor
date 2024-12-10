@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
@@ -11,16 +9,10 @@ using SkiaSharp;
 
 namespace HocrEditor.Commands;
 
-public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewModel>>
+public class CropNodesCommand(HocrPageViewModel hocrPageViewModel)
+    : UndoableCommandBase<ICollection<HocrNodeViewModel>>(hocrPageViewModel)
 {
     private const int WORD_CROP_PADDING = 1;
-
-    private readonly HocrPageViewModel hocrPageViewModel;
-
-    public CropNodesCommand(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
-    {
-        this.hocrPageViewModel = hocrPageViewModel;
-    }
 
     public override bool CanExecute(ICollection<HocrNodeViewModel>? nodes) => nodes is { Count: > 0 };
 
@@ -51,19 +43,17 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
             .Where(n => n.NodeType == HocrNodeType.Word)
             .ToList();
 
-        if (words.Any())
+        if (words.Count != 0)
         {
-            hocrPageViewModel.ThresholdedImage
-                .GetBitmap()
+            hocrPageViewModel.ThresholdedBitmap
                 .ContinueWith(
                     async task =>
                     {
                         var thresholdedImage = await task.ConfigureAwait(false);
 
-                        foreach (var word in words)
-                        {
-                            commands.Add(
-                                PropertyChangeCommand.FromProperty(
+                        commands.AddRange(
+                            words.Select(
+                                word => PropertyChangeCommand.FromProperty(
                                     word,
                                     n => n.BBox,
                                     oldBounds =>
@@ -81,8 +71,8 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
                                         return croppedBounds;
                                     }
                                 )
-                            );
-                        }
+                            )
+                        );
                     }
                 )
                 .Wait();
