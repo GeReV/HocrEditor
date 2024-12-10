@@ -46,7 +46,14 @@ namespace HocrEditor.Models
                     }
                 },
                 "ocr_line" => new HocrLine(id, parentId, title, language, direction, children),
-                "ocrx_word" => new HocrWord(id, parentId, title, language, direction, htmlNode.InnerText.Trim('\u200E')), // Trim left-to-right marks.
+                "ocrx_word" => new HocrWord(
+                    id,
+                    parentId,
+                    title,
+                    language,
+                    direction,
+                    htmlNode.InnerText.Trim('\u200E')
+                ), // Trim left-to-right marks.
                 "ocr_textfloat" => new HocrTextFloat(id, parentId, title, language, direction, children),
                 "ocr_caption" => new HocrCaption(id, parentId, title, language, direction, children),
                 "ocr_header" => new HocrHeader(id, parentId, title, language, direction, children),
