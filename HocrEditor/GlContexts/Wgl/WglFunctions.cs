@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+// ReSharper disable InconsistentNaming
 
 namespace HocrEditor.GlContexts.Wgl
 {
-	internal class WglFunctions
+	internal static class WglFunctions
 	{
 		private const string OPENGL32 = "opengl32.dll";
 
@@ -73,14 +74,14 @@ namespace HocrEditor.GlContexts.Wgl
 		static WglFunctions()
 		{
 			// save the current GL context
-			var prevDC = WglFunctions.wglGetCurrentDC();
-			var prevGLRC = WglFunctions.wglGetCurrentContext();
+			var prevDC = wglGetCurrentDC();
+			var prevGLRC = wglGetCurrentContext();
 
 			// register the dummy window class
 			wc = new WNDCLASS
 			{
 				style = (User32.CS_HREDRAW | User32.CS_VREDRAW | User32.CS_OWNDC),
-				lpfnWndProc = (WNDPROC)User32.DefWindowProc,
+				lpfnWndProc = User32.DefWindowProc,
 				cbClsExtra = 0,
 				cbWndExtra = 0,
 				hInstance = Kernel32.CurrentModuleHandle,
@@ -88,7 +89,7 @@ namespace HocrEditor.GlContexts.Wgl
 				hIcon = User32.LoadIcon(IntPtr.Zero, (IntPtr)User32.IDI_WINLOGO),
 				hbrBackground = IntPtr.Zero,
 				lpszMenuName = null,
-				lpszClassName = "DummyClass"
+				lpszClassName = "DummyClass",
 			};
 			if (User32.RegisterClass(ref wc) == 0)
 			{
@@ -131,75 +132,80 @@ namespace HocrEditor.GlContexts.Wgl
 			Gdi32.SetPixelFormat(dummyDC, dummyFormat, ref dummyPFD);
 
 			// get the dummy GL context
-			var dummyGLRC = WglFunctions.wglCreateContext(dummyDC);
+			var dummyGLRC = wglCreateContext(dummyDC);
 			if (dummyGLRC == IntPtr.Zero)
 			{
 				throw new Exception("Could not create dummy GL context.");
 			}
-			WglFunctions.wglMakeCurrent(dummyDC, dummyGLRC);
+			wglMakeCurrent(dummyDC, dummyGLRC);
 
-			VersionString = WglFunctions.GetString(WglFunctions.GL_VERSION);
+			VersionString = GetString(GL_VERSION);
 
 			// get the extension methods using the dummy context
-			wglGetExtensionsStringARB = WglFunctions.wglGetProcAddress<wglGetExtensionsStringARBDelegate>("wglGetExtensionsStringARB");
-			wglChoosePixelFormatARB = WglFunctions.wglGetProcAddress<wglChoosePixelFormatARBDelegate>("wglChoosePixelFormatARB");
-			wglCreatePbufferARB = WglFunctions.wglGetProcAddress<wglCreatePbufferARBDelegate>("wglCreatePbufferARB");
-			wglDestroyPbufferARB = WglFunctions.wglGetProcAddress<wglDestroyPbufferARBDelegate>("wglDestroyPbufferARB");
-			wglGetPbufferDCARB = WglFunctions.wglGetProcAddress<wglGetPbufferDCARBDelegate>("wglGetPbufferDCARB");
-			wglReleasePbufferDCARB = WglFunctions.wglGetProcAddress<wglReleasePbufferDCARBDelegate>("wglReleasePbufferDCARB");
-			wglSwapIntervalEXT = WglFunctions.wglGetProcAddress<wglSwapIntervalEXTDelegate>("wglSwapIntervalEXT");
+			WglGetExtensionsStringArb = wglGetProcAddress<wglGetExtensionsStringARBDelegate>("wglGetExtensionsStringARB");
+			WglChoosePixelFormatArb = wglGetProcAddress<wglChoosePixelFormatARBDelegate>("wglChoosePixelFormatARB");
+			WglCreatePbufferArb = wglGetProcAddress<wglCreatePbufferARBDelegate>("wglCreatePbufferARB");
+			WglDestroyPbufferArb = wglGetProcAddress<wglDestroyPbufferARBDelegate>("wglDestroyPbufferARB");
+			WglGetPbufferDcarb = wglGetProcAddress<wglGetPbufferDCARBDelegate>("wglGetPbufferDCARB");
+			WglReleasePbufferDcarb = wglGetProcAddress<wglReleasePbufferDCARBDelegate>("wglReleasePbufferDCARB");
+			WglSwapIntervalExt = wglGetProcAddress<wglSwapIntervalEXTDelegate>("wglSwapIntervalEXT");
 
 			// destroy the dummy GL context
-			WglFunctions.wglMakeCurrent(dummyDC, IntPtr.Zero);
-			WglFunctions.wglDeleteContext(dummyGLRC);
+			wglMakeCurrent(dummyDC, IntPtr.Zero);
+			wglDeleteContext(dummyGLRC);
 
 			// destroy the dummy window
 			User32.DestroyWindow(dummyWND);
 			User32.UnregisterClass("DummyClass", Kernel32.CurrentModuleHandle);
 
 			// reset the initial GL context
-			WglFunctions.wglMakeCurrent(prevDC, prevGLRC);
+			wglMakeCurrent(prevDC, prevGLRC);
 		}
 
 		public static string VersionString { get; }
 
 		public static bool HasExtension(IntPtr dc, string ext)
 		{
-			if (wglGetExtensionsStringARB == null)
+			if (WglGetExtensionsStringArb == null)
 			{
 				return false;
 			}
 
-			if (ext == "WGL_ARB_extensions_string")
+			if (string.Equals(ext, "WGL_ARB_extensions_string", StringComparison.Ordinal))
 			{
 				return true;
 			}
 
-			return Array.IndexOf(GetExtensionsARB(dc), ext) != -1;
+			return Array.IndexOf(GetExtensionsArb(dc), ext) != -1;
 		}
 
-		public static string GetExtensionsStringARB(IntPtr dc)
+		public static string? GetExtensionsStringArb(IntPtr dc)
 		{
-			return Marshal.PtrToStringAnsi(wglGetExtensionsStringARB(dc));
+            if (WglGetExtensionsStringArb is null)
+            {
+                return null;
+            }
+
+			return Marshal.PtrToStringAnsi(WglGetExtensionsStringArb(dc));
 		}
 
-		public static string[] GetExtensionsARB(IntPtr dc)
+		public static string[] GetExtensionsArb(IntPtr dc)
 		{
-			var str = GetExtensionsStringARB(dc);
+			var str = GetExtensionsStringArb(dc);
 			if (string.IsNullOrEmpty(str))
 			{
-				return new string[0];
+				return Array.Empty<string>();
 			}
 			return str.Split(' ');
 		}
 
-		public static readonly wglGetExtensionsStringARBDelegate wglGetExtensionsStringARB;
-		public static readonly wglChoosePixelFormatARBDelegate wglChoosePixelFormatARB;
-		public static readonly wglCreatePbufferARBDelegate wglCreatePbufferARB;
-		public static readonly wglDestroyPbufferARBDelegate wglDestroyPbufferARB;
-		public static readonly wglGetPbufferDCARBDelegate wglGetPbufferDCARB;
-		public static readonly wglReleasePbufferDCARBDelegate wglReleasePbufferDCARB;
-		public static readonly wglSwapIntervalEXTDelegate wglSwapIntervalEXT;
+		public static readonly wglGetExtensionsStringARBDelegate? WglGetExtensionsStringArb;
+		public static readonly wglChoosePixelFormatARBDelegate? WglChoosePixelFormatArb;
+		public static readonly wglCreatePbufferARBDelegate? WglCreatePbufferArb;
+		public static readonly wglDestroyPbufferARBDelegate? WglDestroyPbufferArb;
+		public static readonly wglGetPbufferDCARBDelegate? WglGetPbufferDcarb;
+		public static readonly wglReleasePbufferDCARBDelegate? WglReleasePbufferDcarb;
+		public static readonly wglSwapIntervalEXTDelegate? WglSwapIntervalExt;
 
 		[DllImport(OPENGL32, CallingConvention = CallingConvention.Winapi)]
 		public static extern IntPtr wglGetCurrentDC();
@@ -219,12 +225,12 @@ namespace HocrEditor.GlContexts.Wgl
 		[DllImport(OPENGL32, CallingConvention = CallingConvention.Winapi)]
 		public static extern IntPtr wglGetProcAddress([MarshalAs(UnmanagedType.LPStr)] string lpszProc);
 
-		public static T wglGetProcAddress<T>(string lpszProc)
+		public static T? wglGetProcAddress<T>(string lpszProc)
 		{
 			var ptr = wglGetProcAddress(lpszProc);
 			if (ptr == IntPtr.Zero)
 			{
-				return default(T);
+				return default;
 			}
 			return (T)(object)Marshal.GetDelegateForFunctionPointer(ptr, typeof(T));
 		}
@@ -259,13 +265,13 @@ namespace HocrEditor.GlContexts.Wgl
 	public delegate bool wglChoosePixelFormatARBDelegate(
 		IntPtr dc,
 		[In] int[] attribIList,
-		[In] float[] attribFList,
+		[In] float[]? attribFList,
 		uint maxFormats,
 		[Out] int[] pixelFormats,
 		out uint numFormats);
 
 	[UnmanagedFunctionPointer(CallingConvention.Winapi)]
-	public delegate IntPtr wglCreatePbufferARBDelegate(IntPtr dc, int pixelFormat, int width, int height, [In] int[] attribList);
+	public delegate IntPtr wglCreatePbufferARBDelegate(IntPtr dc, int pixelFormat, int width, int height, [In] int[]? attribList);
 
 	[UnmanagedFunctionPointer(CallingConvention.Winapi)]
 	[return: MarshalAs(UnmanagedType.Bool)]

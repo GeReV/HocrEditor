@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+// ReSharper disable InconsistentNaming
 
 namespace HocrEditor.GlContexts.Wgl
 {
-	internal delegate IntPtr WNDPROC(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+    // ReSharper disable once IdentifierTypo
+    internal delegate IntPtr WNDPROC(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
 	[StructLayout(LayoutKind.Sequential)]
 	internal struct WNDCLASS
@@ -18,7 +20,7 @@ namespace HocrEditor.GlContexts.Wgl
 		public IntPtr hCursor;
 		public IntPtr hbrBackground;
 		[MarshalAs(UnmanagedType.LPTStr)]
-		public string lpszMenuName;
+		public string? lpszMenuName;
 		[MarshalAs(UnmanagedType.LPTStr)]
 		public string lpszClassName;
 	}

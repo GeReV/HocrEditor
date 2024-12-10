@@ -9,7 +9,7 @@ namespace HocrEditor.GlContexts.Wgl
 
 		static Kernel32()
 		{
-			CurrentModuleHandle = Kernel32.GetModuleHandle(null);
+			CurrentModuleHandle = GetModuleHandle(lpModuleName: null);
 			if (CurrentModuleHandle == IntPtr.Zero)
 			{
 				throw new Exception("Could not get module handle.");

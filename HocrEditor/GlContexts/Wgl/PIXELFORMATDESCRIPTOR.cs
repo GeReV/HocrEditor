@@ -3,7 +3,8 @@
 namespace HocrEditor.GlContexts.Wgl
 {
 	[StructLayout(LayoutKind.Sequential)]
-	internal struct PIXELFORMATDESCRIPTOR
+    // ReSharper disable once InconsistentNaming
+    internal struct PIXELFORMATDESCRIPTOR
 	{
 		public ushort nSize;
 		public ushort nVersion;

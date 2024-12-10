@@ -3,7 +3,7 @@ using SkiaSharp;
 
 namespace HocrEditor.GlContexts.Wgl
 {
-	internal class WglContext : GlContext
+	internal sealed class WglContext : GlContext
 	{
 		private static ushort gWC;
 
@@ -29,7 +29,7 @@ namespace HocrEditor.GlContexts.Wgl
 				lpfnWndProc = (WNDPROC)User32.DefWindowProc,
 				lpszClassName = "Griffin",
 				lpszMenuName = null,
-				style = User32.CS_HREDRAW | User32.CS_VREDRAW | User32.CS_OWNDC
+				style = User32.CS_HREDRAW | User32.CS_VREDRAW | User32.CS_OWNDC,
 			};
 
 			gWC = User32.RegisterClass(ref wc);
@@ -57,8 +57,8 @@ namespace HocrEditor.GlContexts.Wgl
 				throw new Exception("Could not get device context.");
 			}
 
-			if (!HocrEditor.GlContexts.Wgl.WglFunctions.HasExtension(fDeviceContext, "WGL_ARB_pixel_format") ||
-				!HocrEditor.GlContexts.Wgl.WglFunctions.HasExtension(fDeviceContext, "WGL_ARB_pbuffer"))
+			if (!WglFunctions.HasExtension(fDeviceContext, "WGL_ARB_pixel_format") ||
+				!WglFunctions.HasExtension(fDeviceContext, "WGL_ARB_pbuffer"))
 			{
 				DestroyWindow();
 				throw new Exception("DC does not have extensions.");
@@ -69,57 +69,57 @@ namespace HocrEditor.GlContexts.Wgl
 		{
 			var iAttrs = new int[]
 			{
-				HocrEditor.GlContexts.Wgl.WglFunctions.WGL_ACCELERATION_ARB, HocrEditor.GlContexts.Wgl.WglFunctions.WGL_FULL_ACCELERATION_ARB,
-				HocrEditor.GlContexts.Wgl.WglFunctions.WGL_DRAW_TO_WINDOW_ARB, HocrEditor.GlContexts.Wgl.WglFunctions.TRUE,
+				WglFunctions.WGL_ACCELERATION_ARB, WglFunctions.WGL_FULL_ACCELERATION_ARB,
+				WglFunctions.WGL_DRAW_TO_WINDOW_ARB, WglFunctions.TRUE,
 				//Wgl.WGL_DOUBLE_BUFFER_ARB, (doubleBuffered ? TRUE : FALSE),
-				HocrEditor.GlContexts.Wgl.WglFunctions.WGL_SUPPORT_OPENGL_ARB, HocrEditor.GlContexts.Wgl.WglFunctions.TRUE,
-				HocrEditor.GlContexts.Wgl.WglFunctions.WGL_RED_BITS_ARB, 8,
-				HocrEditor.GlContexts.Wgl.WglFunctions.WGL_GREEN_BITS_ARB, 8,
-				HocrEditor.GlContexts.Wgl.WglFunctions.WGL_BLUE_BITS_ARB, 8,
-				HocrEditor.GlContexts.Wgl.WglFunctions.WGL_ALPHA_BITS_ARB, 8,
-				HocrEditor.GlContexts.Wgl.WglFunctions.WGL_STENCIL_BITS_ARB, 8,
-				HocrEditor.GlContexts.Wgl.WglFunctions.NONE, HocrEditor.GlContexts.Wgl.WglFunctions.NONE
+				WglFunctions.WGL_SUPPORT_OPENGL_ARB, WglFunctions.TRUE,
+				WglFunctions.WGL_RED_BITS_ARB, 8,
+				WglFunctions.WGL_GREEN_BITS_ARB, 8,
+				WglFunctions.WGL_BLUE_BITS_ARB, 8,
+				WglFunctions.WGL_ALPHA_BITS_ARB, 8,
+				WglFunctions.WGL_STENCIL_BITS_ARB, 8,
+				WglFunctions.NONE, WglFunctions.NONE
 			};
 			var piFormats = new int[1];
-			uint nFormats;
-			HocrEditor.GlContexts.Wgl.WglFunctions.wglChoosePixelFormatARB(fDeviceContext, iAttrs, null, (uint)piFormats.Length, piFormats, out nFormats);
+			uint nFormats = 0;
+			WglFunctions.WglChoosePixelFormatArb?.Invoke(fDeviceContext, iAttrs, attribFList: null, (uint)piFormats.Length, piFormats, out nFormats);
 			if (nFormats == 0)
 			{
 				Destroy();
 				throw new Exception("Could not get pixel formats.");
 			}
 
-			fPbuffer = HocrEditor.GlContexts.Wgl.WglFunctions.wglCreatePbufferARB(fDeviceContext, piFormats[0], 1, 1, null);
+			fPbuffer = WglFunctions.WglCreatePbufferArb?.Invoke(fDeviceContext, piFormats[0], 1, 1, attribList: null) ?? IntPtr.Zero;
 			if (fPbuffer == IntPtr.Zero)
 			{
 				Destroy();
 				throw new Exception("Could not create Pbuffer.");
 			}
 
-			fPbufferDC = HocrEditor.GlContexts.Wgl.WglFunctions.wglGetPbufferDCARB(fPbuffer);
+			fPbufferDC = WglFunctions.WglGetPbufferDcarb?.Invoke(fPbuffer) ?? IntPtr.Zero;
 			if (fPbufferDC == IntPtr.Zero)
 			{
 				Destroy();
 				throw new Exception("Could not get Pbuffer DC.");
 			}
 
-			var prevDC = HocrEditor.GlContexts.Wgl.WglFunctions.wglGetCurrentDC();
-			var prevGLRC = HocrEditor.GlContexts.Wgl.WglFunctions.wglGetCurrentContext();
+			var prevDC = WglFunctions.wglGetCurrentDC();
+			var prevGLRC = WglFunctions.wglGetCurrentContext();
 
-			fPbufferGlContext = HocrEditor.GlContexts.Wgl.WglFunctions.wglCreateContext(fPbufferDC);
+			fPbufferGlContext = WglFunctions.wglCreateContext(fPbufferDC);
 
-			HocrEditor.GlContexts.Wgl.WglFunctions.wglMakeCurrent(prevDC, prevGLRC);
+			WglFunctions.wglMakeCurrent(prevDC, prevGLRC);
 
 			if (fPbufferGlContext == IntPtr.Zero)
 			{
 				Destroy();
-				throw new Exception("Could not creeate Pbuffer GL context.");
+				throw new Exception("Could not ceeate Pbuffer GL context.");
 			}
 		}
 
 		public override void MakeCurrent()
 		{
-			if (!HocrEditor.GlContexts.Wgl.WglFunctions.wglMakeCurrent(fPbufferDC, fPbufferGlContext))
+			if (!WglFunctions.wglMakeCurrent(fPbufferDC, fPbufferGlContext))
 			{
 				Destroy();
 				throw new Exception("Could not set the context.");
@@ -137,16 +137,16 @@ namespace HocrEditor.GlContexts.Wgl
 
 		public override void Destroy()
 		{
-			if (!HocrEditor.GlContexts.Wgl.WglFunctions.HasExtension(fPbufferDC, "WGL_ARB_pbuffer"))
+			if (!WglFunctions.HasExtension(fPbufferDC, "WGL_ARB_pbuffer"))
 			{
 				// ASSERT
 			}
 
-			HocrEditor.GlContexts.Wgl.WglFunctions.wglDeleteContext(fPbufferGlContext);
+			WglFunctions.wglDeleteContext(fPbufferGlContext);
 
-			HocrEditor.GlContexts.Wgl.WglFunctions.wglReleasePbufferDCARB?.Invoke(fPbuffer, fPbufferDC);
+			WglFunctions.WglReleasePbufferDcarb?.Invoke(fPbuffer, fPbufferDC);
 
-			HocrEditor.GlContexts.Wgl.WglFunctions.wglDestroyPbufferARB?.Invoke(fPbuffer);
+			WglFunctions.WglDestroyPbufferArb?.Invoke(fPbuffer);
 		}
 
 		private static void DestroyWindow()
@@ -169,24 +169,24 @@ namespace HocrEditor.GlContexts.Wgl
 		public override GRGlTextureInfo CreateTexture(SKSizeI textureSize)
 		{
 			var textures = new uint[1];
-			HocrEditor.GlContexts.Wgl.WglFunctions.glGenTextures(textures.Length, textures);
+			WglFunctions.glGenTextures(textures.Length, textures);
 			var textureId = textures[0];
 
-			HocrEditor.GlContexts.Wgl.WglFunctions.glBindTexture(HocrEditor.GlContexts.Wgl.WglFunctions.GL_TEXTURE_2D, textureId);
-			HocrEditor.GlContexts.Wgl.WglFunctions.glTexImage2D(HocrEditor.GlContexts.Wgl.WglFunctions.GL_TEXTURE_2D, 0, HocrEditor.GlContexts.Wgl.WglFunctions.GL_RGBA, textureSize.Width, textureSize.Height, 0, HocrEditor.GlContexts.Wgl.WglFunctions.GL_RGBA, HocrEditor.GlContexts.Wgl.WglFunctions.GL_UNSIGNED_BYTE, IntPtr.Zero);
-			HocrEditor.GlContexts.Wgl.WglFunctions.glBindTexture(HocrEditor.GlContexts.Wgl.WglFunctions.GL_TEXTURE_2D, 0);
+			WglFunctions.glBindTexture(WglFunctions.GL_TEXTURE_2D, textureId);
+			WglFunctions.glTexImage2D(WglFunctions.GL_TEXTURE_2D, 0, WglFunctions.GL_RGBA, textureSize.Width, textureSize.Height, 0, WglFunctions.GL_RGBA, WglFunctions.GL_UNSIGNED_BYTE, IntPtr.Zero);
+			WglFunctions.glBindTexture(WglFunctions.GL_TEXTURE_2D, 0);
 
 			return new GRGlTextureInfo
 			{
 				Id = textureId,
-				Target = HocrEditor.GlContexts.Wgl.WglFunctions.GL_TEXTURE_2D,
-				Format = HocrEditor.GlContexts.Wgl.WglFunctions.GL_RGBA8
+				Target = WglFunctions.GL_TEXTURE_2D,
+				Format = WglFunctions.GL_RGBA8
 			};
 		}
 
 		public override void DestroyTexture(uint texture)
 		{
-			HocrEditor.GlContexts.Wgl.WglFunctions.glDeleteTextures(1, new[] { texture });
+			WglFunctions.glDeleteTextures(1, new[] { texture });
 		}
 	}
 }
