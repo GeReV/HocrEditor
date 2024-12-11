@@ -10,37 +10,39 @@ public class GaussianBlurEffect(uint kernelSize = 3) : IShader
 
     private uint kernelSize = kernelSize;
 
-    private static string HorizontalPassSource(uint kernelSize) => $$"""
-                                                                     uniform shader child;
-                                                                     uniform float[{{kernelSize}}] kernel;
+    private static string HorizontalPassSource(uint kernelSize) =>
+        $$"""
+          uniform shader child;
+          uniform float[{{kernelSize}}] kernel;
 
-                                                                     vec4 main(vec2 coord) {
-                                                                         vec4 sum = vec4(0.0);
+          vec4 main(vec2 coord) {
+              vec4 sum = vec4(0.0);
 
-                                                                         for (int i = 0; i < {{kernelSize}}; i++) {
-                                                                             float offset = float(i) - float({{kernelSize - 1}}) * 0.5;
-                                                                             sum += child.eval(vec2(coord.x + offset, coord.y)) * kernel[i];
-                                                                         }
+              for (int i = 0; i < {{kernelSize}}; i++) {
+                  float offset = float(i) - float({{kernelSize - 1}}) * 0.5;
+                  sum += child.eval(vec2(coord.x + offset, coord.y)) * kernel[i];
+              }
 
-                                                                         return sum;
-                                                                     }
-                                                                     """;
+              return sum;
+          }
+          """;
 
-    private static string VerticalPassSource(uint kernelSize) => $$"""
-                                                                   uniform shader child;
-                                                                   uniform float[{{kernelSize}}] kernel;
+    private static string VerticalPassSource(uint kernelSize) =>
+        $$"""
+          uniform shader child;
+          uniform float[{{kernelSize}}] kernel;
 
-                                                                   vec4 main(vec2 coord) {
-                                                                       vec4 sum = vec4(0.0);
+          vec4 main(vec2 coord) {
+              vec4 sum = vec4(0.0);
 
-                                                                       for (int i = 0; i < {{kernelSize}}; i++) {
-                                                                           float offset = float(i) - float({{kernelSize - 1}}) * 0.5;
-                                                                           sum += child.eval(vec2(coord.x, coord.y + offset)) * kernel[i];
-                                                                       }
+              for (int i = 0; i < {{kernelSize}}; i++) {
+                  float offset = float(i) - float({{kernelSize - 1}}) * 0.5;
+                  sum += child.eval(vec2(coord.x, coord.y + offset)) * kernel[i];
+              }
 
-                                                                       return sum;
-                                                                   }
-                                                                   """;
+              return sum;
+          }
+          """;
 
     private RuntimeEffect horizontalPass = new(HorizontalPassSource(kernelSize));
     private RuntimeEffect verticalPass = new(VerticalPassSource(kernelSize));
