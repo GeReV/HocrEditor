@@ -2,15 +2,9 @@
 
 namespace HocrEditor.Controls;
 
-internal class ResizeHandle
+internal class ResizeHandle(SKPoint center, CardinalDirections direction)
 {
     private const int HANDLE_PADDING = 3;
-
-    public ResizeHandle(SKPoint center, CardinalDirections direction)
-    {
-        Center = center;
-        Direction = direction;
-    }
 
     public SKRect GetRect()
     {
@@ -22,7 +16,7 @@ internal class ResizeHandle
         return rect;
     }
 
-    public SKPoint Center { get; set; }
+    public SKPoint Center { get; set; } = center;
 
-    public CardinalDirections Direction { get; set; }
+    public CardinalDirections Direction { get; set; } = direction;
 }
