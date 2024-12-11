@@ -16,7 +16,8 @@
                  xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:commands="clr-namespace:HocrEditor.Commands"
-                 xmlns:system="clr-namespace:System;assembly=System.Runtime">
+                 xmlns:system="clr-namespace:System;assembly=System.Runtime"
+                 xmlns:adjustments="clr-namespace:HocrEditor.Controls.Adjustments">
     <Window.Resources>
         <converters:RadioButtonCheckedConverter x:Key="RadioButtonCheckedConverter" />
         <converters:NullableToBooleanConverter x:Key="NullableToBooleanConverter" />
@@ -208,6 +209,9 @@
                 <Button Command="{Binding ImportCommand}"
                         ToolTip="Import"
                         helpers:IconButton.Source="/Icons/document--plus.png" />
+                <Button Command="{Binding ProcessCommand}"
+                        ToolTip="Process"
+                        helpers:IconButton.Source="/Icons/control.png" />
                 <Button Command="Open"
                         ToolTip="Open"
                         helpers:IconButton.Source="/Icons/folder-open-document.png" />
@@ -333,9 +337,6 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
                 <Separator />
-                <ToggleButton IsChecked="{Binding Document.ShowThresholdedImage}"
-                              ToolTip="Show thresholded image"
-                              helpers:IconButton.Source="/Icons/contrast.png" />
                 <ToggleButton IsChecked="{Binding Document.ShowText}"
                               ToolTip="Show text"
                               helpers:IconButton.Source="/Icons/edit.png" />
@@ -348,31 +349,45 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="170" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="300" />
             </Grid.ColumnDefinitions>
             <controls:DocumentPageList DataContext="{Binding Document}"
                                        Grid.Column="0"
                                        ItemsSource="{Binding PagesCollectionView}" />
-            <controls:DocumentCanvas Grid.Column="1"
-                                     ActiveTool="{Binding Document.CanvasTool}"
-                                     IsShowThresholdedImage="{Binding Document.ShowThresholdedImage}"
-                                     IsShowText="{Binding Document.ShowText}"
-                                     IsShowNumbering="{Binding Document.ShowNumbering}"
-                                     ViewModel="{Binding Document.CurrentPage}"
-                                     Margin="-1,0"
-                                     NodeVisibility="{Binding Document.NodeVisibility}"
-                                     NodesChanged="Canvas_OnNodesChanged"
-                                     NodesEdited="Canvas_OnNodeEdited"
-                                     WordSplit="Canvas_OnWordSplit"
-                                     SelectionBounds="{Binding Document.SelectionBounds}"
-                                     SelectionChanged="Canvas_OnSelectionChanged" />
-            <controls:DocumentTreeView
-                FlowDirection="{Binding Document.CurrentPage.FlowDirection, FallbackValue={x:Static models:Direction.Ltr}}"
-                Grid.Column="2"
-                ItemsSource="{Binding Document.CurrentPage.Nodes[0].Children, FallbackValue={x:Null}}"
-                NodesEdited="Canvas_OnNodeEdited"
-                NodesMoved="DocumentTreeView_OnNodesMoved"
-                SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
+            <TabControl Grid.Column="1">
+                <TabItem Header="Document">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="300" />
+                        </Grid.ColumnDefinitions>
+                        <controls:DocumentCanvas Grid.Column="0"
+                                                 ActiveTool="{Binding Document.CanvasTool}"
+                                                 IsShowText="{Binding Document.ShowText}"
+                                                 IsShowNumbering="{Binding Document.ShowNumbering}"
+                                                 ViewModel="{Binding Document.CurrentPage}"
+                                                 NodeVisibility="{Binding Document.NodeVisibility}"
+                                                 NodesChanged="Canvas_OnNodesChanged"
+                                                 NodesEdited="Canvas_OnNodeEdited"
+                                                 WordSplit="Canvas_OnWordSplit"
+                                                 SelectionBounds="{Binding Document.SelectionBounds}"
+                                                 SelectionChanged="Canvas_OnSelectionChanged" />
+                        <controls:DocumentTreeView
+                            Grid.Column="1"
+                            Margin="2,0,0,0"
+                            FlowDirection="{Binding Document.CurrentPage.FlowDirection, FallbackValue={x:Static FlowDirection.LeftToRight}}"
+                            ItemsSource="{Binding Document.CurrentPage.Nodes[0].Children, FallbackValue={x:Null}}"
+                            NodesEdited="Canvas_OnNodeEdited"
+                            NodesMoved="DocumentTreeView_OnNodesMoved"
+                            SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Adjustments">
+                    <adjustments:AdjustmentsControl
+                        ViewModel="{Binding Document.CurrentPage}"
+                        />
+                </TabItem>
+            </TabControl>
+
         </Grid>
     </DockPanel>
 </core:WindowBase>

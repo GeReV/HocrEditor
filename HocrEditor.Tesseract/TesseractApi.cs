@@ -105,11 +105,39 @@ public sealed class TesseractApi : IDisposable
     public string GetTsvText(int pageNumber = 0) =>
         GetText(tesseractDllHandle.TessBaseAPIGetTsvText(apiHandle.DangerousGetHandle(), pageNumber));
 
+    public bool GetIntVariable(string name, out int value)
+    {
+        value = 0;
+
+        return tesseractDllHandle.TessBaseAPIGetIntVariable(apiHandle.DangerousGetHandle(), name, ref value);
+    }
+
+    public bool GetBoolValue(string name, out bool value)
+    {
+        value = false;
+
+        return tesseractDllHandle.TessBaseAPIGetBoolVariable(apiHandle.DangerousGetHandle(), name, ref value);
+    }
+
+    public bool GetDoubleVariable(string name, out double value)
+    {
+        value = 0;
+
+        return tesseractDllHandle.TessBaseAPIGetDoubleVariable(apiHandle.DangerousGetHandle(), name, ref value);
+    }
+
+    public string? GetStringVariable(string name)
+    {
+        var ptr = tesseractDllHandle.TessBaseAPIGetStringVariable(apiHandle.DangerousGetHandle(), name);
+
+        return Marshal.PtrToStringAuto(ptr);
+    }
+
     public void SetInputName(string name) =>
         tesseractDllHandle.TessBaseAPISetInputName(apiHandle.DangerousGetHandle(), name);
 
-    public void SetImage(byte[] data, int width, int height, int bytesPerPixel, int bytesPerLine) =>
-        tesseractDllHandle.TessBaseAPISetImage(apiHandle.DangerousGetHandle(), data, width, height, bytesPerPixel, bytesPerLine);
+    public void SetImage(ReadOnlySpan<byte> data, int width, int height, int bytesPerPixel, int bytesPerLine) =>
+        tesseractDllHandle.TessBaseAPISetImage(apiHandle.DangerousGetHandle(), MemoryMarshal.GetReference(data), width, height, bytesPerPixel, bytesPerLine);
 
     public void SetSourceResolution(int ppi) =>
         tesseractDllHandle.TessBaseAPISetSourceResolution(apiHandle.DangerousGetHandle(), ppi);

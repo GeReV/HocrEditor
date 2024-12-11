@@ -77,7 +77,7 @@ namespace HocrEditor.Services
             };
 
             var children = node.ChildNodes
-                .Where(childNode => !string.Equals(childNode.Name, "#text", StringComparison.Ordinal))
+                .Where(childNode => !string.Equals(childNode.Name, "#text", StringComparison.Ordinal) && !childNode.HasClass("ocr_separator"))
                 .Select(childNode => Parse(childNode, nodeId, language, direction))
                 .ToList();
 

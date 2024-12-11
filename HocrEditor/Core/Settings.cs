@@ -19,7 +19,7 @@ namespace HocrEditor.Core
             }
         }
 
-        public static List<string> TesseractSelectedLanguages
+        public static IList<string> TesseractSelectedLanguages
         {
             get => (GetSetting(nameof(TesseractSelectedLanguages)) ?? string.Empty)
                 .Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
@@ -29,7 +29,7 @@ namespace HocrEditor.Core
 
         public static bool AutoClean
         {
-            get => GetSettingAs(nameof(AutoClean), true);
+            get => GetSettingAs(nameof(AutoClean), defaultValue: true);
             set => SetSetting(nameof(AutoClean), value);
         }
 

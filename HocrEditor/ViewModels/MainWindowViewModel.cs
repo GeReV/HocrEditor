@@ -17,6 +17,8 @@ using HocrEditor.Services;
 using HocrEditor.Tesseract;
 using JetBrains.Annotations;
 using Microsoft.Toolkit.Mvvm.Input;
+using Optional;
+using Optional.Unsafe;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
@@ -38,6 +40,7 @@ namespace HocrEditor.ViewModels
             TesseractLanguages.SubscribeItemPropertyChanged(TesseractLanguagesChanged);
 
             ImportCommand = new RelayCommand(Import);
+            ProcessCommand = new RelayCommand(Process);
 
             SaveCommand = new RelayCommand<bool>(forceSaveAs => Save(forceSaveAs), CanSave);
             OpenCommand = new RelayCommand(Open);
@@ -49,7 +52,7 @@ namespace HocrEditor.ViewModels
                 TesseractLanguages.Where(l => l.IsSelected).Select(l => l.Language).ToList();
         }
 
-        public bool AutoClean
+        public static bool AutoClean
         {
             get => Settings.AutoClean;
             set => Settings.AutoClean = value;
@@ -72,7 +75,10 @@ namespace HocrEditor.ViewModels
 
                 if (Document.Pages.Count > 0)
                 {
-                    sb.AppendFormat(CultureInfo.InvariantCulture, "Page {0}/{1} - ", Document.PagesCollectionView.CurrentPosition + 1, Document.Pages.Count);
+                    sb.Append(
+                        CultureInfo.InvariantCulture,
+                        $"Page {Document.PagesCollectionView.CurrentPosition + 1}/{Document.Pages.Count} - "
+                    );
                 }
 
                 sb.Append(ApplicationName);
@@ -83,11 +89,12 @@ namespace HocrEditor.ViewModels
 
         public ObservableCollection<TesseractLanguage> TesseractLanguages { get; } = new();
 
-        public HocrDocumentViewModel Document { get; set; } = new();
+        public HocrDocumentViewModel Document { get; private set; } = new();
 
         public IRelayCommand<bool> SaveCommand { get; }
         public IRelayCommand OpenCommand { get; }
         public IRelayCommand ImportCommand { get; }
+        public IRelayCommand ProcessCommand { get; }
 
         [UsedImplicitly]
         private void OnDocumentChanged(HocrDocumentViewModel oldValue, HocrDocumentViewModel newValue)
@@ -127,21 +134,18 @@ namespace HocrEditor.ViewModels
                 MessageBoxImage.Question
             );
 
-            switch (result)
+            return result switch
             {
-                case MessageBoxResult.Cancel:
-                    return false;
-                case MessageBoxResult.Yes:
-                    return Save(forceSaveAs: false);
-                case MessageBoxResult.No:
+                MessageBoxResult.Cancel => false,
+                MessageBoxResult.Yes => Save(forceSaveAs: false),
+                MessageBoxResult.No =>
                     // Ignore.
-                    return true;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(result));
-            }
+                    true,
+                _ => throw new ArgumentOutOfRangeException(nameof(result))
+            };
         }
 
-        private bool CanSave(bool forceSaveAs) => (Document.IsChanged || forceSaveAs) && Document.Pages.Any();
+        private bool CanSave(bool forceSaveAs) => (Document.IsChanged || forceSaveAs) && Document.Pages.Count > 0;
 
         private bool Save(bool forceSaveAs)
         {
@@ -179,8 +183,7 @@ namespace HocrEditor.ViewModels
             }
 
             var tesseractPath = GetTesseractPath();
-
-            if (tesseractPath == null)
+            if (!tesseractPath.HasValue)
             {
                 return;
             }
@@ -198,7 +201,7 @@ namespace HocrEditor.ViewModels
 
             var filename = dialog.FileName;
 
-            Task.Run(
+            _ = Task.Run(
                     () => new HocrParser().Parse(filename)
                 )
                 .ContinueWith(
@@ -208,18 +211,13 @@ namespace HocrEditor.ViewModels
                         {
                             var hocrDocument = await hocrDocumentTask.ConfigureAwait(false);
 
-                            using var service = new TesseractService(tesseractPath, Enumerable.Empty<string>());
+                            using var service = new TesseractService(
+                                tesseractPath.ValueOrFailure(),
+                                Enumerable.Empty<string>()
+                            );
 
                             var pages = new List<HocrPageViewModel>(hocrDocument.Pages.Count);
-
-                            foreach (var hocrPage in hocrDocument.Pages)
-                            {
-                                var page = new HocrPageViewModel(hocrPage);
-
-                                // page.ThresholdedImage = service.GetThresholdedImage(page.Image);
-
-                                pages.Add(page);
-                            }
+                            pages.AddRange(hocrDocument.Pages.Select(hocrPage => new HocrPageViewModel(hocrPage)));
 
                             var documentViewModel = new HocrDocumentViewModel(hocrDocument, pages)
                             {
@@ -242,13 +240,6 @@ namespace HocrEditor.ViewModels
 
         private void Import()
         {
-            var tesseractPath = GetTesseractPath();
-
-            if (tesseractPath == null)
-            {
-                return;
-            }
-
             var dialog = new OpenFileDialog
             {
                 Title = "Pick Images",
@@ -269,21 +260,34 @@ namespace HocrEditor.ViewModels
             foreach (var page in pages)
             {
                 Document.Pages.Add(page);
+            }
+        }
 
-                Task.Run(
+        private void Process()
+        {
+            var tesseractPath = GetTesseractPath();
+
+            if (!tesseractPath.HasValue)
+            {
+                return;
+            }
+
+            foreach (var page in Document.Pages)
+            {
+                page.IsProcessing = true;
+
+                _ = Task.Run(
                         async () =>
                         {
                             var languages = TesseractLanguages.Where(l => l.IsSelected)
                                 .Select(l => l.Language);
 
-                            using var service = new TesseractService(tesseractPath, languages);
+                            using var service = new TesseractService(tesseractPath.ValueOrFailure(), languages);
 
-                            var image = await page.Image.GetBitmap().ConfigureAwait(false);
+                            var image = await page.ThresholdedBitmap.ConfigureAwait(false);
 
                             var body = await service.Recognize(image, page.ImageFilename)
                                 .ConfigureAwait(false);
-
-                            // page.ThresholdedImage = service.GetThresholdedImage(page.Image);
 
                             var doc = new HtmlDocument();
                             doc.LoadHtml(body);
@@ -316,10 +320,16 @@ namespace HocrEditor.ViewModels
                                     throw new InvalidOperationException("page.HocrPage cannot be null.");
                                 }
 
-                                var averageFontSize = page.HocrPage.Descendants
+                                var lines = page.HocrPage.Descendants
                                     .Where(node => node.IsLineElement)
                                     .Cast<HocrLine>()
-                                    .Average(node => node.FontSize);
+                                    .ToList();
+
+                                var averageFontSize = 8.0;
+                                if (lines.Count > 0)
+                                {
+                                    averageFontSize = lines.Average(node => node.FontSize);
+                                }
 
                                 var (dpix, dpiy) = page.HocrPage.Dpi;
 
@@ -349,37 +359,48 @@ namespace HocrEditor.ViewModels
                             {
                                 MessageBox.Show($"{ex.Message}\n{ex.Source}\n\n{ex.StackTrace}");
                             }
+                            finally
+                            {
+                                page.IsProcessing = false;
+                            }
                         },
                         TaskScheduler.FromCurrentSynchronizationContext()
                     );
             }
         }
 
-        private string? GetTesseractPath()
+        private Option<string> GetTesseractPath()
         {
-            var tesseractPath = Settings.TesseractPath;
-
-            if (tesseractPath != null)
+            if (Settings.TesseractPath is { } path)
             {
-                return tesseractPath;
+                return Option.Some(path);
             }
 
+            var tesseractPath = TesseractService.DefaultPath;
+
+            if (!tesseractPath.HasValue)
+            {
+                MessageBox.Show("Tesseract path is invalid, please select a valid path.");
+
+                tesseractPath = SelectTesseractPath();
+            }
+
+            tesseractPath.MatchSome(p => { Settings.TesseractPath = p; });
+
+            return tesseractPath;
+        }
+
+        private Option<string> SelectTesseractPath()
+        {
             var dialog = new FolderBrowserDialog
             {
                 Description = "Locate Tesseract OCR...",
-                UseDescriptionForTitle = true
+                UseDescriptionForTitle = true,
             };
 
-            if (dialog.ShowDialog(window.GetIWin32Window()) != DialogResult.OK)
-            {
-                return null;
-            }
-
-            tesseractPath = dialog.SelectedPath;
-
-            Settings.TesseractPath = tesseractPath;
-
-            return tesseractPath;
+            return dialog.ShowDialog(window.GetIWin32Window()) == DialogResult.OK
+                ? dialog.SelectedPath.Some()
+                : Option.None<string>();
         }
 
         protected override void Dispose(bool disposing)

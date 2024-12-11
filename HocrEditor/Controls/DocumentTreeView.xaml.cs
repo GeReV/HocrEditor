@@ -21,7 +21,7 @@ public partial class DocumentTreeView
         nameof(SelectedItems),
         typeof(ICollection<HocrNodeViewModel>),
         typeof(DocumentTreeView),
-        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault)
+        new FrameworkPropertyMetadata(Array.Empty<HocrNodeViewModel>(), FrameworkPropertyMetadataOptions.BindsTwoWayByDefault)
     );
 
     public static readonly DependencyProperty ItemsSourceProperty
@@ -32,9 +32,9 @@ public partial class DocumentTreeView
             new FrameworkPropertyMetadata(null)
         );
 
-    public Option<ICollection<HocrNodeViewModel>> SelectedItems
+    public ICollection<HocrNodeViewModel> SelectedItems
     {
-        get => (Option<ICollection<HocrNodeViewModel>>)GetValue(SelectedItemsProperty);
+        get => (ICollection<HocrNodeViewModel>)GetValue(SelectedItemsProperty);
         set => SetValue(SelectedItemsProperty, value);
     }
 
@@ -95,12 +95,12 @@ public partial class DocumentTreeView
 
     private void TreeViewItem_OnKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Return || !editingNode.HasValue || !SelectedItems.HasValue)
+        if (e.Key != Key.Return || !editingNode.HasValue || SelectedItems.Count == 0)
         {
             return;
         }
 
-        editingNode = SelectedItems.FlatMap(SelectionHelper.SelectEditable);
+        editingNode = SelectionHelper.SelectEditable(SelectedItems);
 
         if (editingNode.Exists(node => node is not { IsEditing: false }))
         {
@@ -114,7 +114,7 @@ public partial class DocumentTreeView
         var parent = editingNode.ValueOrDefault();
 
         // Stack the parents. It is assumed that one of the parent nodes is selected.
-        while (parent != null && !SelectedItems.ValueOrFailure().Contains(parent))
+        while (parent != null && !SelectedItems.Contains(parent))
         {
             stack.Push(parent);
 
@@ -141,7 +141,7 @@ public partial class DocumentTreeView
             treeViewItem = (TreeViewItem)treeViewItem.ItemContainerGenerator.ContainerFromItem(item);
         }
 
-        Dispatcher.InvokeAsync(
+        _ = Dispatcher.InvokeAsync(
             () =>
             {
                 if (treeViewItem?.FindVisualChild<EditableTextBlock>() is not { } editableTextBlock)
@@ -205,13 +205,11 @@ public partial class DocumentTreeView
 
     private void OnNodeEdited(string value)
     {
-        var enumerable = SelectedItems.Map(items => items.AsEnumerable()).ValueOr(Enumerable.Empty<HocrNodeViewModel>());
-
         RaiseEvent(
             new NodesEditedEventArgs(
                 NodesEditedEvent,
                 this,
-                SelectionHelper.SelectAllEditable(enumerable),
+                SelectionHelper.SelectAllEditable(SelectedItems),
                 value
             )
         );

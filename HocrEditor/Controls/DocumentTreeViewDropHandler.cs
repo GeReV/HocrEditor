@@ -11,15 +11,8 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Controls;
 
-public class DocumentTreeViewDropHandler : DefaultDropHandler
+public class DocumentTreeViewDropHandler(DocumentTreeView owner) : DefaultDropHandler
 {
-    private readonly DocumentTreeView owner;
-
-    public DocumentTreeViewDropHandler(DocumentTreeView owner)
-    {
-        this.owner = owner;
-    }
-
     private new static bool CanAcceptData(IDropInfo dropInfo)
     {
         if (!DefaultDropHandler.CanAcceptData(dropInfo))

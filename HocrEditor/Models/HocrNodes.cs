@@ -137,7 +137,7 @@ namespace HocrEditor.Models
             }
         }
 
-        public (float,int) Baseline { get; }
+        public (float, int) Baseline { get; }
         public int FontSize { get; }
     }
 

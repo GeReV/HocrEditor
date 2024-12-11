@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Windows.Threading;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
 using HocrEditor.ViewModels;
@@ -12,40 +13,41 @@ namespace HocrEditor.Controls;
 
 public partial class DocumentCanvas
 {
-    private BiDi bidi = new();
+    private readonly BiDi bidi = new();
 
     private void RenderCanvas(SKCanvas canvas)
     {
+        using var font = new SKFont(SKTypeface.Default, 10.0f);
+        using var paint = new SKPaint();
+
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = 0;
+
+        RenderBackground(canvas, paint);
+
         if (RootId < 0)
         {
             return;
         }
 
-        using var paint = new SKPaint(new SKFont(SKTypeface.Default))
-        {
-            StrokeWidth = 1
-        };
-
-        RenderBackground(canvas, paint);
-
-        RenderNodes(canvas, paint);
+        RenderNodes(canvas, paint, font);
 
         if (IsShowNumbering)
         {
-            RenderNumbering(canvas, paint);
+            RenderNumbering(canvas, paint, font);
         }
 
         ActiveTool.Render(canvas);
     }
 
-    private void RenderNumbering(SKCanvas canvas, SKPaint paint)
+    private void RenderNumbering(SKCanvas canvas, SKPaint paint, SKFont font)
     {
         const float counterFontSize = 9.0f;
         var counterTextSize = counterFontSize / 72.0f * ((HocrPage)Elements[RootId].Item1.HocrNode).Dpi.Item2;
 
-        var stack = new Stack<int>();
-
-        stack.Push(RootId);
+        // var stack = new Stack<int>();
+        //
+        // stack.Push(RootId);
 
         foreach (var recursionItem in RecurseNodes(RootId))
         {
@@ -58,22 +60,17 @@ public partial class DocumentCanvas
                 continue;
             }
 
-            var bounds = Transformation.MapRect(element.Bounds);
-
             var color = GetNodeColor(node);
 
-            var scale = Transformation.ScaleY;
+            font.Size = counterTextSize;
 
-            paint.TextSize = counterTextSize * scale;
-
-            var rectBounds = SKRect.Empty;
-            paint.MeasureText("99", ref rectBounds);
+            font.MeasureText("99", out var rectBounds);
 
             paint.IsStroke = false;
             paint.Color = color;
 
             rectBounds.Bottom += rectBounds.Height * 0.2f;
-            rectBounds.Location = bounds.Location;
+            rectBounds.Location = element.Bounds.Location;
 
             canvas.DrawRect(rectBounds, paint);
 
@@ -81,22 +78,19 @@ public partial class DocumentCanvas
 
             var text = (recursionItem.LevelIndex + 1).ToString(new NumberFormatInfo());
 
-            var textBounds = SKRect.Empty;
-            paint.MeasureText(text, ref textBounds);
+            font.MeasureText(text, out var textBounds);
 
             textBounds.Offset(rectBounds.MidX - textBounds.MidX, rectBounds.MidY - textBounds.MidY);
 
-            canvas.DrawText(text, textBounds.Left, textBounds.Bottom, paint);
+            canvas.DrawText(text, textBounds.Left, textBounds.Bottom, SKTextAlign.Left, font, paint);
         }
     }
 
-    private void RenderNodes(SKCanvas canvas, SKPaint paint)
+    private void RenderNodes(SKCanvas canvas, SKPaint paint, SKFont font)
     {
         foreach (var recursionItem in RecurseNodes(RootId))
         {
             var (node, element) = recursionItem.Item;
-
-            var bounds = Transformation.MapRect(element.Bounds);
 
             var shouldRenderNode = NodeVisibilityDictionary[node.NodeType];
 
@@ -107,52 +101,49 @@ public partial class DocumentCanvas
 
             var color = GetNodeColor(node);
 
-            var scale = Transformation.ScaleY;
-
             if (node.NodeType == HocrNodeType.Word && IsShowText)
             {
                 paint.IsStroke = false;
                 paint.Color = SKColors.White.WithAlpha(128);
 
-                canvas.DrawRect(bounds, paint);
+                canvas.DrawRect(element.Bounds, paint);
 
                 var fontSize = ((HocrLine)Elements[node.ParentId].Item1.HocrNode).FontSize;
 
-                paint.TextSize = fontSize * scale * 0.75f;
+                font.Size = fontSize * 0.75f;
 
                 paint.Color = SKColors.Black;
                 paint.IsStroke = false;
 
-                RenderText(canvas, new SKPoint(bounds.MidX, bounds.MidY), paint, node.InnerText);
+                RenderText(canvas, new SKPoint(element.Bounds.MidX, element.Bounds.MidY), paint, font, node.InnerText);
             }
             else
             {
                 paint.IsStroke = false;
                 paint.Color = node.IsSelected ? SKColors.Red.WithAlpha(16) : color.WithAlpha(16);
 
-                canvas.DrawRect(bounds, paint);
+                canvas.DrawRect(element.Bounds, paint);
             }
 
             paint.Color = node.IsSelected ? SKColors.Red : color;
             paint.IsStroke = true;
 
-            canvas.DrawRect(bounds, paint);
+            canvas.DrawRect(element.Bounds, paint);
         }
     }
 
-    private void RenderText(SKCanvas canvas, SKPoint center, SKPaint paint, string text)
+    private void RenderText(SKCanvas canvas, SKPoint center, SKPaint paint, SKFont font, string text)
     {
-        if (paint.ContainsGlyphs(text.AsSpan()))
+        if (font.ContainsGlyphs(text.AsSpan()))
         {
-            var textBounds = SKRect.Empty;
-
-            paint.MeasureText(text, ref textBounds);
-
+            font.MeasureText(text, out var textBounds);
 
             canvas.DrawText(
                 ReorderBidirectionalText(text),
                 center.X - textBounds.MidX,
                 center.Y - textBounds.MidY,
+                SKTextAlign.Left,
+                font,
                 paint
             );
 
@@ -160,17 +151,18 @@ public partial class DocumentCanvas
         }
 
         // In this case, we are missing some glyphs, so we will need to render text with a font fallback.
-        RenderMultipleTypefaceText(canvas, center, paint, text);
+        RenderMultipleTypefaceText(canvas, center, paint, font, text);
     }
 
     private void RenderMultipleTypefaceText(
         SKCanvas canvas,
         SKPoint center,
         SKPaint paint,
+        SKFont font,
         string text
     )
     {
-        var originalTypeface = paint.Typeface;
+        var originalTypeface = font.Typeface;
 
         // The start index keeps track of the start of the current text run, while the cursor index allows skipping
         // chars if no font is found for them.
@@ -187,7 +179,7 @@ public partial class DocumentCanvas
 
         while (true)
         {
-            var glyphs = paint.GetGlyphs(text.AsSpan()) ?? Array.Empty<ushort>();
+            var glyphs = font.GetGlyphs(text.AsSpan()) ?? Array.Empty<ushort>();
 
             var endIndex = Array.IndexOf(glyphs, (ushort)0, cursorIndex);
 
@@ -198,9 +190,7 @@ public partial class DocumentCanvas
 
             if (endIndex - cursorIndex > 0)
             {
-                var runBounds = SKRect.Empty;
-
-                paint.MeasureText(text, ref runBounds);
+                font.MeasureText(text, out var runBounds);
 
                 runBounds.Offset(textBounds.Right, -runBounds.Top);
 
@@ -208,7 +198,7 @@ public partial class DocumentCanvas
                 textBounds.Right += runBounds.Width;
                 textBounds.Bottom = Math.Max(Math.Abs(runBounds.Height), textBounds.Bottom);
 
-                list.Add((startIndex, endIndex, paint.Typeface, runBounds));
+                list.Add((startIndex, endIndex, font.Typeface, runBounds));
 
                 // Advance to the beginning of the next text run.
                 startIndex = endIndex;
@@ -230,23 +220,25 @@ public partial class DocumentCanvas
             }
             else
             {
-                paint.Typeface = typeface;
+                font.Typeface = typeface;
             }
         }
 
         foreach (var item in list)
         {
-            paint.Typeface = item.typeface;
+            font.Typeface = item.typeface;
 
             canvas.DrawText(
                 text[item.startIndex..item.endIndexExclusive],
                 center.X - textBounds.MidX + item.runBounds.Left,
                 center.Y - textBounds.MidY + item.runBounds.Height,
+                SKTextAlign.Left,
+                font,
                 paint
             );
         }
 
-        paint.Typeface = originalTypeface;
+        font.Typeface = originalTypeface;
     }
 
     private void RenderBackground(SKCanvas canvas, SKPaint paint)
@@ -261,7 +253,7 @@ public partial class DocumentCanvas
         if (!backgroundTask.IsCompleted)
         {
             // If the background isn't available yet, schedule another render for when it is available and skip it for now.
-            backgroundTask.ContinueWith(
+            _ = backgroundTask.ContinueWith(
                 task =>
                 {
                     if (task.IsCanceled)
@@ -269,7 +261,7 @@ public partial class DocumentCanvas
                         return;
                     }
 
-                    Refresh();
+                    Dispatcher.Invoke(Refresh, DispatcherPriority.Render);
                 },
                 backgroundLoadCancellationTokenSource.Token
             );
@@ -281,8 +273,6 @@ public partial class DocumentCanvas
 
         var bounds = new SKRect(0, 0, image.Width, image.Height);
 
-        bounds = Transformation.MapRect(bounds);
-
         var shouldRenderNode = NodeVisibilityDictionary[HocrNodeType.Page];
 
         if (shouldRenderNode)
@@ -291,15 +281,14 @@ public partial class DocumentCanvas
         }
         else
         {
-            paint.IsStroke = false;
+            paint.Style = SKPaintStyle.Fill;
             paint.Color = SKColors.White;
 
             canvas.DrawRect(bounds, paint);
         }
 
         paint.Color = SKColors.Gray;
-        paint.IsStroke = true;
-        paint.StrokeWidth = 1;
+        paint.Style = SKPaintStyle.Stroke;
 
         canvas.DrawRect(bounds, paint);
     }

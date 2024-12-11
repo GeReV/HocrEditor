@@ -26,7 +26,7 @@ public static class HocrNodeTypeHelper
         HocrNodeType.Caption => HocrNodeType.ContentArea,
         HocrNodeType.Word => HocrNodeType.Line,
         HocrNodeType.Image => HocrNodeType.Page,
-        _ => throw new ArgumentOutOfRangeException(nameof(nodeType), nodeType, null)
+        _ => throw new ArgumentOutOfRangeException(nameof(nodeType), nodeType, message: null),
     };
 
     public static IEnumerable<HocrNodeType> GetParentNodeTypes(HocrNodeType nodeType)
@@ -43,20 +43,20 @@ public static class HocrNodeTypeHelper
 
     public static bool CanNodeTypeBeChildOf(HocrNodeType childType, HocrNodeType parentType) => (child: childType, parent: parentType) switch
     {
-        (HocrNodeType.ContentArea, HocrNodeType.Page) => true,
-        (HocrNodeType.Paragraph, HocrNodeType.ContentArea) => true,
-        (HocrNodeType.Line, HocrNodeType.Paragraph) => true,
-        (HocrNodeType.Header, HocrNodeType.Paragraph) => true,
-        (HocrNodeType.Footer, HocrNodeType.Paragraph) => true,
-        (HocrNodeType.TextFloat, HocrNodeType.Paragraph) => true,
-        (HocrNodeType.Caption, HocrNodeType.Paragraph) => true,
-        (HocrNodeType.Word, HocrNodeType.Line) => true,
-        (HocrNodeType.Word, HocrNodeType.TextFloat) => true,
-        (HocrNodeType.Word, HocrNodeType.Caption) => true,
-        (HocrNodeType.Word, HocrNodeType.Header) => true,
-        (HocrNodeType.Word, HocrNodeType.Footer) => true,
+        (HocrNodeType.ContentArea, HocrNodeType.Page) or
+        (HocrNodeType.Paragraph, HocrNodeType.ContentArea) or
+        (HocrNodeType.Line, HocrNodeType.Paragraph) or
+        (HocrNodeType.Header, HocrNodeType.Paragraph) or
+        (HocrNodeType.Footer, HocrNodeType.Paragraph) or
+        (HocrNodeType.TextFloat, HocrNodeType.Paragraph) or
+        (HocrNodeType.Caption, HocrNodeType.Paragraph) or
+        (HocrNodeType.Word, HocrNodeType.Line) or
+        (HocrNodeType.Word, HocrNodeType.TextFloat) or
+        (HocrNodeType.Word, HocrNodeType.Caption) or
+        (HocrNodeType.Word, HocrNodeType.Header) or
+        (HocrNodeType.Word, HocrNodeType.Footer) or
         (HocrNodeType.Image, HocrNodeType.Page) => true,
-        _ => false
+        _ => false,
     };
 
     public static string GetIcon(HocrNodeType nodeType) => nodeType switch
@@ -71,7 +71,7 @@ public static class HocrNodeTypeHelper
         HocrNodeType.Header => "/Icons/edit-heading.png",
         HocrNodeType.Image => "/Icons/image.png",
         HocrNodeType.Word => "/Icons/edit-quotation.png",
-        _ => throw new ArgumentOutOfRangeException(nameof(nodeType))
+        _ => throw new ArgumentOutOfRangeException(nameof(nodeType)),
     };
 
     public static string HocrClassNameForType(HocrNodeType nodeType) =>
@@ -87,19 +87,19 @@ public static class HocrNodeTypeHelper
             HocrNodeType.Caption => "ocr_caption",
             HocrNodeType.Word => "ocrx_word",
             HocrNodeType.Image => "ocr_image",
-            _ => throw new ArgumentOutOfRangeException(nameof(nodeType))
+            _ => throw new ArgumentOutOfRangeException(nameof(nodeType)),
         };
 
     public static string HocrIdForType(HocrNodeType nodeType) =>
         nodeType switch
         {
-            var t when IsLineElement(t) => "line",
+            _ when IsLineElement(nodeType) => "line",
             HocrNodeType.Page => "page",
             HocrNodeType.ContentArea => "block",
             HocrNodeType.Paragraph => "par",
             HocrNodeType.Word => "word",
             HocrNodeType.Image => "image",
-            _ => throw new ArgumentOutOfRangeException(nameof(nodeType))
+            _ => throw new ArgumentOutOfRangeException(nameof(nodeType)),
         };
 
     public static string ElementTypeForType(HocrNodeType nodeType) =>
@@ -109,7 +109,7 @@ public static class HocrNodeTypeHelper
             HocrNodeType.Paragraph => "p",
             HocrNodeType.Word => "span",
             HocrNodeType.Image => "div",
-            var t when IsLineElement(t) => "span",
-            _ => throw new ArgumentOutOfRangeException(nameof(nodeType))
+            _ when IsLineElement(nodeType) => "span",
+            _ => throw new ArgumentOutOfRangeException(nameof(nodeType)),
         };
 }

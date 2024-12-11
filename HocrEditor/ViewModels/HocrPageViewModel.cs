@@ -1,16 +1,15 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using HocrEditor.Commands;
 using HocrEditor.Controls;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
-using HocrEditor.Tesseract;
 using Microsoft.Toolkit.Mvvm.Input;
 using SkiaSharp;
 using Rect = HocrEditor.Models.Rect;
@@ -31,27 +30,16 @@ namespace HocrEditor.ViewModels
 
         public IEnumerable<HocrNodeViewModel> SelectableNodes => Nodes.Where(n => !n.IsRoot);
 
-        public bool IsProcessing => HocrPage == null;
+        public bool IsProcessing { get; set; }
 
         public string ImageFilename { get; private set; }
 
-        public SKBitmapManager.SKBitmapReference Image => ImageCache.Get(ImageFilename, () => SKBitmap.Decode(ImageFilename));
+        public SKBitmapManager.SKBitmapReference Image =>
+            ImageCache.Get(ImageFilename, () => SKBitmap.Decode(ImageFilename));
 
-        public SKBitmapManager.SKBitmapReference ThresholdedImage =>
-            ImageCache.Get(
-                $"{ImageFilename}-thresholded",
-                async () =>
-                {
-                    using var service = new TesseractService(
-                        Settings.TesseractPath ?? string.Empty,
-                        Enumerable.Empty<string>()
-                    );
-
-                    var originalBitmap = await Image.GetBitmap().ConfigureAwait(false);
-
-                    return service.GetThresholdedImage(originalBitmap);
-                }
-            );
+        public Task<SKBitmap> ThresholdedBitmap =>
+            Image.GetBitmap()
+                .ContinueWith(bitmap => AdjustmentFilters.GenerateThresholdedImage(bitmap.Result));
 
         public Direction Direction
         {
@@ -61,6 +49,8 @@ namespace HocrEditor.ViewModels
 
         public FlowDirection FlowDirection =>
             Direction == Direction.Ltr ? FlowDirection.LeftToRight : FlowDirection.RightToLeft;
+
+        public SKMatrix PageTransformation { get; set; } = SKMatrix.Identity;
 
         private Rect selectionBounds;
 
@@ -77,6 +67,8 @@ namespace HocrEditor.ViewModels
         }
 
         public ClipboardViewModel Clipboard { get; } = new();
+
+        public AdjustmentFilters AdjustmentFilters { get; } = new();
 
         public HocrPageViewModel(HocrPage page) :
             this(page.ImageFilename)
@@ -238,9 +230,10 @@ namespace HocrEditor.ViewModels
 
             SelectedNodes.CollectionChanged -= HandleSelectedNodesChanged;
 
+            AdjustmentFilters.Dispose();
+
             Nodes.CollectionChanged -= HandleNodesChanged;
             Nodes.UnsubscribeItemPropertyChanged(HandleNodePropertyChanged);
-
             Nodes.Dispose();
         }
     }

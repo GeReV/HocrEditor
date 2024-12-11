@@ -10,14 +10,10 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class WordSplitCommand : UndoableCommandBase<WordSplitEventArgs>
+public class WordSplitCommand(HocrPageViewModel hocrPageViewModel)
+    : UndoableCommandBase<WordSplitEventArgs>(hocrPageViewModel)
 {
-    private HocrPageViewModel HocrPageViewModel { get; }
-
-    public WordSplitCommand(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
-    {
-        HocrPageViewModel = hocrPageViewModel;
-    }
+    private HocrPageViewModel HocrPageViewModel { get; } = hocrPageViewModel;
 
     public override bool CanExecute(WordSplitEventArgs? e) => e != null;
 
@@ -27,19 +23,22 @@ public class WordSplitCommand : UndoableCommandBase<WordSplitEventArgs>
 
         var node = e.Node;
 
-        if (node.Parent == null)
+        if (node.Parent is not { } parent)
         {
             throw new InvalidOperationException("Expected node to have a parent");
         }
 
-        var commands = new List<UndoRedoCommand>();
-
-        commands.Add(PropertyChangeCommand.FromProperty(node, n => n.BBox, node.BBox with
+        var commands = new List<UndoRedoCommand>
         {
-            Right = e.SplitPosition
-        }));
-
-        var parent = node.Parent;
+            PropertyChangeCommand.FromProperty(
+                node,
+                n => n.BBox,
+                node.BBox with
+                {
+                    Right = e.SplitPosition
+                }
+            )
+        };
 
         var clone = (HocrNodeViewModel)node.Clone();
 
@@ -80,7 +79,12 @@ public class WordSplitCommand : UndoableCommandBase<WordSplitEventArgs>
         commands.Add(parent.Children.ToCollectionInsertCommand(parent.Children.IndexOf(node) + insertOffset, clone));
 
         // Add to page nodes collection.
-        commands.Add(HocrPageViewModel.Nodes.ToCollectionInsertCommand(HocrPageViewModel.Nodes.IndexOf(node) + insertOffset, clone));
+        commands.Add(
+            HocrPageViewModel.Nodes.ToCollectionInsertCommand(
+                HocrPageViewModel.Nodes.IndexOf(node) + insertOffset,
+                clone
+            )
+        );
 
         UndoRedoManager.BeginBatch();
 
@@ -88,7 +92,7 @@ public class WordSplitCommand : UndoableCommandBase<WordSplitEventArgs>
 
         if (Settings.AutoClean)
         {
-            new CropNodesCommand(HocrPageViewModel).Execute(new[] { node, clone });
+            new CropNodesCommand(HocrPageViewModel).Execute([node, clone]);
         }
 
         new ExclusiveSelectNodesCommand(HocrPageViewModel).Execute(Enumerable.Repeat(selectNode, 1));

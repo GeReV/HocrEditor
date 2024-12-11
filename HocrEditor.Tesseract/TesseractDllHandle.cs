@@ -16,6 +16,10 @@ internal class TesseractDllHandle : SafeDllHandle
     public readonly TesseractDelegates.TessBaseAPIGetHOCRText TessBaseAPIGetHOCRText;
     public readonly TesseractDelegates.TessBaseAPIGetAltoText TessBaseAPIGetAltoText;
     public readonly TesseractDelegates.TessBaseAPIGetTsvText TessBaseAPIGetTsvText;
+    public readonly TesseractDelegates.TessBaseAPIGetIntVariable TessBaseAPIGetIntVariable;
+    public readonly TesseractDelegates.TessBaseAPIGetBoolVariable TessBaseAPIGetBoolVariable;
+    public readonly TesseractDelegates.TessBaseAPIGetDoubleVariable TessBaseAPIGetDoubleVariable;
+    public readonly TesseractDelegates.TessBaseAPIGetStringVariable TessBaseAPIGetStringVariable;
     public readonly TesseractDelegates.TessBaseAPISetInputName TessBaseAPISetInputName;
     public readonly TesseractDelegates.TessBaseAPISetImage TessBaseAPISetImage;
     public readonly TesseractDelegates.TessBaseAPISetSourceResolution TessBaseAPISetSourceResolution;
@@ -52,6 +56,14 @@ internal class TesseractDllHandle : SafeDllHandle
             GetProc<TesseractDelegates.TessBaseAPIGetAltoText>(nameof(TesseractDelegates.TessBaseAPIGetAltoText));
         TessBaseAPIGetTsvText =
             GetProc<TesseractDelegates.TessBaseAPIGetTsvText>(nameof(TesseractDelegates.TessBaseAPIGetTsvText));
+        TessBaseAPIGetIntVariable =
+            GetProc<TesseractDelegates.TessBaseAPIGetIntVariable>(nameof(TesseractDelegates.TessBaseAPIGetIntVariable));
+        TessBaseAPIGetBoolVariable =
+            GetProc<TesseractDelegates.TessBaseAPIGetBoolVariable>(nameof(TesseractDelegates.TessBaseAPIGetBoolVariable));
+        TessBaseAPIGetDoubleVariable =
+            GetProc<TesseractDelegates.TessBaseAPIGetDoubleVariable>(nameof(TesseractDelegates.TessBaseAPIGetDoubleVariable));
+        TessBaseAPIGetStringVariable =
+            GetProc<TesseractDelegates.TessBaseAPIGetStringVariable>(nameof(TesseractDelegates.TessBaseAPIGetStringVariable));
         TessBaseAPISetSourceResolution =
             GetProc<TesseractDelegates.TessBaseAPISetSourceResolution>(
                 nameof(TesseractDelegates.TessBaseAPISetSourceResolution)
@@ -114,7 +126,7 @@ internal class TesseractDllHandle : SafeDllHandle
 
         internal delegate void TessBaseAPISetImage(
             IntPtr handle,
-            byte[] data,
+            in byte data,
             int width,
             int height,
             int bytesPerPixel,
@@ -133,6 +145,29 @@ internal class TesseractDllHandle : SafeDllHandle
             IntPtr handle,
             [MarshalAs(UnmanagedType.LPStr)] string key,
             [MarshalAs(UnmanagedType.LPStr)] string value
+        );
+
+        internal delegate bool TessBaseAPIGetIntVariable(
+            IntPtr handle,
+            [MarshalAs(UnmanagedType.LPStr)] string key,
+            ref int value
+        );
+
+        internal delegate bool TessBaseAPIGetBoolVariable(
+            IntPtr handle,
+            [MarshalAs(UnmanagedType.LPStr)] string key,
+            ref bool value
+        );
+
+        internal delegate bool TessBaseAPIGetDoubleVariable(
+            IntPtr handle,
+            [MarshalAs(UnmanagedType.LPStr)] string key,
+            ref double value
+        );
+
+        internal delegate IntPtr TessBaseAPIGetStringVariable(
+            IntPtr handle,
+            [MarshalAs(UnmanagedType.LPStr)] string key
         );
 
         internal delegate void TessBaseAPIReadConfigFile(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)] string file);

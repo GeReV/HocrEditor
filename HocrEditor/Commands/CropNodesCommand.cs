@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
@@ -11,16 +9,10 @@ using SkiaSharp;
 
 namespace HocrEditor.Commands;
 
-public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewModel>>
+public class CropNodesCommand(HocrPageViewModel hocrPageViewModel)
+    : UndoableCommandBase<ICollection<HocrNodeViewModel>>(hocrPageViewModel)
 {
     private const int WORD_CROP_PADDING = 1;
-
-    private readonly HocrPageViewModel hocrPageViewModel;
-
-    public CropNodesCommand(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
-    {
-        this.hocrPageViewModel = hocrPageViewModel;
-    }
 
     public override bool CanExecute(ICollection<HocrNodeViewModel>? nodes) => nodes is { Count: > 0 };
 
@@ -51,19 +43,17 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
             .Where(n => n.NodeType == HocrNodeType.Word)
             .ToList();
 
-        if (words.Any())
+        if (words.Count != 0)
         {
-            hocrPageViewModel.ThresholdedImage
-                .GetBitmap()
+            hocrPageViewModel.ThresholdedBitmap
                 .ContinueWith(
                     async task =>
                     {
                         var thresholdedImage = await task.ConfigureAwait(false);
 
-                        foreach (var word in words)
-                        {
-                            commands.Add(
-                                PropertyChangeCommand.FromProperty(
+                        commands.AddRange(
+                            words.Select(
+                                word => PropertyChangeCommand.FromProperty(
                                     word,
                                     n => n.BBox,
                                     oldBounds =>
@@ -81,8 +71,8 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
                                         return croppedBounds;
                                     }
                                 )
-                            );
-                        }
+                            )
+                        );
                     }
                 )
                 .Wait();
@@ -107,15 +97,16 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
     {
         var nextBounds = bounds;
         var pixels = binaryImage.GetPixelSpan();
+        var bytesPerPixel = binaryImage.BytesPerPixel;
         var width = binaryImage.RowBytes;
-        var cornerColor = pixels[nextBounds.Top * width + nextBounds.Left];
+        var cornerColor = pixels[bounds.Top * width + bounds.Left * bytesPerPixel];
 
         // Horizontal lines from top.
         for (var brk = false; nextBounds.Top <= nextBounds.Bottom;)
         {
             for (var x = nextBounds.Left; x <= nextBounds.Right; x++)
             {
-                if (pixels[nextBounds.Top * width + x] != cornerColor)
+                if (pixels[nextBounds.Top * width + x * bytesPerPixel] != cornerColor)
                 {
                     brk = true;
                     break;
@@ -135,7 +126,7 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
         {
             for (var x = nextBounds.Left; x <= nextBounds.Right; x++)
             {
-                if (pixels[nextBounds.Bottom * width + x] != cornerColor)
+                if (pixels[nextBounds.Bottom * width + x * bytesPerPixel] != cornerColor)
                 {
                     brk = true;
                     break;
@@ -155,7 +146,7 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
         {
             for (var y = nextBounds.Top; y <= nextBounds.Bottom; y++)
             {
-                if (pixels[y * width + nextBounds.Left] != cornerColor)
+                if (pixels[y * width + nextBounds.Left * bytesPerPixel] != cornerColor)
                 {
                     brk = true;
                     break;
@@ -175,7 +166,7 @@ public class CropNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewMode
         {
             for (var y = nextBounds.Top; y <= nextBounds.Bottom; y++)
             {
-                if (pixels[y * width + nextBounds.Right] != cornerColor)
+                if (pixels[y * width + nextBounds.Right * bytesPerPixel] != cornerColor)
                 {
                     brk = true;
                     break;

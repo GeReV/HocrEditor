@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -7,15 +8,29 @@ namespace HocrEditor.Helpers;
 
 public static class BindingHelpers
 {
-    private static readonly Dictionary<(INotifyCollectionChanged, PropertyChangedEventHandler), NotifyCollectionChangedEventHandler>
+    private static readonly Dictionary<(INotifyCollectionChanged, PropertyChangedEventHandler),
+            NotifyCollectionChangedEventHandler>
         CollectionChangedHandlerDictionary = new();
 
-    public static void SubscribeItemPropertyChanged<T>(
-        this ObservableCollection<T> collection,
+    public static void SubscribeItemPropertyChanged<TCollection>(
+        this TCollection collection,
         PropertyChangedEventHandler handler
     )
-        where T : INotifyPropertyChanged
+        where TCollection : INotifyCollectionChanged, IEnumerable<INotifyPropertyChanged>
     {
+        var key = (collection, handler);
+
+        CollectionChangedHandlerDictionary.Add(key, CollectionChangedHandler);
+
+        collection.CollectionChanged += CollectionChangedHandler;
+
+        foreach (var item in collection)
+        {
+            item.PropertyChanged += handler;
+        }
+
+        return;
+
         void CollectionChangedHandler(object? _, NotifyCollectionChangedEventArgs e)
         {
             if (e.OldItems != null)
@@ -34,24 +49,13 @@ public static class BindingHelpers
                 }
             }
         }
-
-        var key = (collection, handler);
-
-        CollectionChangedHandlerDictionary.Add(key, CollectionChangedHandler);
-
-        collection.CollectionChanged += CollectionChangedHandler;
-
-        foreach (var item in collection)
-        {
-            item.PropertyChanged += handler;
-        }
     }
 
-    public static void UnsubscribeItemPropertyChanged<T>(
-        this ObservableCollection<T> collection,
+    public static void UnsubscribeItemPropertyChanged<TCollection>(
+        this TCollection collection,
         PropertyChangedEventHandler handler
     )
-        where T : INotifyPropertyChanged
+        where TCollection : INotifyCollectionChanged, IEnumerable<INotifyPropertyChanged>
     {
         var key = (collection, handler);
 
@@ -61,31 +65,6 @@ public static class BindingHelpers
 
         collection.CollectionChanged -= collectionChangedHandler;
 
-        foreach (var item in collection)
-        {
-            item.PropertyChanged -= handler;
-        }
-    }
-
-
-    public static void SubscribeItemPropertyChanged<T>(
-        this ReadOnlyObservableCollection<T> collection,
-        PropertyChangedEventHandler handler
-    )
-        where T : INotifyPropertyChanged
-    {
-        foreach (var item in collection)
-        {
-            item.PropertyChanged += handler;
-        }
-    }
-
-    public static void UnsubscribeItemPropertyChanged<T>(
-        this ReadOnlyObservableCollection<T> collection,
-        PropertyChangedEventHandler handler
-    )
-        where T : INotifyPropertyChanged
-    {
         foreach (var item in collection)
         {
             item.PropertyChanged -= handler;

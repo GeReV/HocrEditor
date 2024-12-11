@@ -9,16 +9,15 @@ internal sealed class CanvasSelection : IDisposable
 {
     private static readonly SKPaint HandleFillPaint = new()
     {
-        IsStroke = false,
+        Style = SKPaintStyle.Fill,
         Color = SKColors.White,
-        StrokeWidth = 1,
     };
 
     private static readonly SKPaint HandleStrokePaint = new()
     {
-        IsStroke = true,
+        Style = SKPaintStyle.Stroke,
         Color = SKColors.Gray,
-        StrokeWidth = 1,
+        StrokeWidth = 0,
     };
 
     private SKRectI bounds;
@@ -113,14 +112,14 @@ internal sealed class CanvasSelection : IDisposable
         }
     }
 
-    public void Render(SKCanvas canvas, SKMatrix transformation, SKColor color = default)
+    public void Render(SKCanvas canvas, SKColor color = default)
     {
         if (!ShouldShowCanvasSelection)
         {
             return;
         }
 
-        var bbox = transformation.MapRect(Bounds);
+        var bbox = Bounds;
 
         var path = new SKPath();
 
@@ -134,13 +133,13 @@ internal sealed class CanvasSelection : IDisposable
 
         foreach (var handle in ResizeHandles)
         {
-            RenderScalingHandle(canvas, transformation, handle);
+            RenderScalingHandle(canvas, handle);
         }
     }
 
-    private static void RenderScalingHandle(SKCanvas canvas, SKMatrix transformation, ResizeHandle handle)
+    private static void RenderScalingHandle(SKCanvas canvas, ResizeHandle handle)
     {
-        var rect = handle.GetRect(transformation);
+        var rect = handle.GetRect();
 
         canvas.DrawRect(
             rect,

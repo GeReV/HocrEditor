@@ -8,23 +8,25 @@ public static class SKCanvasExtensions
 
     private static readonly SKPaint DashPaint = new()
     {
-        IsStroke = true,
+        Style = SKPaintStyle.Stroke,
         Color = SKColors.Black,
-        StrokeWidth = 1,
-        PathEffect = SKPathEffect.CreateDash(new[] { SELECTION_DASH_LENGTH, SELECTION_DASH_LENGTH }, 0f)
+        StrokeWidth = 0,
+        PathEffect = SKPathEffect.CreateDash(new[] { SELECTION_DASH_LENGTH, SELECTION_DASH_LENGTH }, 0f),
     };
 
     private static SKPaint StrokePaintWithColor(SKColor color) =>
         new()
         {
-            IsStroke = true,
-            StrokeWidth = 1,
-            Color = color == SKColor.Empty ? SKColors.White : color
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = 0,
+            Color = color == SKColor.Empty ? SKColors.White : color,
         };
 
     public static void DrawDashedPath(this SKCanvas canvas, SKPath path, SKColor color = default)
     {
-        canvas.DrawPath(path, StrokePaintWithColor(color));
+        using var paint = StrokePaintWithColor(color);
+
+        canvas.DrawPath(path, paint);
         canvas.DrawPath(path, DashPaint);
     }
 
@@ -33,7 +35,9 @@ public static class SKCanvasExtensions
 
     public static void DrawDashedLine(this SKCanvas canvas, float x0, float y0, float x1, float y1, SKColor color = default)
     {
-        canvas.DrawLine(x0, y0, x1, y1, StrokePaintWithColor(color));
+        using var paint = StrokePaintWithColor(color);
+
+        canvas.DrawLine(x0, y0, x1, y1, paint);
         canvas.DrawLine(x0, y0, x1, y1, DashPaint);
     }
 }
