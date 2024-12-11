@@ -20,78 +20,80 @@
         <local:ZoomPanControl x:Name="Canvas"
                               Transform="{Binding Document.CurrentPage.PageTransformation, FallbackValue={x:Static skiaSharp:SKMatrix.Identity}}"
                               Paint="Canvas_OnPaint" />
-        <ItemsControl Grid.Column="1"
-                      Background="{x:Static SystemColors.ControlLightLightBrush}"
-                      VerticalAlignment="Stretch"
-                      Padding="2, 0"
-                      ItemsSource="{Binding Document.CurrentPage.AdjustmentFilters, FallbackValue={x:Null}}"
-                      dd:DragDrop.DragDropContext="adjustments"
-                      dd:DragDrop.IsDragSource="True"
-                      dd:DragDrop.IsDropTarget="True">
-            <ItemsControl.ItemContainerStyle>
-                <Style>
-                    <Setter Property="FrameworkElement.Margin"
-                            Value="0,0,0,3" />
-                </Style>
-            </ItemsControl.ItemContainerStyle>
-            <ItemsControl.Resources>
-                <Style TargetType="{x:Type adjustments:FilterControl}">
-                    <Setter Property="dd:DragDrop.DragSourceIgnore"
-                            Value="True" />
-                </Style>
-                <Style TargetType="{x:Type Rectangle}">
-                    <Setter Property="dd:DragDrop.DragSourceIgnore"
-                            Value="False" />
-                </Style>
-                <DataTemplate DataType="{x:Type viewModels:GrayscaleFilter}">
-                    <adjustments:FilterControl IsChecked="{Binding IsEnabled}"
-                                               Text="{Binding Name}" />
-                </DataTemplate>
-                <DataTemplate DataType="{x:Type viewModels:GaussianBlurFilter}">
-                    <adjustments:FilterControl IsChecked="{Binding IsEnabled}"
-                                               Text="{Binding Name}">
-                        <Grid Width="270">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Label Grid.Row="0"
-                                   Grid.Column="0"
-                                   DockPanel.Dock="Left">
-                                0
-                            </Label>
-                            <Label Grid.Row="0"
-                                   Grid.Column="2"
-                                   DockPanel.Dock="Right">
-                                63
-                            </Label>
-                            <Slider Grid.Row="1"
-                                    Grid.Column="0"
-                                    Grid.ColumnSpan="3"
-                                    Minimum="1"
-                                    Maximum="63"
-                                    TickFrequency="2"
-                                    IsSnapToTickEnabled="True"
-                                    TickPlacement="TopLeft"
-                                    Value="{Binding KernelSize}" />
-                        </Grid>
-                    </adjustments:FilterControl>
-                </DataTemplate>
-                <DataTemplate DataType="{x:Type viewModels:HistogramScanFilter}">
-                    <adjustments:FilterControl IsChecked="{Binding IsEnabled}"
-                                               Text="{Binding Name}">
-                        <local:HistogramControl Value="{Binding Threshold}"
-                                                MarkerPosition="{Binding MarkerPosition}"
-                                                Values="{Binding HistogramValues}"
-                                                Width="270" />
-                    </adjustments:FilterControl>
-                </DataTemplate>
-            </ItemsControl.Resources>
-        </ItemsControl>
+        <local:TitledPanel Grid.Column="1"
+                           Margin="2,0,0,0"
+                           Header="Adjustment Filters">
+            <ItemsControl Background="{x:Static SystemColors.ControlLightLightBrush}"
+                          VerticalAlignment="Stretch"
+                          ItemsSource="{Binding Document.CurrentPage.AdjustmentFilters, FallbackValue={x:Null}}"
+                          dd:DragDrop.DragDropContext="adjustments"
+                          dd:DragDrop.IsDragSource="True"
+                          dd:DragDrop.IsDropTarget="True">
+                <ItemsControl.ItemContainerStyle>
+                    <Style>
+                        <Setter Property="FrameworkElement.Margin"
+                                Value="0,0,0,3" />
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
+                <ItemsControl.Resources>
+                    <Style TargetType="{x:Type adjustments:FilterControl}">
+                        <Setter Property="dd:DragDrop.DragSourceIgnore"
+                                Value="True" />
+                    </Style>
+                    <Style TargetType="{x:Type Rectangle}">
+                        <Setter Property="dd:DragDrop.DragSourceIgnore"
+                                Value="False" />
+                    </Style>
+                    <DataTemplate DataType="{x:Type viewModels:GrayscaleFilter}">
+                        <adjustments:FilterControl IsChecked="{Binding IsEnabled}"
+                                                   Title="{Binding Name}" />
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type viewModels:GaussianBlurFilter}">
+                        <adjustments:FilterControl IsChecked="{Binding IsEnabled}"
+                                                   Title="{Binding Name}">
+                            <Grid Width="270">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Row="0"
+                                       Grid.Column="0"
+                                       DockPanel.Dock="Left">
+                                    0
+                                </Label>
+                                <Label Grid.Row="0"
+                                       Grid.Column="2"
+                                       DockPanel.Dock="Right">
+                                    63
+                                </Label>
+                                <Slider Grid.Row="1"
+                                        Grid.Column="0"
+                                        Grid.ColumnSpan="3"
+                                        Minimum="1"
+                                        Maximum="63"
+                                        TickFrequency="2"
+                                        IsSnapToTickEnabled="True"
+                                        TickPlacement="TopLeft"
+                                        Value="{Binding KernelSize}" />
+                            </Grid>
+                        </adjustments:FilterControl>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type viewModels:HistogramScanFilter}">
+                        <adjustments:FilterControl IsChecked="{Binding IsEnabled}"
+                                                   Title="{Binding Name}">
+                            <local:HistogramControl Value="{Binding Threshold}"
+                                                    MarkerPosition="{Binding MarkerPosition}"
+                                                    Values="{Binding HistogramValues}"
+                                                    Width="270" />
+                        </adjustments:FilterControl>
+                    </DataTemplate>
+                </ItemsControl.Resources>
+            </ItemsControl>
+        </local:TitledPanel>
     </Grid>
 </UserControl>

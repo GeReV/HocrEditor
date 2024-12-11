@@ -4,54 +4,40 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:HocrEditor.Controls.Adjustments"
+             xmlns:controls="clr-namespace:HocrEditor.Controls"
              xmlns:dd="urn:gong-wpf-dragdrop"
              mc:Ignorable="d"
              d:DesignHeight="300"
              d:DesignWidth="300">
-    <Border BorderThickness="1"
-            BorderBrush="{x:Static SystemColors.ControlDarkBrush}"
-            SnapsToDevicePixels="True">
-        <DockPanel>
-            <Border DockPanel.Dock="Top"
-                    Background="{x:Static SystemColors.ControlLightBrush}"
-                    BorderThickness="0,0,0,1"
-                    BorderBrush="{x:Static SystemColors.ControlDarkBrush}"
-                    Padding="2"
-                    Margin="0,0,0,-1"
-                    SnapsToDevicePixels="True">
-                <DockPanel LastChildFill="True">
-                    <Rectangle DockPanel.Dock="Left"
-                               Width="12"
-                               Height="17"
-                               Fill="Gray"
-                               Cursor="SizeAll"
-                               VerticalAlignment="Center"
-                               dd:DragDrop.DragSourceIgnore="False" />
-                    <CheckBox DockPanel.Dock="Right"
-                              VerticalAlignment="Center"
-                              IsChecked="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=UserControl}}" />
-                    <TextBlock Margin="6,0"
-                               VerticalAlignment="Center"
-                               Text="{Binding Text, RelativeSource={RelativeSource AncestorType=UserControl}, FallbackValue=Text}" />
-                </DockPanel>
-            </Border>
-            <Border BorderThickness="0"
-                    Padding="2">
-                <Border.Resources>
-                    <Style TargetType="{x:Type Border}">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding ElementName=PART_Host, Path=Children.Count}"
-                                         Value="0">
-                                <Setter Property="Visibility"
-                                        Value="Collapsed">
-                                </Setter>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Resources>
-                <StackPanel Orientation="Vertical"
-                            x:Name="PART_Host" />
-            </Border>
-        </DockPanel>
-    </Border>
+    <UserControl.Template>
+        <ControlTemplate TargetType="UserControl">
+            <controls:TitledPanel x:Name="TitledPanel">
+                <controls:TitledPanel.HeaderTemplate>
+                    <DataTemplate>
+                        <Border
+                                Background="{x:Static SystemColors.ControlLightBrush}"
+                                BorderBrush="{x:Static SystemColors.ControlDarkBrush}"
+                                BorderThickness="1"
+                                Cursor="SizeAll"
+                                Margin="-1"
+                                Padding="3"
+                                SnapsToDevicePixels="True">
+                            <DockPanel LastChildFill="True"
+                                       dd:DragDrop.DragSourceIgnore="False">
+                                <CheckBox DockPanel.Dock="Right"
+                                          Cursor="Arrow"
+                                          VerticalAlignment="Center"
+                                          IsChecked="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=local:FilterControl}}" />
+                                <TextBlock VerticalAlignment="Center"
+                                           Text="{Binding Title, RelativeSource={RelativeSource AncestorType=local:FilterControl}}" />
+                            </DockPanel>
+                        </Border>
+                    </DataTemplate>
+                </controls:TitledPanel.HeaderTemplate>
+                <controls:TitledPanel.Content>
+                    <ContentPresenter ContentSource="Content" />
+                </controls:TitledPanel.Content>
+            </controls:TitledPanel>
+        </ControlTemplate>
+    </UserControl.Template>
 </UserControl>

@@ -1,24 +1,14 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
+using HocrEditor.Helpers;
 
 namespace HocrEditor.Controls.Adjustments;
 
-[ContentProperty(nameof(Children))]
+[ContentProperty(nameof(Content))]
 public partial class FilterControl : UserControl
 {
-    public static readonly DependencyPropertyKey ChildrenProperty = DependencyProperty.RegisterReadOnly(
-        nameof(Children),
-        typeof(UIElementCollection),
-        typeof(FilterControl),
-        new PropertyMetadata());
-
-    public UIElementCollection Children
-    {
-        get => (UIElementCollection)GetValue(ChildrenProperty.DependencyProperty);
-        private init => SetValue(ChildrenProperty, value);
-    }
-
     public static readonly DependencyProperty IsCheckedProperty = DependencyProperty.Register(
         nameof(IsChecked),
         typeof(bool),
@@ -32,23 +22,21 @@ public partial class FilterControl : UserControl
         set => SetValue(IsCheckedProperty, value);
     }
 
-    public static readonly DependencyProperty TextProperty = DependencyProperty.Register(
-        nameof(Text),
+    public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(
+        nameof(Title),
         typeof(string),
         typeof(FilterControl),
-        new PropertyMetadata(default(string))
+        new PropertyMetadata("Title")
     );
 
-    public string Text
+    public string Title
     {
-        get => (string)GetValue(TextProperty);
-        set => SetValue(TextProperty, value);
+        get => (string)GetValue(TitleProperty);
+        set => SetValue(TitleProperty, value);
     }
 
     public FilterControl()
     {
         InitializeComponent();
-
-        Children = PART_Host.Children;
     }
 }

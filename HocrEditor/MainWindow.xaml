@@ -372,8 +372,9 @@
                                                  SelectionBounds="{Binding Document.SelectionBounds}"
                                                  SelectionChanged="Canvas_OnSelectionChanged" />
                         <controls:DocumentTreeView
-                            FlowDirection="{Binding Document.CurrentPage.FlowDirection, FallbackValue={x:Static models:Direction.Ltr}}"
                             Grid.Column="1"
+                            Margin="2,0,0,0"
+                            FlowDirection="{Binding Document.CurrentPage.FlowDirection, FallbackValue={x:Static FlowDirection.LeftToRight}}"
                             ItemsSource="{Binding Document.CurrentPage.Nodes[0].Children, FallbackValue={x:Null}}"
                             NodesEdited="Canvas_OnNodeEdited"
                             NodesMoved="DocumentTreeView_OnNodesMoved"
