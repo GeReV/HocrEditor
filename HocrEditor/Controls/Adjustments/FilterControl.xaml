@@ -9,13 +9,19 @@
              mc:Ignorable="d"
              d:DesignHeight="300"
              d:DesignWidth="300">
+    <UserControl.Resources>
+        <Style TargetType="controls:TitledPanel"
+               BasedOn="{StaticResource {x:Type controls:TitledPanel}}">
+            <Setter Property="HeaderPadding"
+                    Value="3" />
+        </Style>
+    </UserControl.Resources>
     <UserControl.Template>
         <ControlTemplate TargetType="UserControl">
             <controls:TitledPanel x:Name="TitledPanel">
                 <controls:TitledPanel.HeaderTemplate>
                     <DataTemplate>
-                        <Border
-                                Background="{x:Static SystemColors.ControlLightBrush}"
+                        <Border Background="{x:Static SystemColors.ControlLightBrush}"
                                 BorderBrush="{x:Static SystemColors.ControlDarkBrush}"
                                 BorderThickness="1"
                                 Cursor="SizeAll"

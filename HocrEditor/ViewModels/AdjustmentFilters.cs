@@ -18,8 +18,8 @@ public sealed class AdjustmentFilters : ObservableCollection<ImageFilterBase>, I
     private Option<SKBitmap> thresholdedBitmap;
 
     public AdjustmentFilters() : base([
-        new GrayscaleFilter(),
-        new GaussianBlurFilter { KernelSize = 3 },
+        // new GrayscaleFilter(),
+        // new GaussianBlurFilter { KernelSize = 3 },
         new HistogramScanFilter(),
     ])
     {
