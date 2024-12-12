@@ -350,10 +350,10 @@
                 <ColumnDefinition Width="170" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <controls:DocumentPageList DataContext="{Binding Document}"
-                                       Grid.Column="0"
+            <controls:DocumentPageList Grid.Column="0"
+                                       DataContext="{Binding Document}"
                                        ItemsSource="{Binding PagesCollectionView}" />
-            <TabControl Grid.Column="1">
+            <TabControl Grid.Column="1" Margin="-1,0,0,0">
                 <TabItem Header="Document">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -371,20 +371,17 @@
                                                  WordSplit="Canvas_OnWordSplit"
                                                  SelectionBounds="{Binding Document.SelectionBounds}"
                                                  SelectionChanged="Canvas_OnSelectionChanged" />
-                        <controls:DocumentTreeView
-                            Grid.Column="1"
-                            Margin="2,0,0,0"
-                            FlowDirection="{Binding Document.CurrentPage.FlowDirection, FallbackValue={x:Static FlowDirection.LeftToRight}}"
-                            ItemsSource="{Binding Document.CurrentPage.Nodes[0].Children, FallbackValue={x:Null}}"
-                            NodesEdited="Canvas_OnNodeEdited"
-                            NodesMoved="DocumentTreeView_OnNodesMoved"
-                            SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
+                        <controls:DocumentTreeView Grid.Column="1"
+                                                   Margin="-1,0,0,0"
+                                                   FlowDirection="{Binding Document.CurrentPage.FlowDirection, FallbackValue={x:Static FlowDirection.LeftToRight}}"
+                                                   ItemsSource="{Binding Document.CurrentPage.Nodes[0].Children, FallbackValue={x:Null}}"
+                                                   NodesEdited="Canvas_OnNodeEdited"
+                                                   NodesMoved="DocumentTreeView_OnNodesMoved"
+                                                   SelectedItems="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}" />
                     </Grid>
                 </TabItem>
                 <TabItem Header="Adjustments">
-                    <adjustments:AdjustmentsControl
-                        ViewModel="{Binding Document.CurrentPage}"
-                        />
+                    <adjustments:AdjustmentsControl ViewModel="{Binding Document.CurrentPage}" />
                 </TabItem>
             </TabControl>
 

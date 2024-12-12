@@ -18,10 +18,11 @@
             <ColumnDefinition Width="300" />
         </Grid.ColumnDefinitions>
         <local:ZoomPanControl x:Name="Canvas"
+                              Background="{x:Static SystemColors.ControlLightBrush}"
                               Transform="{Binding Document.CurrentPage.PageTransformation, FallbackValue={x:Static skiaSharp:SKMatrix.Identity}}"
                               Paint="Canvas_OnPaint" />
         <local:TitledPanel Grid.Column="1"
-                           Margin="2,0,0,0"
+                           Margin="-1,0,0,0"
                            Header="Adjustment Filters">
             <ItemsControl Background="{x:Static SystemColors.ControlLightLightBrush}"
                           VerticalAlignment="Stretch"

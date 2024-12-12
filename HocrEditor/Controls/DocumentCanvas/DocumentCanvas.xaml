@@ -9,7 +9,6 @@
              xmlns:helpers="clr-namespace:HocrEditor.Helpers"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:models="clr-namespace:HocrEditor.Models"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
              xmlns:viewModels="clr-namespace:HocrEditor.ViewModels"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:commands="clr-namespace:HocrEditor.Commands"
@@ -18,6 +17,7 @@
     <Grid>
         <controls:ZoomPanControl
             x:Name="Surface"
+            Background="{x:Static SystemColors.ControlLightBrush}"
             Transform="{Binding Document.CurrentPage.PageTransformation, FallbackValue={x:Static skiaSharp:SKMatrix.Identity}}"
             Paint="Canvas_OnPaint" />
         <Canvas Name="TextBoxLayout">

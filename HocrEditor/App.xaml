@@ -6,9 +6,9 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Controls/TitledPanel.xaml" />
+                <ResourceDictionary Source="Style.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <ResourceDictionary x:Key="DisabledButtonIconResources">
-
                 <Style TargetType="Image">
                     <Style.Triggers>
                         <DataTrigger

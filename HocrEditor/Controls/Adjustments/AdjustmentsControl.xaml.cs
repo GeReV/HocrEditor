@@ -129,7 +129,6 @@ public partial class AdjustmentsControl : UserControl
         using var paint = new SKPaint();
         paint.Shader = shader;
 
-        e.Surface.Canvas.Clear(SKColors.LightGray);
         e.Surface.Canvas.DrawRect(clipRect, paint);
     }
 

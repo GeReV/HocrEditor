@@ -174,7 +174,13 @@ public partial class ZoomPanControl : UserControl
 
     private void Canvas_OnPaintSurface(object? sender, SKPaintGLSurfaceEventArgs e)
     {
-        e.Surface.Canvas.Clear(SKColors.LightGray);
+        var color = SKColors.LightGray;
+        if (Background is SolidColorBrush brush)
+        {
+            color = brush.Color.ToSKColor();
+        }
+
+        e.Surface.Canvas.Clear(color);
         e.Surface.Canvas.SetMatrix(Transform);
 
         Paint?.Invoke(this, new ZoomPanPaintEventArgs(e.Surface, e.Info));

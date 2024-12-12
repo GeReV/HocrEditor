@@ -15,54 +15,58 @@
         <converters:BooleanNegateConverter x:Key="NegateConverter" />
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </UserControl.Resources>
-    <ListBox IsSynchronizedWithCurrentItem="True"
-             ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
-             Name="PageList"
-             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-             ScrollViewer.VerticalScrollBarVisibility="Visible"
-             SelectedIndex="0"
-             SelectionMode="Extended"
-             dd:DragDrop.DragDropContext="PagesDragDrop"
-             dd:DragDrop.IsDragSource="True"
-             dd:DragDrop.IsDropTarget="True"
-             dd:DragDrop.SelectDroppedItems="True"
-             VirtualizingPanel.CacheLength="25"
-             VirtualizingPanel.CacheLengthUnit="Item">
-        <ListBox.CommandBindings>
-            <CommandBinding CanExecute="DeleteCommandBinding_OnCanExecute"
-                            Command="Delete"
-                            Executed="DeleteCommandBinding_OnExecuted" />
-        </ListBox.CommandBindings>
-        <ListBox.Resources>
-            <Style TargetType="ListBoxItem"
-                   d:DataContext="{d:DesignInstance viewModels:HocrPageViewModel}">
-                <Setter Property="IsEnabled"
-                        Value="{Binding IsProcessing, Converter={StaticResource NegateConverter}}" />
-            </Style>
-        </ListBox.Resources>
-        <ListBox.ItemTemplate>
-            <DataTemplate DataType="viewModels:HocrPageViewModel">
-                <Border Margin="5">
-                    <Grid>
-                        <controls:LazyLoadImage Name="PagePreview"
-                                       RenderOptions.BitmapScalingMode="HighQuality"
-                                       Stretch="Uniform"
-                                       StretchDirection="DownOnly"
-                                       UriSource="{Binding ImageFilename}" />
-                        <ProgressBar IsIndeterminate="True"
-                                     VerticalAlignment="Bottom"
-                                     Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                    </Grid>
-                </Border>
-                <DataTemplate.Triggers>
-                    <DataTrigger Binding="{Binding IsProcessing}"
-                                 Value="True">
-                        <Setter Property="Opacity"
-                                TargetName="PagePreview"
-                                Value="0.2" />
-                    </DataTrigger>
-                </DataTemplate.Triggers>
-            </DataTemplate>
-        </ListBox.ItemTemplate>
-    </ListBox>
+    <controls:TitledPanel Header="Pages"
+                          Padding="0">
+        <ListBox Name="PageList"
+                 Margin="-1"
+                 IsSynchronizedWithCurrentItem="True"
+                 ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ScrollViewer.VerticalScrollBarVisibility="Visible"
+                 SelectedIndex="0"
+                 SelectionMode="Extended"
+                 dd:DragDrop.DragDropContext="PagesDragDrop"
+                 dd:DragDrop.IsDragSource="True"
+                 dd:DragDrop.IsDropTarget="True"
+                 dd:DragDrop.SelectDroppedItems="True"
+                 VirtualizingPanel.CacheLength="25"
+                 VirtualizingPanel.CacheLengthUnit="Item">
+            <ListBox.CommandBindings>
+                <CommandBinding CanExecute="DeleteCommandBinding_OnCanExecute"
+                                Command="Delete"
+                                Executed="DeleteCommandBinding_OnExecuted" />
+            </ListBox.CommandBindings>
+            <ListBox.Resources>
+                <Style TargetType="ListBoxItem"
+                       d:DataContext="{d:DesignInstance viewModels:HocrPageViewModel}">
+                    <Setter Property="IsEnabled"
+                            Value="{Binding IsProcessing, Converter={StaticResource NegateConverter}}" />
+                </Style>
+            </ListBox.Resources>
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="viewModels:HocrPageViewModel">
+                    <Border Margin="5">
+                        <Grid>
+                            <controls:LazyLoadImage Name="PagePreview"
+                                                    RenderOptions.BitmapScalingMode="HighQuality"
+                                                    Stretch="Uniform"
+                                                    StretchDirection="DownOnly"
+                                                    UriSource="{Binding ImageFilename}" />
+                            <ProgressBar IsIndeterminate="True"
+                                         VerticalAlignment="Bottom"
+                                         Visibility="{Binding IsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        </Grid>
+                    </Border>
+                    <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsProcessing}"
+                                     Value="True">
+                            <Setter Property="Opacity"
+                                    TargetName="PagePreview"
+                                    Value="0.2" />
+                        </DataTrigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </controls:TitledPanel>
 </UserControl>
