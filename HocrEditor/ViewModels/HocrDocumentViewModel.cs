@@ -6,11 +6,11 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows.Data;
+using CommunityToolkit.Mvvm.Input;
 using HocrEditor.Controls;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
-using Microsoft.Toolkit.Mvvm.Input;
 using Rect = HocrEditor.Models.Rect;
 
 namespace HocrEditor.ViewModels;

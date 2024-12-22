@@ -3,8 +3,8 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Input;
 using JetBrains.Annotations;
-using Microsoft.Toolkit.Mvvm.Input;
 using PropertyChanged;
 
 namespace HocrEditor.Commands;

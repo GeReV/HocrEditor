@@ -1,5 +1,5 @@
 ﻿using System;
-using Microsoft.Toolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Input;
 
 namespace HocrEditor.Commands;
 

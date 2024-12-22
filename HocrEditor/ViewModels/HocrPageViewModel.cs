@@ -5,12 +5,12 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using CommunityToolkit.Mvvm.Input;
 using HocrEditor.Commands;
 using HocrEditor.Controls;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
-using Microsoft.Toolkit.Mvvm.Input;
 using SkiaSharp;
 using Rect = HocrEditor.Models.Rect;
 

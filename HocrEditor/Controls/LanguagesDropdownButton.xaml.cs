@@ -6,13 +6,13 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Controls;
 
-public partial class LanguagesButton : UserControl
+public partial class LanguagesDropdownButton : UserControl
 {
     public static readonly DependencyProperty ItemsSourceProperty
         = DependencyProperty.Register(
             nameof(ItemsSource),
             typeof(ObservableCollection<TesseractLanguage>),
-            typeof(LanguagesButton),
+            typeof(LanguagesDropdownButton),
             new PropertyMetadata(null)
         );
 
@@ -32,7 +32,7 @@ public partial class LanguagesButton : UserControl
         }
     }
 
-    public LanguagesButton()
+    public LanguagesDropdownButton()
     {
         InitializeComponent();
     }

@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using CommunityToolkit.Mvvm.Input;
 using HocrEditor.Commands;
 using HocrEditor.Commands.UndoRedo;
 using HocrEditor.Controls;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
-using Microsoft.Toolkit.Mvvm.Input;
 
 namespace HocrEditor.ViewModels
 {
