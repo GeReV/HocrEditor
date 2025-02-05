@@ -18,19 +18,21 @@
     <controls:TitledPanel Header="Pages"
                           Padding="0">
         <ListBox Name="PageList"
-                 Margin="-1"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 SelectedIndex="0"
+                 SelectionMode="Extended"
                  IsSynchronizedWithCurrentItem="True"
                  ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                  ScrollViewer.VerticalScrollBarVisibility="Visible"
-                 SelectedIndex="0"
-                 SelectionMode="Extended"
+                 VirtualizingPanel.ScrollUnit="Pixel"
+                 VirtualizingPanel.CacheLength="25"
+                 VirtualizingPanel.CacheLengthUnit="Item"
                  dd:DragDrop.DragDropContext="PagesDragDrop"
                  dd:DragDrop.IsDragSource="True"
                  dd:DragDrop.IsDropTarget="True"
-                 dd:DragDrop.SelectDroppedItems="True"
-                 VirtualizingPanel.CacheLength="25"
-                 VirtualizingPanel.CacheLengthUnit="Item">
+                 dd:DragDrop.SelectDroppedItems="True">
             <ListBox.CommandBindings>
                 <CommandBinding CanExecute="DeleteCommandBinding_OnCanExecute"
                                 Command="Delete"

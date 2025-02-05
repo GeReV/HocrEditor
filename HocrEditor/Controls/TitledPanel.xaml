@@ -4,39 +4,66 @@
                     xmlns:controls="clr-namespace:HocrEditor.Controls">
     <converters:ContentEmptyConverter x:Key="ContentEmptyConverter" />
 
+    <SolidColorBrush x:Key="TitledPanel.Static.Background"
+                     Color="{StaticResource Base.Black0}" />
+    <SolidColorBrush x:Key="TitledPanel.Static.Border"
+                     Color="{StaticResource Base.Black0}" />
+    <SolidColorBrush x:Key="TitledPanel.Static.Foreground"
+                     Color="{StaticResource Base.White0}" />
+    <SolidColorBrush x:Key="TitledPanel.Header.Static.Background"
+                     Color="{StaticResource Base.Black10}" />
+
     <Style TargetType="controls:TitledPanel">
-        <Setter Property="Background" Value="{x:Static SystemColors.ControlLightLightBrush}" />
-        <Setter Property="BorderBrush" Value="{x:Static SystemColors.ControlDarkBrush}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="HeaderBackground" Value="{x:Static SystemColors.ControlLightBrush}" />
-        <Setter Property="HeaderBorderThickness" Value="0, 0, 0, 1" />
-        <Setter Property="HeaderBorderBrush" Value="{x:Static SystemColors.ControlDarkBrush}" />
-        <Setter Property="Padding" Value="3,4,3,3" />
-        <Setter Property="HeaderPadding" Value="6" />
+        <Setter Property="Background"
+                Value="{StaticResource TitledPanel.Static.Background}" />
+        <Setter Property="BorderBrush"
+                Value="{StaticResource TitledPanel.Static.Border}" />
+        <Setter Property="BorderThickness"
+                Value="1" />
+        <Setter Property="Foreground"
+                Value="{StaticResource TitledPanel.Static.Foreground}" />
+        <Setter Property="HeaderBackground"
+                Value="{StaticResource TitledPanel.Header.Static.Background}" />
+        <Setter Property="HeaderBorderBrush"
+                Value="{StaticResource TitledPanel.Static.Border}" />
+        <Setter Property="HeaderBorderThickness"
+                Value="0, 0, 0, 1" />
+        <Setter Property="HeaderCursor"
+                Value="">
+        </Setter>
+        <Setter Property="Padding"
+                Value="3,4,3,3" />
+        <Setter Property="HeaderPadding"
+                Value="4" />
         <Setter Property="HeaderTemplate">
             <Setter.Value>
                 <DataTemplate>
-                    <Border Background="{Binding RelativeSource={RelativeSource AncestorType=controls:TitledPanel}, Path=HeaderBackground}"
-                            BorderThickness="{Binding RelativeSource={RelativeSource AncestorType=controls:TitledPanel}, Path=HeaderBorderThickness}"
-                            BorderBrush="{Binding RelativeSource={RelativeSource AncestorType=controls:TitledPanel}, Path=HeaderBorderBrush}"
-                            Padding="{Binding RelativeSource={RelativeSource AncestorType=controls:TitledPanel}, Path=HeaderPadding}"
-                            SnapsToDevicePixels="True">
-                        <TextBlock Text="{Binding}" />
-                    </Border>
+                    <TextBlock Text="{Binding}"
+                               VerticalAlignment="Center" />
                 </DataTemplate>
             </Setter.Value>
         </Setter>
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="{x:Type HeaderedContentControl}">
+                <ControlTemplate TargetType="{x:Type controls:TitledPanel}">
                     <Border Background="{TemplateBinding Background}"
                             BorderThickness="{TemplateBinding BorderThickness}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             SnapsToDevicePixels="True">
                         <DockPanel LastChildFill="True">
-                            <ContentPresenter x:Name="PART_Header"
-                                              DockPanel.Dock="Top"
-                                              ContentSource="Header" />
+                            <Border
+                                Background="{Binding RelativeSource={RelativeSource AncestorType=controls:TitledPanel}, Path=HeaderBackground}"
+                                BorderThickness="{Binding RelativeSource={RelativeSource AncestorType=controls:TitledPanel}, Path=HeaderBorderThickness}"
+                                BorderBrush="{Binding RelativeSource={RelativeSource AncestorType=controls:TitledPanel}, Path=HeaderBorderBrush}"
+                                Cursor="{Binding RelativeSource={RelativeSource AncestorType=controls:TitledPanel}, Path=HeaderCursor}"
+                                Padding="{Binding RelativeSource={RelativeSource AncestorType=controls:TitledPanel}, Path=HeaderPadding}"
+                                SnapsToDevicePixels="True"
+                                Margin="0,0,0,-1"
+                                DockPanel.Dock="Top">
+                                <ContentPresenter x:Name="PART_Header"
+                                                  ContentSource="Header"
+                                                  Height="22" />
+                            </Border>
                             <Border BorderThickness="0"
                                     Padding="{TemplateBinding Padding}">
                                 <Border.Resources>

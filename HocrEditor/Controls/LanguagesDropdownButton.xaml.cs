@@ -36,14 +36,4 @@ public partial class LanguagesDropdownButton : UserControl
     {
         InitializeComponent();
     }
-
-    private void Popup_OnClosed(object? sender, EventArgs e)
-    {
-        Button.IsChecked = false;
-    }
-
-    private void Button_OnChecked(object sender, RoutedEventArgs e)
-    {
-        Popup.IsOpen = true;
-    }
 }

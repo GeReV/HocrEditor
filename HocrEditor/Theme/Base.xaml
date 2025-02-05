@@ -1,0 +1,14 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Color x:Key="Base.White0">#FFFFFFFF</Color>
+    <Color x:Key="Base.White10">#FFE0E0E0</Color>
+    <Color x:Key="Base.White20">#FFC1C1C1</Color>
+    <Color x:Key="Base.Black0">#FF282828</Color>
+    <Color x:Key="Base.Black10">#FF686868</Color>
+    <Color x:Key="Base.Black20">#FF808080</Color>
+
+    <SolidColorBrush x:Key="Base.Static.Foreground" Color="{StaticResource Base.White0}" />
+    <SolidColorBrush x:Key="Base.Disabled.Foreground" Color="{StaticResource Base.White10}" />
+    <SolidColorBrush x:Key="Panel.Static.Border"
+                     Color="{StaticResource Base.Black0}" />
+</ResourceDictionary>

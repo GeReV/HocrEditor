@@ -1,75 +1,76 @@
-﻿<UserControl
-    d:DesignHeight="300"
-    d:DesignWidth="300"
-    mc:Ignorable="d"
-    x:Class="HocrEditor.Controls.LanguagesButton"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:dd="urn:gong-wpf-dragdrop"
-    xmlns:helpers="clr-namespace:HocrEditor.Helpers"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <UserControl.Resources>
-        <Style BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}" TargetType="{x:Type ToggleButton}" />
-    </UserControl.Resources>
-    <Grid>
-        <ToggleButton helpers:IconButton.Source="/Icons/edit-language.png" x:Name="Button">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="16" />
-                </Grid.ColumnDefinitions>
-                <TextBlock
-                    Grid.Column="0"
-                    Margin="2,0,0,0"
-                    x:Name="Label">
-                    OCR Languages
-                </TextBlock>
-                <Path
-                    Data="M 0 0 L 4 4 L 8 0 Z"
-                    Grid.Column="1"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    x:Name="Arrow">
-                    <Path.Fill>
-                        <SolidColorBrush Color="#444444" />
-                    </Path.Fill>
-                </Path>
-            </Grid>
-        </ToggleButton>
-        <Popup
-            Closed="Popup_OnClosed"
-            IsOpen="{Binding IsChecked, ElementName=Button}"
-            PlacementTarget="{Binding ElementName=Button}"
-            StaysOpen="False"
-            x:Name="Popup">
-            <Border>
-                <ListBox
-                    HorizontalContentAlignment="Stretch"
-                    ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                    SelectionMode="Single"
-                    dd:DragDrop.DragDropContext="languages"
-                    dd:DragDrop.IsDragSource="True"
-                    dd:DragDrop.IsDropTarget="True">
+﻿<UserControl mc:Ignorable="d"
+             x:Class="HocrEditor.Controls.LanguagesDropdownButton"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:dd="urn:gong-wpf-dragdrop"
+             xmlns:helpers="clr-namespace:HocrEditor.Helpers"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:HocrEditor.Controls">
+    <controls:DropdownButton x:Name="Button"
+                             Content="OCR Languages"
+                             helpers:IconButton.Source="/Icons/edit-language.png">
+        <controls:DropdownButton.PopupTemplate>
+            <DataTemplate>
+                <ListBox HorizontalContentAlignment="Stretch"
+                         ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                         SelectionMode="Single"
+                         dd:DragDrop.DragDropContext="languages"
+                         dd:DragDrop.IsDragSource="True"
+                         dd:DragDrop.IsDropTarget="True">
+                    <ListBox.Style>
+                        <Style TargetType="{x:Type ListBox}">
+                            <Setter Property="Background"
+                                    Value="{StaticResource PopupMenu.Static.Background}" />
+                            <Setter Property="BorderBrush"
+                                    Value="{StaticResource PopupMenu.Static.Border}" />
+                            <Setter Property="BorderThickness"
+                                    Value="1" />
+                            <Setter Property="Padding"
+                                    Value="4" />
+                        </Style>
+                    </ListBox.Style>
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="{x:Type ListBoxItem}">
-                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Border.CornerRadius"
+                                    Value="3" />
+                            <Setter Property="Padding"
+                                    Value="2" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border HorizontalAlignment="Stretch"
+                                                Background="{TemplateBinding Background}"
+                                                BorderThickness="0"
+                                                CornerRadius="{TemplateBinding Border.CornerRadius}"
+                                                Padding="{TemplateBinding Padding}"
+                                                SnapsToDevicePixels="True">
+                                            <ContentPresenter />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver"
+                                         Value="True">
+                                    <Setter Property="Background"
+                                            Value="{StaticResource PopupMenu.Item.MouseOver.Background}" />
+                                </Trigger>
+                            </Style.Triggers>
                         </Style>
                     </ListBox.ItemContainerStyle>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel HorizontalAlignment="Stretch">
-                                <CheckBox
-                                    Content="{Binding DisplayText}"
-                                    IsChecked="{Binding IsSelected}"
-                                    Padding="2"
-                                    VerticalAlignment="Center"
-                                    VerticalContentAlignment="Center" />
-                            </StackPanel>
+                            <CheckBox Content="{Binding DisplayText}"
+                                      IsChecked="{Binding IsSelected}"
+                                      Foreground="{StaticResource PopupMenu.Static.Foreground}"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Center"
+                                      VerticalContentAlignment="Center" />
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-            </Border>
-        </Popup>
-    </Grid>
+            </DataTemplate>
+        </controls:DropdownButton.PopupTemplate>
+    </controls:DropdownButton>
 </UserControl>

@@ -5,6 +5,7 @@
                  mc:Ignorable="d"
                  x:Class="HocrEditor.MainWindow"
                  x:TypeArguments="viewModels:MainWindowViewModel"
+                 Background="{StaticResource Button.Static.Border}"
                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                  xmlns:controls="clr-namespace:HocrEditor.Controls"
                  xmlns:converters="clr-namespace:HocrEditor.Converters"
@@ -230,7 +231,7 @@
                         ToolTip="Save"
                         helpers:IconButton.Source="/Icons/disk-black.png" />
                 <Separator />
-                <controls:LanguagesButton ItemsSource="{Binding TesseractLanguages}" />
+                <controls:LanguagesDropdownButton ItemsSource="{Binding TesseractLanguages}" />
             </ToolBar>
             <ToolBar>
                 <Button Command="Copy"
@@ -325,17 +326,10 @@
             </ToolBar>
             <ToolBar>
                 <ItemsControl ItemsSource="{Binding Document.NodeVisibility}">
-                    <ItemsControl.Resources>
-                        <Style BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                               TargetType="Button" />
-                        <Style BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}"
-                               TargetType="ToggleButton" />
-                        <Style BasedOn="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"
-                               TargetType="Separator" />
-                    </ItemsControl.Resources>
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" />
+                            <StackPanel Orientation="Horizontal"
+                                        helpers:MarginSetter.Margin="0,0,1,0" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
@@ -343,6 +337,7 @@
                             <ToggleButton Click="NodeVisibilityButton_OnClicked"
                                           IsChecked="{Binding Visible}"
                                           ToolTip="{Binding NodeTypeViewModel.ToolTip}"
+                                          Style="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}"
                                           helpers:IconButton.Source="{Binding NodeTypeViewModel.IconPath}" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
@@ -356,7 +351,7 @@
                               helpers:IconButton.Source="/Icons/edit-number.png" />
             </ToolBar>
         </ToolBarTray>
-        <Grid>
+        <Grid Margin="-1,0,-1,-1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="170" />
                 <ColumnDefinition Width="*" />
@@ -364,7 +359,8 @@
             <controls:DocumentPageList Grid.Column="0"
                                        DataContext="{Binding Document}"
                                        ItemsSource="{Binding PagesCollectionView}" />
-            <TabControl Grid.Column="1" Margin="-1,0,0,0">
+            <TabControl Grid.Column="1"
+                        Margin="-1,0,0,0">
                 <TabItem Header="Document">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -372,6 +368,7 @@
                             <ColumnDefinition Width="300" />
                         </Grid.ColumnDefinitions>
                         <controls:DocumentCanvas Grid.Column="0"
+                                                 Background="{StaticResource Button.Static.Background}"
                                                  ActiveTool="{Binding Document.CanvasTool}"
                                                  IsShowText="{Binding Document.ShowText}"
                                                  IsShowNumbering="{Binding Document.ShowNumbering}"

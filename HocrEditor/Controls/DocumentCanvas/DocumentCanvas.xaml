@@ -31,7 +31,7 @@
                     Name="SelectionPopup"
                     Padding="2"
                     SnapsToDevicePixels="True"
-                    Style="{StaticResource ToolBarStyle}">
+                    Style="{StaticResource ToolBarTrayStyle}">
                 <Border.Resources>
                     <Style BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
                            TargetType="Button"

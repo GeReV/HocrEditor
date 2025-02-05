@@ -140,6 +140,36 @@
 
     <ItemGroup>
         <Page Remove=".github\**" />
+        <Page Update="Theme\ButtonBase.xaml">
+          <Generator>MSBuild:Compile</Generator>
+          <XamlRuntime>Wpf</XamlRuntime>
+          <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Theme\DropdownButton.xaml">
+          <Generator>MSBuild:Compile</Generator>
+          <XamlRuntime>Wpf</XamlRuntime>
+          <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Theme\MenuBase.xaml">
+          <Generator>MSBuild:Compile</Generator>
+          <XamlRuntime>Wpf</XamlRuntime>
+          <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Theme\ToolbarBase.xaml">
+          <Generator>MSBuild:Compile</Generator>
+          <XamlRuntime>Wpf</XamlRuntime>
+          <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Theme\ToolBarDropdownButton.xaml">
+          <Generator>MSBuild:Compile</Generator>
+          <XamlRuntime>Wpf</XamlRuntime>
+          <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Theme\ScrollBarBase.xaml">
+          <Generator>MSBuild:Compile</Generator>
+          <XamlRuntime>Wpf</XamlRuntime>
+          <SubType>Designer</SubType>
+        </Page>
     </ItemGroup>
 
     <ItemGroup>

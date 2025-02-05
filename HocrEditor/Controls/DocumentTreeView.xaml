@@ -13,10 +13,11 @@
              mc:Ignorable="d"
              d:DesignHeight="300"
              d:DesignWidth="300">
-    <controls:TitledPanel Header="Document Elements" FlowDirection="LeftToRight">
+    <controls:TitledPanel Header="Document Elements"
+                          FlowDirection="LeftToRight">
         <TreeView x:Name="TreeView"
                   BorderThickness="0"
-                  Background="{x:Static SystemColors.ControlLightLightBrush}"
+                  Background="Transparent"
                   ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   FlowDirection="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=FlowDirection}"
                   VerticalAlignment="Stretch"
@@ -37,76 +38,14 @@
                     <BooleanToVisibilityConverter />
                 </converters:ValueConverterGroup>
                 <converters:NullableBitmapSourceConverter x:Key="NullableBitmapSourceConverter" />
-
-                <Color x:Key="GlyphColor">#FF444444</Color>
-
-                <Style TargetType="ToggleButton"
-                       x:Key="ExpandCollapseToggleStyle">
-                    <Setter Property="Focusable"
-                            Value="False" />
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="ToggleButton">
-                                <Grid Background="Transparent"
-                                      Height="13"
-                                      Width="15">
-                                    <Path Data="M 4 0 L 8 4 L 4 8 Z"
-                                          HorizontalAlignment="Left"
-                                          Margin="1,1,1,1"
-                                          VerticalAlignment="Center"
-                                          x:Name="Collapsed">
-                                        <Path.Fill>
-                                            <SolidColorBrush Color="{DynamicResource GlyphColor}" />
-                                        </Path.Fill>
-                                    </Path>
-                                    <Path Data="M 0 4 L 8 4 L 4 8 Z"
-                                          HorizontalAlignment="Left"
-                                          Margin="1,1,1,1"
-                                          VerticalAlignment="Center"
-                                          Visibility="Hidden"
-                                          x:Name="Expanded">
-                                        <Path.Fill>
-                                            <SolidColorBrush Color="{DynamicResource GlyphColor}" />
-                                        </Path.Fill>
-                                    </Path>
-                                    <VisualStateManager.VisualStateGroups>
-                                        <VisualStateGroup x:Name="CheckStates">
-                                            <VisualState x:Name="Checked">
-                                                <Storyboard>
-                                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Collapsed"
-                                                        Storyboard.TargetProperty="(UIElement.Visibility)">
-                                                        <DiscreteObjectKeyFrame KeyTime="0"
-                                                            Value="{x:Static Visibility.Hidden}" />
-                                                    </ObjectAnimationUsingKeyFrames>
-                                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Expanded"
-                                                        Storyboard.TargetProperty="(UIElement.Visibility)">
-                                                        <DiscreteObjectKeyFrame KeyTime="0"
-                                                            Value="{x:Static Visibility.Visible}" />
-                                                    </ObjectAnimationUsingKeyFrames>
-                                                </Storyboard>
-                                            </VisualState>
-                                            <VisualState x:Name="Unchecked" />
-                                            <VisualState x:Name="Indeterminate" />
-                                        </VisualStateGroup>
-                                    </VisualStateManager.VisualStateGroups>
-                                </Grid>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Style>
             </TreeView.Resources>
 
             <TreeView.ItemContainerStyle>
-                <Style TargetType="{x:Type TreeViewItem}"
+                <Style BasedOn="{StaticResource TreeViewItemStyle}"
+                       TargetType="{x:Type TreeViewItem}"
                        d:DataContext="{d:DesignInstance viewModels:HocrNodeViewModel}">
                     <Setter Property="behaviors:TreeViewMultipleSelectionBehavior.IsItemSelected"
                             Value="{Binding IsSelected, Mode=TwoWay}" />
-
-                    <Setter Property="BorderThickness"
-                            Value="1" />
-                    <!--  Clear the default focus rectangle which would span the entire item in full width and with all visible children  -->
-                    <Setter Property="FocusVisualStyle"
-                            Value="{x:Null}" />
 
                     <EventSetter Event="PreviewKeyDown"
                                  HandledEventsToo="True"
@@ -144,13 +83,13 @@
                                     <Border Background="{TemplateBinding Background}"
                                             BorderBrush="{TemplateBinding BorderBrush}"
                                             BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="{TemplateBinding Border.CornerRadius}"
+                                            SnapsToDevicePixels="True"
                                             Grid.Column="1"
                                             Grid.Row="0"
-                                            Padding="0"
-                                            SnapsToDevicePixels="True"
                                             x:Name="Bd">
                                         <Grid>
-                                            <Rectangle Margin="0"
+                                            <Rectangle Margin="1"
                                                        Stroke="Black"
                                                        StrokeDashArray="1 2"
                                                        StrokeThickness="1"
@@ -158,6 +97,7 @@
                                                        x:Name="FocusRectangle" />
                                             <ContentPresenter ContentSource="Header"
                                                               HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                              Margin="{TemplateBinding Padding}"
                                                               x:Name="PART_Header" />
                                         </Grid>
                                     </Border>
@@ -200,9 +140,9 @@
                                     <Trigger Property="IsSelected"
                                              Value="True">
                                         <Setter Property="Border.Background"
-                                                Value="#cbe8f6" />
+                                                Value="{StaticResource TreeView.Highlight.Background}" />
                                         <Setter Property="Border.BorderBrush"
-                                                Value="#26a0da" />
+                                                Value="{StaticResource TreeView.Highlight.Border}" />
                                     </Trigger>
 
                                     <!--  Show the border when the item is focused  -->
@@ -224,9 +164,9 @@
                                                 Value="True" />
                                         </MultiTrigger.Conditions>
                                         <Setter Property="Border.Background"
-                                                Value="#cbe8f6" />
+                                                Value="{StaticResource TreeView.Highlight.Background}" />
                                         <Setter Property="Border.BorderBrush"
-                                                Value="#26a0da" />
+                                                Value="{StaticResource TreeView.Highlight.Border}" />
                                     </MultiTrigger>
 
                                     <!--  Slightly darker background when the item is selected and focused  -->
@@ -239,9 +179,9 @@
                                                 Value="True" />
                                         </MultiTrigger.Conditions>
                                         <Setter Property="Border.Background"
-                                                Value="#d1e8ff" />
+                                                Value="{StaticResource TreeView.Highlight.Background}" />
                                         <Setter Property="Border.BorderBrush"
-                                                Value="#66a7e8" />
+                                                Value="{StaticResource TreeView.Highlight.Border}" />
                                     </MultiTrigger>
 
                                     <!--  Make all selected items grey when the entire Window is inactive  -->
@@ -255,10 +195,10 @@
                                                 Value="True" />
                                         </MultiDataTrigger.Conditions>
                                         <Setter Property="Border.Background"
-                                                Value="#d9d9d9" />
+                                                Value="{StaticResource TreeView.Highlight.Disabled.Background}" />
                                         <!--  Windows 8: #f7f7f7  -->
                                         <Setter Property="Border.BorderBrush"
-                                                Value="#d9d9d9" />
+                                                Value="{StaticResource TreeView.Highlight.Disabled.Border}" />
                                         <!--  Windows 8: #dedede  -->
                                     </MultiDataTrigger>
 
@@ -276,10 +216,10 @@
                                                 Value="True" />
                                         </MultiDataTrigger.Conditions>
                                         <Setter Property="Border.Background"
-                                                Value="#d9d9d9" />
+                                                Value="{StaticResource TreeView.Highlight.Disabled.Background}" />
                                         <!--  Windows 8: #f7f7f7  -->
                                         <Setter Property="Border.BorderBrush"
-                                                Value="#d9d9d9" />
+                                                Value="{StaticResource TreeView.Highlight.Disabled.Border}" />
                                         <!--  Windows 8: #dedede  -->
                                     </MultiDataTrigger>
 
@@ -318,9 +258,9 @@
                                     <DataTrigger Binding="{Binding IsEditing}"
                                                  Value="True">
                                         <Setter Property="Border.Background"
-                                                Value="#cbe8f6" />
+                                                Value="{StaticResource TreeView.Highlight.Background}" />
                                         <Setter Property="Border.BorderBrush"
-                                                Value="#26a0da" />
+                                                Value="{StaticResource TreeView.Highlight.Border}" />
                                         <Setter Property="controls:EditableTextBlock.BorderThickness"
                                                 Value="0" />
                                     </DataTrigger>

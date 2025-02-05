@@ -6,15 +6,15 @@ namespace HocrEditor.Converters;
 
 public class RadioButtonCheckedConverter: IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter,
+    public object Convert(object? value, Type targetType, object? parameter,
         System.Globalization.CultureInfo culture)
     {
         return Equals(value, parameter);
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter,
+    public object? ConvertBack(object? value, Type targetType, object? parameter,
         System.Globalization.CultureInfo culture)
     {
-        return value.Equals(true) ? parameter : Binding.DoNothing;
+        return Equals(value, true) ? parameter : Binding.DoNothing;
     }
 }

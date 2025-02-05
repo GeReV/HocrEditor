@@ -1,0 +1,14 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="PopupMenu.Static.Background"
+                     Color="{StaticResource Base.Black10}" />
+    <SolidColorBrush x:Key="PopupMenu.Static.Border"
+                     Color="{StaticResource Base.Black0}" />
+    <SolidColorBrush x:Key="PopupMenu.Static.Foreground"
+                     Color="{StaticResource Base.White0}" />
+
+    <SolidColorBrush x:Key="PopupMenu.Item.MouseOver.Background"
+                     Color="{StaticResource Base.Black20}" />
+
+</ResourceDictionary>
