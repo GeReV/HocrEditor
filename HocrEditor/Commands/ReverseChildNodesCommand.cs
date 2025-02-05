@@ -5,12 +5,9 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class ReverseChildNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewModel>>
+public class ReverseChildNodesCommand(IUndoRedoCommandsService undoRedoCommandsService)
+    : UndoableCommandBase<ICollection<HocrNodeViewModel>>(undoRedoCommandsService)
 {
-    public ReverseChildNodesCommand(IUndoRedoCommandsService undoRedoCommandsService) : base(undoRedoCommandsService)
-    {
-    }
-
     public override bool CanExecute(ICollection<HocrNodeViewModel>? nodes) => nodes is { Count: > 0 };
 
     public override void Execute(ICollection<HocrNodeViewModel>? nodes)

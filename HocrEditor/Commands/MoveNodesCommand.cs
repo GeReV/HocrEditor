@@ -10,18 +10,12 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class MoveNodesCommand : UndoableCommandBase<NodesMovedEventArgs>
+public class MoveNodesCommand(HocrPageViewModel hocrPageViewModel)
+    : UndoableCommandBase<ListItemsMovedEventArgs>(hocrPageViewModel)
 {
-    private readonly HocrPageViewModel hocrPageViewModel;
+    public override bool CanExecute(ListItemsMovedEventArgs? e) => e != null;
 
-    public MoveNodesCommand(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
-    {
-        this.hocrPageViewModel = hocrPageViewModel;
-    }
-
-    public override bool CanExecute(NodesMovedEventArgs? e) => e != null;
-
-    public override void Execute(NodesMovedEventArgs? e)
+    public override void Execute(ListItemsMovedEventArgs? e)
     {
         if (e == null)
         {
@@ -30,7 +24,7 @@ public class MoveNodesCommand : UndoableCommandBase<NodesMovedEventArgs>
 
         var insertIndex = e.InsertIndex;
         var destinationList = e.TargetCollection.TryGetList();
-        var data = DefaultDropHandler.ExtractData(e.Data).OfType<HocrNodeViewModel>().ToList();
+        var data = e.Data.OfType<HocrNodeViewModel>().ToList();
         var isSameCollection = false;
 
         if (data.TrueForAll(item => IsSameNodeType(item, e.TargetOwner)))
@@ -66,7 +60,7 @@ public class MoveNodesCommand : UndoableCommandBase<NodesMovedEventArgs>
 
             commands.Add(new CollectionRemoveCommand(sourceList, node));
 
-            // If source is destination too fix the insertion index
+            // If source is destination too, fix the insertion index
             if (destinationList != null && ReferenceEquals(sourceList, destinationList) &&
                 index < insertIndex)
             {

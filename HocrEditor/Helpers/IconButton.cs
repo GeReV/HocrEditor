@@ -16,7 +16,7 @@ public class IconButton
             typeof(ImageSource),
             typeof(IconButton),
             new UIPropertyMetadata(
-                null,
+                defaultValue: null,
                 OnChangeCallback
             )
         );
@@ -127,43 +127,22 @@ public class IconButton
             return;
         }
 
-        var borderChild = border.Child;
+        var contentPresenter = border.FindVisualChild<ContentPresenter>();
+
+        if (contentPresenter is null)
+        {
+            throw new InvalidOperationException("Unexpected state in button");
+        }
 
         var spacing = GetSpacing(button);
         var orientation = GetOrientation(button);
 
-        switch (borderChild)
+        var parent = VisualTreeHelper.GetParent(contentPresenter);
+
+        var margin = orientation == Orientation.Horizontal ? new Thickness(0, 0, spacing, 0) : new Thickness(0, 0, 0, spacing);
+
+        switch (parent)
         {
-            case ContentPresenter contentPresenter:
-            {
-                border.Child = null;
-
-                var icon = new Image
-                {
-                    Source = GetSource(button),
-                    Width = 16,
-                    Height = 16,
-                };
-
-                var stackPanel = new StackPanel
-                {
-                    Orientation = orientation,
-                };
-
-                if (GetPosition(button) == IconPosition.Before)
-                {
-                    stackPanel.Children.Add(icon);
-                    stackPanel.Children.Add(contentPresenter);
-                }
-                else
-                {
-                    stackPanel.Children.Add(contentPresenter);
-                    stackPanel.Children.Add(icon);
-                }
-
-                border.Child = stackPanel;
-                break;
-            }
             case StackPanel stackPanel:
             {
                 stackPanel.Orientation = orientation;
@@ -183,12 +162,60 @@ public class IconButton
                     stackPanel.Children.Add(icon);
                 }
 
+                MarginSetter.SetMargin(stackPanel, margin);
                 break;
             }
-            default:
-                throw new InvalidOperationException("Unexpected state in button");
+            case Decorator decorator:
+            {
+                decorator.Child = null;
+                decorator.Child = BuildStackPanel(button, contentPresenter);
+
+                MarginSetter.SetMargin(decorator.Child, margin);
+                break;
+            }
+            case Panel panel:
+            {
+                var index = panel.Children.IndexOf(contentPresenter);
+
+                panel.Children.Remove(contentPresenter);
+
+                var child = BuildStackPanel(button, contentPresenter);
+
+                panel.Children.Insert(index, child);
+
+                MarginSetter.SetMargin(child, margin);
+                break;
+            }
         }
 
-        MarginSetter.SetMargin(border.Child, orientation == Orientation.Horizontal ? new Thickness(0, 0, spacing, 0) : new Thickness(0, 0, 0, spacing));
+
+    }
+
+    private static StackPanel BuildStackPanel(ButtonBase button, ContentPresenter contentPresenter)
+    {
+        var icon = new Image
+        {
+            Source = GetSource(button),
+            Width = 16,
+            Height = 16,
+        };
+
+        var stackPanel = new StackPanel
+        {
+            Orientation = GetOrientation(button),
+        };
+
+        if (GetPosition(button) == IconPosition.Before)
+        {
+            stackPanel.Children.Add(icon);
+            stackPanel.Children.Add(contentPresenter);
+        }
+        else
+        {
+            stackPanel.Children.Add(contentPresenter);
+            stackPanel.Children.Add(icon);
+        }
+
+        return stackPanel;
     }
 }

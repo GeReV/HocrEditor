@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -28,19 +29,24 @@ namespace HocrEditor.ViewModels
 {
     public sealed class MainWindowViewModel : ViewModelBase
     {
-        private readonly Window window;
+        private readonly Window? window;
 
-        public MainWindowViewModel(Window window)
+        public MainWindowViewModel() : this(window: null)
+        {
+        }
+
+        public MainWindowViewModel(Window? window)
         {
             this.window = window;
 
             Document.PropertyChanged += DocumentOnPropertyChanged;
+            Document.Pages.CollectionChanged += DocumentPagesOnCollectionChanged;
 
             TesseractLanguages.CollectionChanged += TesseractLanguagesChanged;
             TesseractLanguages.SubscribeItemPropertyChanged(TesseractLanguagesChanged);
 
             ImportCommand = new RelayCommand(Import);
-            ProcessCommand = new RelayCommand(Process);
+            ProcessCommand = new RelayCommand(Process, CanProcess);
 
             SaveCommand = new RelayCommand<bool>(forceSaveAs => Save(forceSaveAs), CanSave);
             OpenCommand = new RelayCommand(Open);
@@ -100,10 +106,13 @@ namespace HocrEditor.ViewModels
         private void OnDocumentChanged(HocrDocumentViewModel oldValue, HocrDocumentViewModel newValue)
         {
             oldValue.PropertyChanged -= DocumentOnPropertyChanged;
+            oldValue.Pages.CollectionChanged -= DocumentPagesOnCollectionChanged;
             oldValue.Dispose();
 
             newValue.PropertyChanged += DocumentOnPropertyChanged;
+            newValue.Pages.CollectionChanged += DocumentPagesOnCollectionChanged;
         }
+
 
         private void DocumentOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
@@ -125,6 +134,12 @@ namespace HocrEditor.ViewModels
             }
         }
 
+        private void DocumentPagesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            ProcessCommand.NotifyCanExecuteChanged();
+            SaveCommand.NotifyCanExecuteChanged();
+        }
+
         public bool AskSaveOnExit()
         {
             var result = MessageBox.Show(
@@ -141,7 +156,7 @@ namespace HocrEditor.ViewModels
                 MessageBoxResult.No =>
                     // Ignore.
                     true,
-                _ => throw new ArgumentOutOfRangeException(nameof(result))
+                _ => throw new ArgumentOutOfRangeException(nameof(result)),
             };
         }
 
@@ -263,6 +278,8 @@ namespace HocrEditor.ViewModels
             }
         }
 
+        private bool CanProcess() => Document.Pages.Count > 0;
+
         private void Process()
         {
             var tesseractPath = GetTesseractPath();
@@ -304,11 +321,12 @@ namespace HocrEditor.ViewModels
 
                                 Document.OcrSystem = hocrDocument.OcrSystem;
 
-                                Document.Capabilities.AddRange(
-                                    hocrDocument.Capabilities
-                                        .ToHashSet(StringComparer.Ordinal)
-                                        .Except(Document.Capabilities, StringComparer.Ordinal)
-                                );
+                                foreach (var capability in hocrDocument.Capabilities
+                                             .ToHashSet(StringComparer.Ordinal)
+                                             .Except(Document.Capabilities, StringComparer.Ordinal))
+                                {
+                                    Document.Capabilities.Add(capability);
+                                }
 
                                 Debug.Assert(hocrDocument.Pages.Count == 1);
 
@@ -411,6 +429,7 @@ namespace HocrEditor.ViewModels
             TesseractLanguages.UnsubscribeItemPropertyChanged(TesseractLanguagesChanged);
             TesseractLanguages.Dispose();
 
+            Document.Pages.CollectionChanged -= DocumentPagesOnCollectionChanged;
             Document.PropertyChanged -= DocumentOnPropertyChanged;
             Document.Dispose();
         }

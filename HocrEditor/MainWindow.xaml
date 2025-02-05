@@ -146,7 +146,7 @@
                           Header="Save _as..." />
                 <Separator />
                 <MenuItem Command="{Binding ImportCommand}"
-                          Header="_Import..." />
+                          Header="_Import pages..." />
                 <Separator />
                 <MenuItem Command="Close"
                           Header="E_xit" />
@@ -183,35 +183,42 @@
                 <MenuItem Header="_Marquee"
                           IsCheckable="True"
                           IsChecked="{Binding Document.CanvasTool, Mode=OneWay, Converter={StaticResource RadioButtonCheckedConverter}, ConverterParameter={x:Static controls:DocumentCanvasTools.RegionSelectionTool}}"
+                          IsEnabled="{Binding Document.CurrentPage, Converter={StaticResource NullableToBooleanConverter}}"
                           InputGestureText="Ctrl+R" />
                 <MenuItem Command="{Binding Document.CurrentPage.ExclusiveSelectNodesCommand, FallbackValue={x:Null}}"
                           CommandParameter="{Binding Document.CurrentPage.Nodes, FallbackValue={x:Null}}"
+                          IsEnabled="{Binding Document.CurrentPage, Converter={StaticResource NullableToBooleanConverter}}"
                           Header="_All"
                           InputGestureText="Ctrl+A" />
                 <MenuItem Command="{Binding Document.CurrentPage.DeselectNodesCommand, FallbackValue={x:Null}}"
                           CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                          IsEnabled="{Binding Document.CurrentPage, Converter={StaticResource NullableToBooleanConverter}}"
                           Header="Deselect A_ll"
                           InputGestureText="Ctrl+D" />
                 <MenuItem Header="Inve_rse"
+                          IsEnabled="{Binding Document.CurrentPage, Converter={StaticResource NullableToBooleanConverter}}"
                           InputGestureText="Ctrl+I" />
                 <MenuItem Command="{Binding Document.CurrentPage.SelectIdenticalNodesCommand, FallbackValue={x:Null}}"
                           CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                          IsEnabled="{Binding Document.CurrentPage, Converter={StaticResource NullableToBooleanConverter}}"
                           Header="_Identical Nodes"
                           InputGestureText="Ctrl+Shift+A" />
             </MenuItem>
             <MenuItem Header="Tools">
                 <MenuItem Command="{Binding Document.CurrentPage.ConvertToImageCommand, FallbackValue={x:Null}}"
                           CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                          IsEnabled="{Binding Document.CurrentPage, Converter={StaticResource NullableToBooleanConverter}}"
                           Header="C_onvert Nodes to Image" />
                 <MenuItem Command="{Binding Document.CurrentPage.ReverseChildNodesCommand, FallbackValue={x:Null}}"
                           CommandParameter="{Binding Document.CurrentPage.SelectedNodes, FallbackValue={x:Null}}"
+                          IsEnabled="{Binding Document.CurrentPage, Converter={StaticResource NullableToBooleanConverter}}"
                           Header="_Reverse children" />
             </MenuItem>
         </Menu>
         <ToolBarTray DockPanel.Dock="Top">
             <ToolBar>
                 <Button Command="{Binding ImportCommand}"
-                        ToolTip="Import"
+                        ToolTip="Import pages..."
                         helpers:IconButton.Source="/Icons/document--plus.png" />
                 <Button Command="{Binding ProcessCommand}"
                         ToolTip="Process"

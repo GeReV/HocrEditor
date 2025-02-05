@@ -52,7 +52,7 @@ public class HocrDocumentViewModel : ViewModelBase, IUndoRedoCommandsService
         set => HocrDocument.OcrSystem = value;
     }
 
-    public List<string> Capabilities => HocrDocument.Capabilities;
+    public ICollection<string> Capabilities => HocrDocument.Capabilities;
 
     public HocrPageViewModel? CurrentPage
     {

@@ -27,7 +27,7 @@ public sealed class ForwardingCommandBinding : Freezable
             nameof(SourceCommand),
             typeof(ICommand),
             typeof(ForwardingCommandBinding),
-            new FrameworkPropertyMetadata(null, SourceCommandChanged)
+            new FrameworkPropertyMetadata(defaultValue: null, SourceCommandChanged)
         );
 
     /// <summary>
@@ -38,7 +38,7 @@ public sealed class ForwardingCommandBinding : Freezable
             nameof(TargetCommand),
             typeof(ICommand),
             typeof(ForwardingCommandBinding),
-            new FrameworkPropertyMetadata(null)
+            new FrameworkPropertyMetadata(propertyChangedCallback: null)
         );
 
     /// <summary>
@@ -49,7 +49,7 @@ public sealed class ForwardingCommandBinding : Freezable
             nameof(TargetCommandParameter),
             typeof(object),
             typeof(ForwardingCommandBinding),
-            new FrameworkPropertyMetadata(null)
+            new FrameworkPropertyMetadata(propertyChangedCallback: null)
         );
 
     /// <summary>
@@ -130,7 +130,7 @@ public sealed class ForwardingCommandBinding : Freezable
         {
             e.Handled = true;
 
-            asyncCommand.ExecuteAsync(parameter)
+            _ = asyncCommand.ExecuteAsync(parameter)
                 .ContinueWith(_ => OnExecuted(e), TaskScheduler.FromCurrentSynchronizationContext());
 
             return;

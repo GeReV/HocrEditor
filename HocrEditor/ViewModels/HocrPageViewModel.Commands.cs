@@ -10,6 +10,7 @@ using HocrEditor.Controls;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
 using HocrEditor.Models;
+using HocrEditor.ViewModels.Filters;
 
 namespace HocrEditor.ViewModels
 {
@@ -52,10 +53,14 @@ namespace HocrEditor.ViewModels
         public ConvertToImageCommand ConvertToImageCommand { get; set; }
 
         public IRelayCommand<ObservableCollection<HocrNodeViewModel>> ReverseChildNodesCommand { get; set; }
-        public IRelayCommand<NodesMovedEventArgs> MoveNodesCommand { get; }
+        public IRelayCommand<ListItemsMovedEventArgs> MoveNodesCommand { get; }
         public IRelayCommand<NodesEditedEventArgs> EditNodesCommand { get; }
         public IRelayCommand<WordSplitEventArgs> WordSplitCommand { get; }
         public IRelayCommand<HocrNodeType> CreateNodeCommand { get; }
+
+        public IRelayCommand<IAdjustmentFilterType> CreateAdjustmentFilterCommand { get; }
+        public IRelayCommand<ImageFilterBase> DeleteAdjustmentFilterCommand { get; }
+        public IRelayCommand<ListItemsMovedEventArgs> MoveAdjustmentFiltersCommand { get; }
 
         public IRelayCommand<IList<HocrNodeViewModel>> ExclusiveSelectNodesCommand { get; }
         public IRelayCommand<IList<HocrNodeViewModel>> AppendSelectNodesCommand { get; }
@@ -126,7 +131,7 @@ namespace HocrEditor.ViewModels
 
             var list = e.Nodes.ToList();
 
-            return list.Count > 0 && list.All(n => n.IsEditable);
+            return list.Count > 0 && list.TrueForAll(n => n.IsEditable);
         }
 
         private void EditNodes(NodesEditedEventArgs? e)
@@ -138,7 +143,7 @@ namespace HocrEditor.ViewModels
 
             var list = e.Nodes.ToList();
 
-            if (list.Count <= 0 || !list.All(n => n.IsEditable))
+            if (list.Count <= 0 || !list.TrueForAll(n => n.IsEditable))
             {
                 return;
             }

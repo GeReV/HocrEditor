@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using GongSolutions.Wpf.DragDrop;
-using GongSolutions.Wpf.DragDrop.Utilities;
 using HocrEditor.Helpers;
 using HocrEditor.ViewModels;
 
@@ -22,28 +20,29 @@ public class DocumentTreeViewDropHandler(DocumentTreeView owner) : DefaultDropHa
 
         var data = ExtractData(dropInfo.Data).OfType<HocrNodeViewModel>().ToList();
 
-        if (data.DistinctBy(n => n.NodeType).Count() > 1)
+        if (data.DistinctBy(n => n.NodeType).Skip(1).Any())
         {
             return false;
         }
 
-
-        if (dropInfo.TargetItem is HocrNodeViewModel targetItem)
+        if (dropInfo.TargetItem is not HocrNodeViewModel targetItem)
         {
-            var isDroppingInto = dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.TargetItemCenter);
+            return false;
+        }
 
-            var hocrNodeType = data.First().NodeType;
+        var isDroppingInto = dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.TargetItemCenter);
 
-            if (isDroppingInto)
-            {
-                return hocrNodeType == targetItem.NodeType || HocrNodeTypeHelper.CanNodeTypeBeChildOf(hocrNodeType, targetItem.NodeType);
-            }
+        var hocrNodeType = data[0].NodeType;
 
-            if (dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.BeforeTargetItem) ||
-                dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.AfterTargetItem))
-            {
-                return HocrNodeTypeHelper.CanNodeTypeBeChildOf(hocrNodeType, targetItem.Parent!.NodeType);
-            }
+        if (isDroppingInto)
+        {
+            return hocrNodeType == targetItem.NodeType || HocrNodeTypeHelper.CanNodeTypeBeChildOf(hocrNodeType, targetItem.NodeType);
+        }
+
+        if (dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.BeforeTargetItem) ||
+            dropInfo.InsertPosition.HasFlag(RelativeInsertPosition.AfterTargetItem))
+        {
+            return HocrNodeTypeHelper.CanNodeTypeBeChildOf(hocrNodeType, targetItem.Parent!.NodeType);
         }
 
         return false;
@@ -84,7 +83,7 @@ public class DocumentTreeViewDropHandler(DocumentTreeView owner) : DefaultDropHa
         }
 
         owner.RaiseEvent(
-            new NodesMovedEventArgs(
+            new ListItemsMovedEventArgs(
                 DocumentTreeView.NodesMovedEvent,
                 owner,
                 dropInfo.DragInfo.SourceCollection,

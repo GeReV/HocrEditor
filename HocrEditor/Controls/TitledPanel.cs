@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace HocrEditor.Controls;
@@ -10,7 +11,7 @@ public class TitledPanel : HeaderedContentControl
         nameof(HeaderBackground),
         typeof(Brush),
         typeof(TitledPanel),
-        new FrameworkPropertyMetadata(default(Brush), FrameworkPropertyMetadataOptions.AffectsRender)
+        new FrameworkPropertyMetadata(defaultValue: null, FrameworkPropertyMetadataOptions.AffectsRender)
     );
 
     public Brush HeaderBackground
@@ -23,7 +24,7 @@ public class TitledPanel : HeaderedContentControl
         nameof(HeaderBorderBrush),
         typeof(Brush),
         typeof(TitledPanel),
-        new FrameworkPropertyMetadata(default(Brush), FrameworkPropertyMetadataOptions.AffectsRender)
+        new FrameworkPropertyMetadata(defaultValue: null, FrameworkPropertyMetadataOptions.AffectsRender)
     );
 
     public Brush HeaderBorderBrush
@@ -43,6 +44,19 @@ public class TitledPanel : HeaderedContentControl
     {
         get => (Thickness)GetValue(HeaderBorderThicknessProperty);
         set => SetValue(HeaderBorderThicknessProperty, value);
+    }
+
+    public static readonly DependencyProperty HeaderCursorProperty = DependencyProperty.Register(
+        nameof(HeaderCursor),
+        typeof(Cursor),
+        typeof(TitledPanel),
+        new PropertyMetadata(default(Cursor))
+    );
+
+    public Cursor HeaderCursor
+    {
+        get => (Cursor)GetValue(HeaderCursorProperty);
+        set => SetValue(HeaderCursorProperty, value);
     }
 
     public static readonly DependencyProperty HeaderPaddingProperty = DependencyProperty.Register(

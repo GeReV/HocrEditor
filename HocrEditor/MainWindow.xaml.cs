@@ -132,7 +132,7 @@ namespace HocrEditor
             ViewModel.Document.CurrentPage?.WordSplitCommand.Execute(e);
         }
 
-        private void DocumentTreeView_OnNodesMoved(object? sender, NodesMovedEventArgs e)
+        private void DocumentTreeView_OnNodesMoved(object? sender, ListItemsMovedEventArgs e)
         {
             ViewModel.Document.CurrentPage?.MoveNodesCommand.Execute(e);
         }

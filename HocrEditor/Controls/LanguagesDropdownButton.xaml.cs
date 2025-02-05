@@ -13,7 +13,7 @@ public partial class LanguagesDropdownButton : UserControl
             nameof(ItemsSource),
             typeof(ObservableCollection<TesseractLanguage>),
             typeof(LanguagesDropdownButton),
-            new PropertyMetadata(null)
+            new PropertyMetadata(propertyChangedCallback: null)
         );
 
     public ObservableCollection<TesseractLanguage>? ItemsSource

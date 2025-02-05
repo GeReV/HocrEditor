@@ -8,19 +8,10 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class CreateNodeCommand : UndoableCommandBase<HocrNodeType>
+public class CreateNodeCommand(HocrPageViewModel hocrPageViewModel)
+    : UndoableCommandBase<HocrNodeType>(hocrPageViewModel)
 {
-    private readonly HocrPageViewModel hocrPageViewModel;
-
-    public CreateNodeCommand(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
-    {
-        this.hocrPageViewModel = hocrPageViewModel;
-    }
-
-    public override bool CanExecute(HocrNodeType nodeType)
-    {
-        return true;
-    }
+    public override bool CanExecute(HocrNodeType nodeType) => true;
 
     public override void Execute(HocrNodeType nodeType)
     {
@@ -128,13 +119,13 @@ public class CreateNodeCommand : UndoableCommandBase<HocrNodeType>
                 ),
                 HocrNodeType.Image => new HocrImage(id, parentNode.Id, title, string.Empty, Direction.Ltr),
                 HocrNodeType.Page => throw new InvalidOperationException("Expected to not receive a page node type"),
-                _ => throw new ArgumentOutOfRangeException(nameof(hocrNodeType))
+                _ => throw new ArgumentOutOfRangeException(nameof(hocrNodeType)),
             };
 
             var hocrNodeViewModel = new HocrNodeViewModel(hocrNode)
             {
                 // No need to set this with a PropertyChangeCommand, as it doesn't need to be reset on undo.
-                BBox = selectionBounds
+                BBox = selectionBounds,
             };
 
             nodes.Add(hocrNodeViewModel);
