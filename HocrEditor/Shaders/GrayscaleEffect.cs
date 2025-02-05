@@ -2,7 +2,7 @@
 
 namespace HocrEditor.Shaders;
 
-public class GrayscaleEffect : RuntimeEffect
+public class GrayscaleEffect() : RuntimeEffect(SOURCE)
 {
     private SKShader image = SKShader.CreateEmpty();
 
@@ -16,8 +16,6 @@ public class GrayscaleEffect : RuntimeEffect
                                       return vec3(dot(child.eval(coord).rgb, luma)).rgb1;
                                   }
                                   """;
-
-    public GrayscaleEffect() : base(SOURCE) {}
 
     public GrayscaleEffect(SKShader image) : this()
     {

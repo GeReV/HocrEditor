@@ -213,5 +213,10 @@ namespace HocrEditor
         {
             ViewModel.Document.ShowNumbering = !ViewModel.Document.ShowNumbering;
         }
+
+        private void AdjustmentsControl_OnFiltersMoved(object? sender, ListItemsMovedEventArgs e)
+        {
+            ViewModel.Document.CurrentPage?.MoveAdjustmentFiltersCommand.Execute(e);
+        }
     }
 }

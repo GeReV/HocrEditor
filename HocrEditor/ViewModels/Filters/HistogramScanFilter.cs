@@ -7,9 +7,9 @@ using HocrEditor.Shaders;
 using Optional;
 using SkiaSharp;
 
-namespace HocrEditor.ViewModels;
+namespace HocrEditor.ViewModels.Filters;
 
-public sealed class HistogramScanFilter(bool automaticThreshold = true) : ImageFilterBase
+public sealed class HistogramScanFilter(bool automaticThreshold) : ImageFilterBase, IImageFilter
 {
     private Option<CancellationTokenSource> updateCancellationTokenSource;
 
@@ -22,7 +22,11 @@ public sealed class HistogramScanFilter(bool automaticThreshold = true) : ImageF
 
     public IReadOnlyList<int> HistogramValues { get; private set; } = Array.Empty<int>();
 
-    public override string Name => "Histogram Scan";
+    public static string Name => "Histogram Scan";
+
+    public HistogramScanFilter() : this(automaticThreshold: true)
+    {
+    }
 
     protected override void PerformUpdate(SKShader source, SKImageInfo imageInfo)
     {

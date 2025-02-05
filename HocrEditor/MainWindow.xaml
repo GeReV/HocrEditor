@@ -57,6 +57,10 @@
         <core:ForwardingCommandBinding SourceCommand="{x:Static commands:RoutedCommands.CreateNodeCommand}"
                                        TargetCommand="{Binding Document.CurrentPage.CreateNodeCommand, FallbackValue={x:Null}}"
                                        Executed="CreateNodeCommandBinding_OnExecuted" />
+        <core:ForwardingCommandBinding SourceCommand="{x:Static commands:RoutedCommands.CreateAdjustmentFilterCommand}"
+                                       TargetCommand="{Binding Document.CurrentPage.CreateAdjustmentFilterCommand, FallbackValue={x:Null}}" />
+        <core:ForwardingCommandBinding SourceCommand="{x:Static commands:RoutedCommands.DeleteAdjustmentFilterCommand}"
+                                       TargetCommand="{Binding Document.CurrentPage.DeleteAdjustmentFilterCommand , FallbackValue={x:Null}}" />
         <core:ForwardingCommandBinding SourceCommand="NextPage"
                                        TargetCommand="{Binding Document.NextPageCommand}" />
         <core:ForwardingCommandBinding SourceCommand="PreviousPage"
@@ -381,7 +385,9 @@
                     </Grid>
                 </TabItem>
                 <TabItem Header="Adjustments">
-                    <adjustments:AdjustmentsControl ViewModel="{Binding Document.CurrentPage}" />
+                    <adjustments:AdjustmentsControl Background="{StaticResource Button.Static.Background}"
+                                                    ViewModel="{Binding Document.CurrentPage}"
+                                                    FiltersMoved="AdjustmentsControl_OnFiltersMoved" />
                 </TabItem>
             </TabControl>
 
