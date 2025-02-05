@@ -14,12 +14,11 @@
              xmlns:commands="clr-namespace:HocrEditor.Commands"
              xmlns:controls="clr-namespace:HocrEditor.Controls"
              xmlns:skiaSharp="clr-namespace:SkiaSharp;assembly=SkiaSharp">
-    <Grid>
-        <controls:ZoomPanControl
-            x:Name="Surface"
-            Background="{x:Static SystemColors.ControlLightBrush}"
-            Transform="{Binding Document.CurrentPage.PageTransformation, FallbackValue={x:Static skiaSharp:SKMatrix.Identity}}"
-            Paint="Canvas_OnPaint" />
+    <Grid Background="{Binding Background, RelativeSource={RelativeSource AncestorType=UserControl}}">
+        <controls:ZoomPanControl x:Name="Surface"
+                                 Background="{Binding Background, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                 Transform="{Binding Document.CurrentPage.PageTransformation, FallbackValue={x:Static skiaSharp:SKMatrix.Identity}}"
+                                 Paint="Canvas_OnPaint" />
         <Canvas Name="TextBoxLayout">
             <TextBox KeyDown="TextBox_OnKeyDown"
                      LostFocus="TextBox_OnLostFocus"

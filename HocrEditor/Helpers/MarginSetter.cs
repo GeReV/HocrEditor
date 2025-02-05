@@ -51,12 +51,12 @@ public class MarginSetter
             "Margin",
             typeof(Thickness),
             typeof(MarginSetter),
-            new UIPropertyMetadata(new Thickness(), MarginChangedCallback)
+            new UIPropertyMetadata(default(Thickness), MarginChangedCallback)
         );
 
     public static readonly DependencyProperty LastItemMarginProperty =
         DependencyProperty.RegisterAttached("LastItemMargin", typeof (Thickness), typeof (MarginSetter),
-            new UIPropertyMetadata(new Thickness(), MarginChangedCallback));
+            new UIPropertyMetadata(default(Thickness), MarginChangedCallback));
 
     private static void MarginChangedCallback(object sender, DependencyPropertyChangedEventArgs e)
     {

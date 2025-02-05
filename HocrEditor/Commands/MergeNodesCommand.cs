@@ -8,15 +8,9 @@ using HocrEditor.ViewModels;
 
 namespace HocrEditor.Commands;
 
-public class MergeNodesCommand : UndoableCommandBase<ICollection<HocrNodeViewModel>>
+public class MergeNodesCommand(HocrPageViewModel hocrPageViewModel)
+    : UndoableCommandBase<ICollection<HocrNodeViewModel>>(hocrPageViewModel)
 {
-    private readonly HocrPageViewModel hocrPageViewModel;
-
-    public MergeNodesCommand(HocrPageViewModel hocrPageViewModel) : base(hocrPageViewModel)
-    {
-        this.hocrPageViewModel = hocrPageViewModel;
-    }
-
     public override bool CanExecute(ICollection<HocrNodeViewModel>? nodes) => nodes is { Count: > 0 };
 
     public override void Execute(ICollection<HocrNodeViewModel>? nodes)

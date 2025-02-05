@@ -53,7 +53,7 @@ public partial class HistogramControl : UserControl
         nameof(MarkerPosition),
         typeof(int),
         typeof(HistogramControl),
-        new PropertyMetadata(default(int), UpdateView, CoerceValue)
+        new PropertyMetadata(0, UpdateView, CoerceValue)
     );
 
     public int MarkerPosition

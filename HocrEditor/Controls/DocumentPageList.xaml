@@ -1,4 +1,4 @@
-﻿<UserControl d:DataContext="{d:DesignInstance viewModels:HocrDocumentViewModel}"
+<UserControl d:DataContext="{d:DesignInstance viewModels:HocrDocumentViewModel}"
              d:DesignHeight="300"
              d:DesignWidth="300"
              mc:Ignorable="d"

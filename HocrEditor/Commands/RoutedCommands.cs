@@ -2,7 +2,7 @@
 
 namespace HocrEditor.Commands;
 
-public class RoutedCommands
+public static class RoutedCommands
 {
     public static readonly RoutedCommand OcrRegionCommand = new();
     public static readonly RoutedCommand MergeCommand = new();
@@ -10,4 +10,6 @@ public class RoutedCommands
     public static readonly RoutedCommand CreateNodeCommand = new();
     public static readonly RoutedCommand ToggleTextCommand = new();
     public static readonly RoutedCommand ToggleNumbersCommand = new();
+    public static readonly RoutedCommand CreateAdjustmentFilterCommand = new();
+    public static readonly RoutedCommand DeleteAdjustmentFilterCommand = new();
 }

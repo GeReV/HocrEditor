@@ -6,6 +6,7 @@
              xmlns:local="clr-namespace:HocrEditor.Controls.Adjustments"
              xmlns:controls="clr-namespace:HocrEditor.Controls"
              xmlns:dd="urn:gong-wpf-dragdrop"
+             xmlns:commands="clr-namespace:HocrEditor.Commands"
              mc:Ignorable="d"
              d:DesignHeight="300"
              d:DesignWidth="300">
@@ -18,26 +19,25 @@
     </UserControl.Resources>
     <UserControl.Template>
         <ControlTemplate TargetType="UserControl">
-            <controls:TitledPanel x:Name="TitledPanel">
+            <controls:TitledPanel x:Name="TitledPanel"
+                                  HeaderPadding="3"
+                                  HeaderCursor="SizeAll">
                 <controls:TitledPanel.HeaderTemplate>
                     <DataTemplate>
-                        <Border Background="{x:Static SystemColors.ControlLightBrush}"
-                                BorderBrush="{x:Static SystemColors.ControlDarkBrush}"
-                                BorderThickness="1"
-                                Cursor="SizeAll"
-                                Margin="-1"
-                                Padding="3"
-                                SnapsToDevicePixels="True">
-                            <DockPanel LastChildFill="True"
-                                       dd:DragDrop.DragSourceIgnore="False">
-                                <CheckBox DockPanel.Dock="Right"
-                                          Cursor="Arrow"
-                                          VerticalAlignment="Center"
-                                          IsChecked="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=local:FilterControl}}" />
-                                <TextBlock VerticalAlignment="Center"
-                                           Text="{Binding Title, RelativeSource={RelativeSource AncestorType=local:FilterControl}}" />
-                            </DockPanel>
-                        </Border>
+                        <!-- TODO: How can DragDrop.DragSourceIgnore be extracted out of this control to the parent list? -->
+                        <DockPanel LastChildFill="True" dd:DragDrop.DragSourceIgnore="False">
+                            <Button Cursor="Arrow"
+                                    Content="×"
+                                    Command="{x:Static commands:RoutedCommands.DeleteAdjustmentFilterCommand}"
+                                    CommandParameter="{Binding DataContext, RelativeSource={RelativeSource AncestorType=local:FilterControl}}"
+                                    DockPanel.Dock="Right" />
+                            <CheckBox Cursor="Arrow"
+                                      VerticalAlignment="Center"
+                                      IsChecked="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=local:FilterControl}}"
+                                      DockPanel.Dock="Right" />
+                            <TextBlock VerticalAlignment="Center"
+                                       Text="{Binding Title, RelativeSource={RelativeSource AncestorType=local:FilterControl}}" />
+                        </DockPanel>
                     </DataTemplate>
                 </controls:TitledPanel.HeaderTemplate>
                 <controls:TitledPanel.Content>

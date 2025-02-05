@@ -93,6 +93,10 @@ namespace HocrEditor.ViewModels
             WordSplitCommand = new WordSplitCommand(this);
             CreateNodeCommand = new CreateNodeCommand(this);
 
+            CreateAdjustmentFilterCommand = new CreateAdjustmentFilterCommand(this);
+            DeleteAdjustmentFilterCommand = new DeleteAdjustmentFilterCommand(this);
+            MoveAdjustmentFiltersCommand = new MoveAdjustmentFiltersCommand(this);
+
             ExclusiveSelectNodesCommand = new ExclusiveSelectNodesCommand(this);
             AppendSelectNodesCommand = new AppendSelectNodesCommand(this);
             DeselectNodesCommand = new DeselectNodesCommand(this);

@@ -1,24 +1,23 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using HocrEditor.ViewModels;
 
 namespace HocrEditor.Controls;
 
-public partial class LanguagesDropdownButton : UserControl
+public partial class FiltersDropdownButton : UserControl
 {
     public static readonly DependencyProperty ItemsSourceProperty
         = DependencyProperty.Register(
             nameof(ItemsSource),
-            typeof(ObservableCollection<TesseractLanguage>),
-            typeof(LanguagesDropdownButton),
+            typeof(IReadOnlyCollection<IAdjustmentFilterType>),
+            typeof(FiltersDropdownButton),
             new PropertyMetadata(propertyChangedCallback: null)
         );
 
-    public ObservableCollection<TesseractLanguage>? ItemsSource
+    public IReadOnlyCollection<IAdjustmentFilterType>? ItemsSource
     {
-        get => (ObservableCollection<TesseractLanguage>)GetValue(ItemsSourceProperty);
+        get => (IReadOnlyCollection<IAdjustmentFilterType>)GetValue(ItemsSourceProperty);
         set
         {
             if (value == null)
@@ -32,18 +31,14 @@ public partial class LanguagesDropdownButton : UserControl
         }
     }
 
-    public LanguagesDropdownButton()
+    public FiltersDropdownButton()
     {
         InitializeComponent();
     }
 
-    private void Popup_OnClosed(object? sender, EventArgs e)
+    private void DeleteButton_OnClickHandler(object sender, RoutedEventArgs e)
     {
-        Button.IsChecked = false;
-    }
-
-    private void Button_OnChecked(object sender, RoutedEventArgs e)
-    {
-        Popup.IsOpen = true;
+        FiltersDropdown.IsChecked = false;
     }
 }
+

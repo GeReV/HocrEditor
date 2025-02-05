@@ -126,6 +126,8 @@
         <None Remove="Icons\control.png" />
         <Resource Include="Icons\control.png" />
         <None Remove="Icons\ruler.png" />
+        <None Remove="Icons\function.png" />
+        <Resource Include="Icons\function.png" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,0 +1,51 @@
+﻿<UserControl x:Class="HocrEditor.Controls.FiltersDropdownButton"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:helpers="clr-namespace:HocrEditor.Helpers"
+             xmlns:controls="clr-namespace:HocrEditor.Controls"
+             xmlns:commands="clr-namespace:HocrEditor.Commands"
+             mc:Ignorable="d">
+    <controls:DropdownButton x:Name="FiltersDropdown"
+                             helpers:IconButton.Source="/Icons/function.png">
+        <controls:DropdownButton.PopupTemplate>
+            <DataTemplate>
+                <ItemsControl
+                    ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                    <ItemsControl.Style>
+                        <Style TargetType="ItemsControl">
+                            <Setter Property="Background"
+                                    Value="{StaticResource PopupMenu.Static.Background}" />
+                            <Setter Property="BorderBrush"
+                                    Value="{StaticResource PopupMenu.Static.Border}" />
+                            <Setter Property="BorderThickness"
+                                    Value="1" />
+                            <Setter Property="Padding"
+                                    Value="4" />
+                        </Style>
+                    </ItemsControl.Style>
+                    <ItemsControl.Resources>
+                        <Style TargetType="Button"
+                               BasedOn="{StaticResource BaseButtonStyle}">
+                            <Setter Property="HorizontalAlignment"
+                                    Value="Stretch" />
+                            <Setter Property="HorizontalContentAlignment"
+                                    Value="Left" />
+                            <EventSetter Event="Click"
+                                         Handler="DeleteButton_OnClickHandler" />
+                        </Style>
+                    </ItemsControl.Resources>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button x:Name="CreateFilter"
+                                    Content="{Binding Name}"
+                                    Command="{x:Static commands:RoutedCommands.CreateAdjustmentFilterCommand}"
+                                    CommandParameter="{Binding}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DataTemplate>
+        </controls:DropdownButton.PopupTemplate>
+    </controls:DropdownButton>
+</UserControl>

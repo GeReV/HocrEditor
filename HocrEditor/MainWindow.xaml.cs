@@ -132,7 +132,7 @@ namespace HocrEditor
             ViewModel.Document.CurrentPage?.WordSplitCommand.Execute(e);
         }
 
-        private void DocumentTreeView_OnNodesMoved(object? sender, NodesMovedEventArgs e)
+        private void DocumentTreeView_OnNodesMoved(object? sender, ListItemsMovedEventArgs e)
         {
             ViewModel.Document.CurrentPage?.MoveNodesCommand.Execute(e);
         }
@@ -212,6 +212,11 @@ namespace HocrEditor
         private void ToggleNumberingCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             ViewModel.Document.ShowNumbering = !ViewModel.Document.ShowNumbering;
+        }
+
+        private void AdjustmentsControl_OnFiltersMoved(object? sender, ListItemsMovedEventArgs e)
+        {
+            ViewModel.Document.CurrentPage?.MoveAdjustmentFiltersCommand.Execute(e);
         }
     }
 }

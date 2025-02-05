@@ -1,9 +1,9 @@
 ﻿using HocrEditor.Shaders;
 using SkiaSharp;
 
-namespace HocrEditor.ViewModels;
+namespace HocrEditor.ViewModels.Filters;
 
-public sealed class GaussianBlurFilter : ImageFilterBase
+public sealed class GaussianBlurFilter : ImageFilterBase, IImageFilter
 {
     private readonly GaussianBlurEffect gaussianBlurEffect = new();
 
@@ -13,7 +13,7 @@ public sealed class GaussianBlurFilter : ImageFilterBase
         set => gaussianBlurEffect.KernelSize = value;
     }
 
-    public override string Name => "Blur";
+    public static string Name => "Gaussian Blur";
 
     public override SKShader Compose(SKShader source, SKImageInfo imageInfo)
     {

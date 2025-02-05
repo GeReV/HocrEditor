@@ -70,11 +70,11 @@ public partial class DocumentTreeView
     public static readonly RoutedEvent NodesMovedEvent = EventManager.RegisterRoutedEvent(
         nameof(NodesMoved),
         RoutingStrategy.Bubble,
-        typeof(EventHandler<NodesMovedEventArgs>),
+        typeof(EventHandler<ListItemsMovedEventArgs>),
         typeof(DocumentTreeView)
     );
 
-    public event EventHandler<NodesMovedEventArgs> NodesMoved
+    public event EventHandler<ListItemsMovedEventArgs> NodesMoved
     {
         add => AddHandler(NodesMovedEvent, value);
         remove => RemoveHandler(NodesMovedEvent, value);

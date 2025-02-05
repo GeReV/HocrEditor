@@ -28,6 +28,6 @@ public class NullableBitmapSourceConverter : IValueConverter
         value switch
         {
             BitmapImage bitmapImage => bitmapImage.UriSource.ToString(),
-            _ => null
+            _ => null,
         };
 }

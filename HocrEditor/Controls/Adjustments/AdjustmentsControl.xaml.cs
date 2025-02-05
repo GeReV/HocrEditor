@@ -1,13 +1,13 @@
-﻿using System.Collections.Specialized;
+﻿using System;
+using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Threading;
+using GongSolutions.Wpf.DragDrop;
 using HocrEditor.Helpers;
 using HocrEditor.ViewModels;
+using HocrEditor.ViewModels.Filters;
 using SkiaSharp;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -15,6 +15,9 @@ namespace HocrEditor.Controls.Adjustments;
 
 public partial class AdjustmentsControl : UserControl
 {
+    private SKRectI clipRect = SKRectI.Empty;
+    private SKShader shader = SKShader.CreateEmpty();
+
     public static readonly DependencyProperty ViewModelProperty
         = DependencyProperty.Register(
             nameof(ViewModel),
@@ -42,13 +45,26 @@ public partial class AdjustmentsControl : UserControl
         }
     }
 
-    private SKRectI clipRect = SKRectI.Empty;
+    public static readonly RoutedEvent FiltersMovedEvent = EventManager.RegisterRoutedEvent(
+        nameof(FiltersMoved),
+        RoutingStrategy.Bubble,
+        typeof(EventHandler<ListItemsMovedEventArgs>),
+        typeof(AdjustmentsControl)
+    );
 
-    private SKShader shader = SKShader.CreateEmpty();
+    public event EventHandler<ListItemsMovedEventArgs> FiltersMoved
+    {
+        add => AddHandler(FiltersMovedEvent, value);
+        remove => RemoveHandler(FiltersMovedEvent, value);
+    }
+
+    public IDropTarget DropHandler { get; }
 
     public AdjustmentsControl()
     {
         InitializeComponent();
+
+        DropHandler = new AdjustmentFiltersDropHandler(this);
 
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
@@ -134,7 +150,7 @@ public partial class AdjustmentsControl : UserControl
 
     private void UpdateImage()
     {
-        Dispatcher.InvokeAsync(
+        _ = Dispatcher.InvokeAsync(
             () =>
             {
 

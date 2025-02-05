@@ -7,19 +7,20 @@ namespace HocrEditor.Core;
 
 public sealed class UndoRedoManager
 {
+    private int batchNumber;
+
+    private List<UndoRedoCommand> batchCommands = new();
+
     private readonly List<List<UndoRedoCommand>> commands = new();
 
     public int CurrentIndex { get; private set; } = -1;
 
-    public bool CanUndo => CurrentIndex >= 0;
+    public bool CanUndo => commands.Count > 0 && CurrentIndex >= 0;
 
     public bool CanRedo => commands.Count > 0 && CurrentIndex < commands.Count - 1;
 
     public event EventHandler? UndoStackChanged;
 
-    private int batchNumber;
-
-    private List<UndoRedoCommand> batchCommands = new();
 
     public void BeginBatch()
     {

@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using HocrEditor.Core;
 using HocrEditor.Helpers;
+using HocrEditor.ViewModels.Filters;
 using Optional;
-using Optional.Unsafe;
 using SkiaSharp;
 
 namespace HocrEditor.ViewModels;
@@ -18,9 +18,9 @@ public sealed class AdjustmentFilters : ObservableCollection<ImageFilterBase>, I
     private Option<SKBitmap> thresholdedBitmap;
 
     public AdjustmentFilters() : base([
-        // new GrayscaleFilter(),
+        new GrayscaleFilter(),
         // new GaussianBlurFilter { KernelSize = 3 },
-        new HistogramScanFilter(),
+        // new HistogramScanFilter(),
     ])
     {
         CollectionChanged += OnCollectionChanged;

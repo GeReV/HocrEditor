@@ -1,13 +1,11 @@
 ﻿using SkiaSharp;
 
-namespace HocrEditor.ViewModels;
+namespace HocrEditor.ViewModels.Filters;
 
 public abstract class ImageFilterBase : ViewModelBase, IImageFilter
 {
     // Filter initially requires update.
     private bool requiresUpdate = true;
-
-    public abstract string Name { get; }
 
     public bool IsEnabled { get; set; } = true;
 
